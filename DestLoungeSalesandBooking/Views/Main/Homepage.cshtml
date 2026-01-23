@@ -1,0 +1,109 @@
+﻿@{
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+}
+<header>
+    <div class="header-container">
+        <div class="logo">
+            <a href="@Url.Action("Homepage","Main")">
+                <img src="~/Content/Pictures/DestLogo.png" class="logo" alt="D'est Lounge">
+            </a>
+        </div>
+        <nav class="main-nav">
+            <a href="@Url.Action("Homepage","Main")">HOME</a>
+            <a href="@Url.Action("ServicePage","Main")">SERVICES</a>
+            <a href="@Url.Action("ContactPage","Main")">CONTACT</a>
+            <a href="@Url.Action("FAQsPage","Main")">FAQs</a>
+        </nav>
+        <div class="header-actions">
+            <a href="@Url.Action("LoginPage","Main")" class="login-link">
+                <i class="fa-regular fa-user"></i> LOGIN/SIGNUP
+            </a>
+            <a href="@Url.Action("ContactPage","Main")" class="email-icon">
+                <i class="fa-solid fa-envelope"></i>
+            </a>
+        </div>
+    </div>
+</header>
+
+<div class="banner-container">
+    <div class="banner-text">
+        <h1 class="hello">HELLO.</h1>
+        <h2 class="youre-looking">YOU'RE LOOKING</h2>
+        <h2 class="gorgeous">gorgeous</h2>
+        <h2 class="today">TODAY.</h2>
+    </div>
+</div>
+
+<div class="services-intro">
+    <div class="divider-line"></div>
+    <div class="service-text">
+        <h3 class="service-title">nails</h3>
+        <p class="service-tagline">Nailed it, every time.</p>
+    </div>
+</div>
+
+<!-- Polaroid Images Section -->
+<div class="polaroid-section">
+    <div class="polaroid-card">
+        <div class="polaroid-image">
+            <img src="~/Content/Pictures/nail1.jpg" alt="Nail Design 1">
+        </div>
+        <div class="polaroid-caption">=========</div>
+    </div>
+    <div class="polaroid-card">
+        <div class="polaroid-image">
+            <img src="~/Content/Pictures/nail2.jpg" alt="Nail Design 2">
+        </div>
+        <div class="polaroid-caption">=========</div>
+    </div>
+    <div class="polaroid-card">
+        <div class="polaroid-image">
+            <img src="~/Content/Pictures/nail3.jpg" alt="Nail Design 3">
+        </div>
+        <div class="polaroid-caption">=========</div>
+    </div>
+</div>
+
+<!-- D'est Description Box -->
+<div class="dest-description">
+    <h3 class="dest-title">D'est</h3>
+    <p class="dest-text">
+        is a modern beauty and relaxation space where self-care meets sophistication.
+        A good place to stay where every visit is designed to be a luxurious and calming
+        pause from everyday.
+    </p>
+</div>
+
+<footer>
+    <div class="footer-container">
+        <h2 class="footer-title">Follow our Socials!</h2>
+        <div class="social-links">
+            <a href="https://www.tiktok.com/&#64;destlounge"
+               class="social-item"
+               target="_blank">
+                <i class="fa-brands fa-tiktok"></i>
+                <span>destlounge</span>
+            </a>
+            <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
+                <i class="fa-brands fa-facebook"></i>
+                <span>D'est Lounge</span>
+            </a>
+            <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
+                <i class="fa-brands fa-instagram"></i>
+                <span>destlounge</span>
+            </a>
+        </div>
+    </div>
+</footer>
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background-image: url('/Content/Pictures/HomepageBackground.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+</style>

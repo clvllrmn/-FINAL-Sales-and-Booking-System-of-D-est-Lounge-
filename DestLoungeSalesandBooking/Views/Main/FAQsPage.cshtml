@@ -1,0 +1,179 @@
+﻿@{
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+}
+
+<header>
+    <div class="header-container">
+        <div class="logo">
+            <a href="@Url.Action("Homepage","Main")">
+                <img src="~/Content/Pictures/DestLogo.png" class="logo" alt="D'est Lounge">
+            </a>
+        </div>
+        <nav class="main-nav">
+            <a href="@Url.Action("Homepage","Main")">HOME</a>
+            <a href="@Url.Action("ServicePage","Main")">SERVICES</a>
+            <a href="@Url.Action("ContactPage","Main")">CONTACT</a>
+            <a href="@Url.Action("FAQsPage","Main")">FAQs</a>
+        </nav>
+        <div class="header-actions">
+            <a href="@Url.Action("LoginPage","Main")" class="login-link">
+                <i class="fa-regular fa-user"></i> LOGIN/SIGNUP
+            </a>
+            <a href="@Url.Action("ContactPage","Main")" class="email-icon">
+                <i class="fa-solid fa-envelope"></i>
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- FAQs Section -->
+<div class="faqs-container" ng-controller="DestLoungeSalesandBookingController">
+    <h1 class="faqs-title">FAQS</h1>
+
+    <div class="faqs-grid">
+        <div class="faq-card"
+             ng-repeat="faq in faqs"
+             ng-click="toggleFaq($index)"
+             ng-class="{'active': faq.isOpen}">
+            <div class="faq-question">
+                <h3>{{faq.question}}</h3>
+                <i class="fa-solid" ng-class="faq.isOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+            </div>
+            <div class="faq-answer" ng-show="faq.isOpen">
+                <p>{{faq.answer}}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div class="footer-container">
+        <h2 class="footer-title">Follow our Socials!</h2>
+        <div class="social-links">
+            <a href="https://www.tiktok.com/&#64;destlounge"
+               class="social-item"
+               target="_blank">
+                <i class="fa-brands fa-tiktok"></i>
+                <span>destlounge</span>
+            </a>
+            <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
+                <i class="fa-brands fa-facebook"></i>
+                <span>D'est Lounge</span>
+            </a>
+            <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
+                <i class="fa-brands fa-instagram"></i>
+                <span>destlounge</span>
+            </a>
+        </div>
+    </div>
+</footer>
+
+<style>
+    .faqs-container {
+        min-height: calc(100vh - 400px);
+        background-color: #e7dfd6;
+        padding: 3rem 2rem;
+    }
+
+    .faqs-title {
+        font-size: 4rem;
+        font-weight: 600;
+        color: white;
+        text-align: center;
+        margin: 0 0 3rem 0;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .faqs-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .faq-card {
+        background-color: #6b4423;
+        border-radius: 20px;
+        padding: 2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .faq-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 6px 6px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    .faq-card.active {
+        background-color: #5d3a1f;
+    }
+
+    .faq-question {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .faq-question h3 {
+        color: white;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin: 0;
+        line-height: 1.4;
+        flex: 1;
+    }
+
+    .faq-question i {
+        color: white;
+        font-size: 1.2rem;
+        transition: transform 0.3s ease;
+    }
+
+    .faq-answer {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 2px solid rgba(255, 255, 255, 0.3);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .faq-answer p {
+        color: white;
+        font-size: 1rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 1024px) {
+        .faqs-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .faqs-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .faqs-title {
+            font-size: 3rem;
+        }
+    }
+</style>

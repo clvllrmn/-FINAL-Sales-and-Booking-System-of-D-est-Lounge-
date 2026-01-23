@@ -1,0 +1,359 @@
+﻿@{
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+}
+<header>
+    <div class="header-container">
+        <div class="logo">
+            <a href="@Url.Action("Homepage","Main")">
+                <img src="~/Content/Pictures/DestLogo.png" class="logo" alt="D'est Lounge">
+            </a>
+        </div>
+        <nav class="main-nav">
+            <a href="@Url.Action("Homepage","Main")">HOME</a>
+            <a href="@Url.Action("ServicePage","Main")">SERVICES</a>
+            <a href="@Url.Action("ContactPage","Main")">CONTACT</a>
+            <a href="@Url.Action("FAQsPage","Main")">FAQs</a>
+        </nav>
+        <div class="header-actions">
+            <a href="@Url.Action("LoginPage","Main")" class="login-link">
+                <i class="fa-regular fa-user"></i> LOGIN/SIGNUP
+            </a>
+            <a href="@Url.Action("ContactPage","Main")" class="email-icon">
+                <i class="fa-solid fa-envelope"></i>
+            </a>
+        </div>
+    </div>
+</header>
+<div class="signup-container" ng-controller="DestLoungeSalesandBookingController">
+    <div class="signup-box">
+
+        <h1 class="signup-title">Sign Up</h1>
+
+        <!-- Display success/error messages -->
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-error">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+
+        <form name="registerForm"
+              method="post"
+              action="@Url.Action("SignupPage","Main")"
+              novalidate>
+
+            @Html.AntiForgeryToken()
+
+            <!-- FIRST & LAST NAME -->
+            <div class="form-row">
+                <div class="input-wrapper">
+                    <input type="text"
+                           id="FNAME"
+                           name="FNAME"
+                           class="form-input"
+                           placeholder="First Name"
+                           ng-model="user.firstName"
+                           ng-pattern="/^[a-zA-Z\s'-]+$/"
+                           ng-keydown="focusNext($event, 'LNAME')"
+                           required>
+                    <span class="error-message"
+                          ng-show="registerForm.FNAME.$error.pattern && registerForm.FNAME.$dirty">
+                        Only letters allowed
+                    </span>
+                </div>
+
+                <div class="input-wrapper">
+                    <input type="text"
+                           id="LNAME"
+                           name="LNAME"
+                           class="form-input"
+                           placeholder="Last Name"
+                           ng-model="user.lastName"
+                           ng-pattern="/^[a-zA-Z\s'-]+$/"
+                           ng-keydown="focusNext($event, 'EMAIL')"
+                           required>
+                    <span class="error-message"
+                          ng-show="registerForm.LNAME.$error.pattern && registerForm.LNAME.$dirty">
+                        Only letters allowed
+                    </span>
+                </div>
+            </div>
+
+            <!-- EMAIL -->
+            <div class="form-group">
+                <input type="email"
+                       id="EMAIL"
+                       name="EMAIL"
+                       class="form-input"
+                       placeholder="Email"
+                       ng-model="user.email"
+                       ng-keydown="focusNext($event, 'CONTACT')"
+                       required>
+            </div>
+
+            <!-- CONTACT NUMBER -->
+            <div class="form-group">
+                <input type="tel"
+                       id="CONTACT"
+                       name="CONTACT"
+                       class="form-input"
+                       placeholder="Contact Number (11 digits)"
+                       ng-model="user.contactNumber"
+                       ng-pattern="/^\d{11}$/"
+                       ng-minlength="11"
+                       ng-maxlength="11"
+                       maxlength="11"
+                       inputmode="numeric"
+                       ng-keydown="focusNext($event, 'ADDRESS')"
+                       required>
+
+                <span class="error-message"
+                      ng-show="registerForm.CONTACT.$dirty && registerForm.CONTACT.$invalid">
+                    Contact number must be exactly 11 digits
+                </span>
+            </div>
+
+            <!-- ADDRESS -->
+            <div class="form-group">
+                <input type="text"
+                       id="ADDRESS"
+                       name="ADDRESS"
+                       class="form-input"
+                       placeholder="Address"
+                       ng-model="user.address"
+                       ng-minlength="5"
+                       ng-keydown="focusNext($event, 'PASSWORD')"
+                       required>
+            </div>
+
+            <!-- PASSWORD -->
+            <div class="form-group password-group">
+                <input type="{{ showPassword ? 'text' : 'password' }}"
+                       id="PASSWORD"
+                       name="PASSWORD"
+                       class="form-input"
+                       placeholder="Password"
+                       ng-model="user.password"
+                       @* Notice the / / wrapping the Razor code below *@
+                       ng-pattern='/@Html.Raw("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{8,}$")/'
+                       ng-keydown="focusNext($event, 'CONFIRMPASSWORD')"
+                       required>
+
+                <i class="fa-solid toggle-password"
+                   ng-class="showPassword ? 'fa-eye-slash' : 'fa-eye'"
+                   ng-click="togglePassword()"></i>
+
+                <span class="error-message"
+                      ng-show="registerForm.PASSWORD.$error.pattern && registerForm.PASSWORD.$dirty">
+                    Password must be 8+ chars with uppercase, lowercase, number, and symbol (@@$!%*?&#)
+                </span>
+            </div>
+
+            <!-- CONFIRM PASSWORD -->
+            <div class="form-group password-group">
+                <input type="{{ showPassword ? 'text' : 'password' }}"
+                       id="CONFIRMPASSWORD"
+                       name="CONFIRMPASSWORD"
+                       class="form-input"
+                       placeholder="Confirm Password"
+                       ng-model="user.confirmPassword"
+                       compare-to="user.password"
+                       ng-keydown="submitOnEnter($event)"
+                       required>
+
+                <i class="fa-solid toggle-password"
+                   ng-class="showPassword ? 'fa-eye-slash' : 'fa-eye'"
+                   ng-click="togglePassword()"></i>
+
+                <span class="error-message"
+                      ng-show="registerForm.CONFIRMPASSWORD.$error.compareTo && registerForm.CONFIRMPASSWORD.$dirty">
+                    Passwords do not match
+                </span>
+            </div>
+
+            <!-- TERMS -->
+            <div class="terms-container">
+                <label>
+                    <input type="checkbox" name="acceptTerms" ng-model="user.acceptedTerms" required>
+                    I agree to
+                </label>
+                <span class="terms-link" ng-click="openTerms($event)">Terms and Conditions</span>
+            </div>
+
+
+            <!-- LINKS -->
+            <div class="already-account-container">
+                <a href="@Url.Action("LoginPage","Main")" class="already-account">
+                    Already have an account?
+                </a>
+            </div>
+
+            <!-- BUTTONS -->
+            <button type="submit"
+                    class="signup-button"
+                    ng-disabled="registerForm.$invalid || !user.acceptedTerms">
+                Sign Up
+            </button>
+
+            <button type="button" class="google-button">
+                <i class="fa-brands fa-google"></i>
+                Sign in with Google
+            </button>
+
+        </form>
+    </div>
+
+    <!-- TERMS MODAL -->
+    <div class="modal-overlay" ng-show="showTerms" ng-click="closeTerms()">
+        <div class="terms-modal" ng-click="$event.stopPropagation()">
+            <h2>Acceptance of Terms</h2>
+
+            <div class="terms-content">
+                <p>
+                    By accessing or using the services provided by D'est Lounge,
+                    you agree to be bound by these Terms of Use.
+                </p>
+
+                <h4> 1. Acceptance of Terms </h4>
+                <p>
+                    By accessing or using the services provided by D'est Lounge, you agree to be bound by these Terms of Use ("Terms"), which govern your use of the system's functions, including registration, authentication, content access, booking, and providing feedback/reviews.
+                </p>
+
+                <h4>2. User Accounts and Authentication</h4>
+                <p>
+                    Registration: Users must provide accurate and complete information when registering an account.
+                </p>
+
+                <p>
+                    Login Methods: Users may log in using traditional account credentials (username/password) or through the "Login via Google" integration.
+                </p>
+
+                <p>
+                    Security and Responsibility: You are responsible for maintaining the confidentiality of your password and for all activities that occur under your account. You agree to notify us immediately of any unauthorized use of your account.
+                </p>
+
+                <p>
+                    Password Recovery: If you forget your password, you must use the "Forgot Password" feature, which requires OTP verification sent to your registered email account to ensure protection against misuse.
+                </p>
+
+                <h4>3. Content and Use of Services (Customer/Owner Role)</h4>
+
+                <p>
+                    Solely for Consumption and Task Completion: The Customer's engagement with the system's content is centered on consumption and task completion, including service booking and information viewing. The Customer is not generally focused on content creation or editing within the core content management function.
+                </p>
+
+                <p>
+                    Booking Confirmation and Payment: All service bookings require a non-refundable down payment of 40% of the total estimated cost to secure the booking. By finalizing a booking, the Customer agrees to this payment requirement.
+                </p>
+
+                <p>
+                    Service Booking: Customers may use the system to book services as defined by the system Owner.
+                </p>
+
+                <p>
+                    Condition for Review: Customers can only add reviews after successfully completing their appointment/service.
+                </p>
+
+                <p>
+                    Review Ownership and Rights: You grant the system and its Owner a perpetual, irrevocable, worldwide, non-exclusive license to use, reproduce, modify, adapt, publish, and distribute your reviews.
+                </p>
+
+                <p>
+                    Review Deletion: The system Owner retains the right to delete any review at their sole discretion.
+                </p>
+
+                <h4>
+                    4. Owner's Rights and Responsibilities
+                </h4>
+
+                <p>
+                    The Owner is responsible for the custodial role over all system content and administration of services. The Owner has the right to delete any user-generated review posted in the system.
+                </p>
+
+                <h4>
+                    5. Service Operation
+                </h4>
+                <h4>
+                    5.1 Prohibited Conduct
+                </h4>
+                <p>
+                    You agree not to use the services to:
+                </p>
+                <p>
+                    Post or transmit any content that is false, misleading, unlawful, harmful, threatening, abusive, defamatory, or objectionable.
+                </p>
+                <p>
+                    Impersonate any person or entity.
+                </p>
+                <p>
+                    Violate any applicable local, state, national, or international law.
+                </p>
+                <p>
+                    Interfere with or disrupt the service or servers, or networks connected to the service.
+                </p>
+
+                <h4>
+                    5.2 Booking and Scheduling Rules
+                </h4>
+                <p>
+                    Customers can book only available time slots as defined by the System Admin.
+                </p>
+                <p>
+                    A non-refundable down payment equivalent to 40% of the estimated service cost is required to secure and confirm any booking.
+                </p>
+                <p>
+                    Customers may reschedule or cancel a booking up to 24 hours before their scheduled time.
+                </p>
+                <p>
+                    The system must prevent double-booking of time slots.
+                </p>
+                <p>
+                    A booking may only be marked as "Done" by the Owner.
+                </p>
+                <p>
+                    Only bookings marked "Done" will allow customers to submit reviews.
+                </p>
+                <h4>
+                    6. Termination
+                </h4>
+                <p>
+                    We may terminate or suspend your access to the service immediately, without prior notice or liability, for any reason, including, without limitation, if you breach these Terms.
+                </p>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="close-btn" ng-click="closeTerms()">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div class="footer-container">
+        <h2 class="footer-title">Follow our Socials!</h2>
+        <div class="social-links">
+            <a href="https://www.tiktok.com/&#64;destlounge"
+               class="social-item"
+               target="_blank">
+                <i class="fa-brands fa-tiktok"></i>
+                <span>destlounge</span>
+            </a>
+            <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
+                <i class="fa-brands fa-facebook"></i>
+                <span>D'est Lounge</span>
+            </a>
+            <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
+                <i class="fa-brands fa-instagram"></i>
+                <span>destlounge</span>
+            </a>
+        </div>
+    </div>
+</footer>
