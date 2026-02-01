@@ -4,9 +4,14 @@ hee hee
 gumagana push sakin - Carl
 
 
-if may na download kayo git paki open sa view sa Visual Studio then terminal then type nyo sa terminal "git --version"
+if may na download kayo git paki open sa view sa Visual Studio then terminal then type nyo sa terminal "git --version" or kahit cmd pwede na yan itype basta may mag show version
 
-if may mag show version ng git nyo meron kayo and type nyo lang "git status" para makita if may nag push
+if may mag show version ng git nyo means meron kayo git na download so just type in cmd "cd C:\Users\carlp\OneDrive\Documents\GitHub\D-est-Lounge-Sales-and-Booking-System" or kung saan man nakalagay sa files ninyo sa computer/laptop repository like saakin, copy nyo lang path kung saan nakalagay then dun nyo paste after ng cd para ma direct sya sa mismong path ng repo
+then after type nyo lang "git status" make sure na labas default branch na "master" then after "git branch" make sure na master pa din then "git remote -v" make sure tama repo like this,  origin  https://github.com/clvllrmn/D-est-Lounge-Sales-and-Booking-System.git (fetch)
+origin  https://github.com/clvllrmn/D-est-Lounge-Sales-and-Booking-System.git (push)
+
+
+afterwards okay na yan i recommend download github desktop for more easy commit and push para makita nyo talaga if nag push ung ginawa nyo madali lang naman turo ko nalang siguro sa free time nyo if u want.
 
 
 if wala naman nag show na git version paki download git sa website 
