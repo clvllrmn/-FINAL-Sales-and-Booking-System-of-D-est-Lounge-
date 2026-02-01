@@ -2,3 +2,13 @@ test
 hee hee
 
 gumagana push sakin - Carl
+
+
+if may na download kayo git paki open sa view sa Visual Studio then terminal then type nyo sa terminal "git --version"
+
+if may mag show version ng git nyo meron kayo and type nyo lang "git status" para makita if may nag push
+
+
+if wala naman nag show na git version paki download git sa website 
+
+https://git-scm.com/install/windows
