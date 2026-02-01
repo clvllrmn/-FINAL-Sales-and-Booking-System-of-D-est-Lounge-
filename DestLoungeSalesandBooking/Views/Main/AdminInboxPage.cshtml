@@ -1,0 +1,433 @@
+﻿@{
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+}
+
+<!-- Sidebar Navigation -->
+<aside class="sidebar">
+    <div class="logo-container">
+        <a href="@Url.Action("Homepage","Main")">
+            <img src="~/Content/Pictures/DestLogo.png" class="sidebar-logo" alt="D'est Lounge">
+        </a>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="@Url.Action("AdminHomepage","Main")" class="nav-item">HOME</a>
+        <a href="@Url.Action("AdminBookingPage","Main")" class="nav-item">BOOKINGS</a>
+        <a href="@Url.Action("AdminServicePage","Main")" class="nav-item">SERVICES</a>
+        <a href="@Url.Action("AdminContactPage","Main")" class="nav-item">CONTACT</a>
+        <a href="@Url.Action("AdminFAQsPage","Main")" class="nav-item">FAQs</a>
+        <a href="@Url.Action("AdminInboxPage","Main")" class="nav-item active">INBOX</a>
+        <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
+    </nav>
+    <div class="sidebar-footer">
+        <a href="@Url.Action("LoginPage","Main")" class="admin-link">
+            <i class="fa-regular fa-user"></i> Admin
+        </a>
+    </div>
+</aside>
+
+<!-- Main Content Area -->
+<div class="main-content">
+    <div class="inbox-page-container">
+        <h1 class="inbox-page-title">Recent Activity</h1>
+
+        <div class="inbox-card-list" ng-controller="DestLoungeSalesandBookingController">
+            <!-- Inbox Card -->
+            <div class="inbox-card" ng-repeat="item in inboxItems">
+                <div class="inbox-row">
+                    <div class="inbox-icon-circle">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div class="inbox-info">
+                        <span class="inbox-label">Client:</span>
+                        <span class="inbox-value">{{item.clientName}}</span>
+                    </div>
+                </div>
+                <hr class="inbox-divider">
+
+                <div class="inbox-row">
+                    <div class="inbox-icon-circle">
+                        <i class="fa-solid fa-tag"></i>
+                    </div>
+                    <div class="inbox-info">
+                        <span class="inbox-label">Service:</span>
+                        <span class="inbox-value">{{item.serviceName}}</span>
+                    </div>
+                </div>
+                <hr class="inbox-divider">
+
+                <div class="inbox-row">
+                    <div class="inbox-icon-circle">
+                        <i class="fa-solid fa-calendar-days"></i>
+                    </div>
+                    <div class="inbox-info">
+                        <span class="inbox-label">Date/Time:</span>
+                        <span class="inbox-value">{{item.dateTime}}</span>
+                    </div>
+                </div>
+                <hr class="inbox-divider">
+
+                <div class="inbox-row">
+                    <div class="inbox-icon-circle">
+                        <i class="fa-solid fa-phone"></i>
+                    </div>
+                    <div class="inbox-info">
+                        <span class="inbox-label">Contact:</span>
+                        <span class="inbox-value">{{item.phone}} - {{item.email}}</span>
+                    </div>
+                    <!-- Expand/Collapse Arrow -->
+                    <button class="inbox-arrow" ng-click="item.expanded = !item.expanded">
+                        <i class="fa-solid fa-chevron-left" ng-class="{'rotated': item.expanded}"></i>
+                    </button>
+                </div>
+
+                <!-- Expanded Detail Section -->
+                <div class="inbox-expanded-detail" ng-show="item.expanded">
+                    <hr class="inbox-divider">
+                    <div class="inbox-expanded-actions">
+                        <button class="btn-confirm" ng-click="confirmBooking(item)">
+                            <i class="fa-solid fa-check"></i> Confirm
+                        </button>
+                        <button class="btn-cancel-booking" ng-click="cancelBooking(item)">
+                            <i class="fa-solid fa-xmark"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <h2 class="footer-title">Follow our Socials!</h2>
+            <div class="social-links">
+                <a href="https://www.tiktok.com/&#64;destlounge"
+                   class="social-item"
+                   target="_blank">
+                    <i class="fa-brands fa-tiktok"></i>
+                    <span>destlounge</span>
+                </a>
+                <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
+                    <i class="fa-brands fa-facebook"></i>
+                    <span>D'est Lounge</span>
+                </a>
+                <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
+                    <i class="fa-brands fa-instagram"></i>
+                    <span>destlounge</span>
+                </a>
+            </div>
+        </div>
+    </footer>
+</div>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Georgia', serif;
+        background-color: #d4c4b0;
+    }
+
+    /* Sidebar */
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 10%;
+        min-width: 9rem;
+        height: 100vh;
+        background-color: #e7dfd6;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 1.25rem 0;
+        z-index: 1000;
+    }
+
+    .logo-container {
+        margin-bottom: 2rem;
+    }
+
+    .sidebar-logo {
+        width: 3.5rem;
+        height: auto;
+    }
+
+    .sidebar-nav {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        width: 100%;
+    }
+
+    .nav-item {
+        color: white;
+        text-decoration: none;
+        padding: 1rem 0.625rem;
+        font-size: 1rem;
+        font-weight: 500;
+        text-align: center;
+        transition: background-color 0.3s;
+        letter-spacing: 0.0625rem;
+        display: block;
+    }
+
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-item.active {
+            background-color: rgba(139, 111, 71, 0.5);
+            border-left: 0.25rem solid #8b6f47;
+        }
+
+    .sidebar-footer {
+        margin-top: auto;
+        padding: 1.25rem 0;
+    }
+
+    .admin-link {
+        color: white;
+        text-decoration: none;
+        font-size: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.3125rem;
+    }
+
+        .admin-link i {
+            font-size: 1.25rem;
+        }
+
+    /* Main Content */
+    .main-content {
+        margin-left: 10%;
+        min-height: 100vh;
+        background-color: #d4c4b0;
+    }
+
+    /* Inbox Page */
+    .inbox-page-container {
+        padding: 2.5rem 3rem;
+        max-width: 750px;
+    }
+
+    .inbox-page-title {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #5d4037;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Inbox Card */
+    .inbox-card {
+        background-color: #f5f0eb;
+        border-radius: 12px;
+        padding: 1.5rem 1.75rem;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Inbox Row */
+    .inbox-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.6rem 0;
+    }
+
+    /* Icon Circles */
+    .inbox-icon-circle {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        background-color: #8b6f47;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.1rem;
+    }
+
+    /* Info Text */
+    .inbox-info {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+
+    .inbox-label {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #3d2817;
+    }
+
+    .inbox-value {
+        font-size: 0.85rem;
+        color: #6b5a4a;
+        margin-top: 0.15rem;
+    }
+
+    /* Divider */
+    .inbox-divider {
+        border: none;
+        border-top: 1px solid #d4c4b0;
+        margin: 0.25rem 0;
+    }
+
+    /* Expand Arrow */
+    .inbox-arrow {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #8b6f47;
+        font-size: 1.1rem;
+        padding: 0.4rem 0.6rem;
+        border-radius: 50%;
+        transition: background-color 0.3s, transform 0.3s;
+    }
+
+        .inbox-arrow:hover {
+            background-color: rgba(139, 111, 71, 0.15);
+        }
+
+        .inbox-arrow .rotated {
+            transform: rotate(180deg);
+        }
+
+    /* Expanded Actions */
+    .inbox-expanded-detail {
+        padding-top: 0.5rem;
+    }
+
+    .inbox-expanded-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        padding: 0.75rem 0 0.25rem;
+    }
+
+    .btn-confirm,
+    .btn-cancel-booking {
+        border: none;
+        border-radius: 20px;
+        padding: 0.5rem 1.25rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: background-color 0.3s, transform 0.2s;
+    }
+
+    .btn-confirm {
+        background-color: #4a7c59;
+        color: white;
+    }
+
+        .btn-confirm:hover {
+            background-color: #3a6347;
+            transform: scale(1.03);
+        }
+
+    .btn-cancel-booking {
+        background-color: #c84b4b;
+        color: white;
+    }
+
+        .btn-cancel-booking:hover {
+            background-color: #a83c3c;
+            transform: scale(1.03);
+        }
+
+    /* Footer */
+    footer {
+        background-color: #e7d7c8;
+        border: 2px solid #d4c4b0;
+        border-left: none;
+        border-right: none;
+        padding: 2.5rem 2rem;
+        margin: 2rem 0 0 0;
+        text-align: center;
+    }
+
+    .footer-container {
+        padding: 0;
+        margin: 0 auto;
+    }
+
+    .footer-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+        margin: 0 0 2rem 0;
+        font-style: italic;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .social-links {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 4rem;
+        flex-wrap: wrap;
+    }
+
+    .social-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        text-decoration: none;
+        color: #3d2817;
+        transition: transform 0.3s ease, color 0.3s ease;
+    }
+
+        .social-item:hover {
+            transform: scale(1.1);
+            color: #6b4423;
+        }
+
+        .social-item i {
+            font-size: 3rem;
+        }
+
+        .social-item span {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .sidebar {
+            width: 6%;
+            min-width: 5rem;
+        }
+
+        .main-content {
+            margin-left: 6%;
+        }
+
+        .nav-item {
+            font-size: 0.65rem;
+            padding: 0.75rem 0.3125rem;
+        }
+
+        .inbox-page-container {
+            padding: 1.5rem 1rem;
+        }
+
+        .inbox-card {
+            padding: 1rem 1.25rem;
+        }
+    }
+</style>
