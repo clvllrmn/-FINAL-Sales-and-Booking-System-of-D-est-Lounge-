@@ -1,0 +1,539 @@
+﻿@{
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+}
+
+<header>
+    <div class="header-container">
+        <div class="logo">
+            <a href="@Url.Action("Homepage","Main")">
+                <img src="~/Content/Pictures/DestLogo.png" class="logo" alt="D'est Lounge">
+            </a>
+        </div>
+        <nav class="main-nav">
+            <a href="@Url.Action("Homepage","Main")">HOME</a>
+            <a href="@Url.Action("ServicePage","Main")">SERVICES</a>
+            <a href="@Url.Action("ContactPage","Main")">CONTACT</a>
+            <a href="@Url.Action("FAQsPage","Main")">FAQs</a>
+        </nav>
+        <div class="header-actions">
+            <a href="@Url.Action("LoginPage","Main")" class="login-link">
+                <i class="fa-regular fa-user"></i> LOGIN/SIGNUP
+            </a>
+            <a href="@Url.Action("ContactPage","Main")" class="email-icon">
+                <i class="fa-solid fa-envelope"></i>
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- Booking Section -->
+<div class="booking-container" ng-controller="DestLoungeSalesandBookingController">
+    <!-- Service Summary -->
+    <div class="service-summary">
+        <h2>Service Summary</h2>
+        <div class="summary-content">
+            <div class="summary-items" ng-show="booking.selectedServices.length > 0">
+                <div class="summary-item" ng-repeat="service in booking.selectedServices">
+                    <span class="service-name">{{service.name}}</span>
+                    <span class="service-price">₱{{service.price}}</span>
+                </div>
+                <div class="summary-divider"></div>
+                <div class="summary-total">
+                    <span class="total-label">Total:</span>
+                    <span class="total-price">₱{{calculateTotal()}}</span>
+                </div>
+            </div>
+            <div class="summary-empty" ng-show="booking.selectedServices.length === 0">
+                <p>No services selected yet</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Form -->
+    <div class="booking-form">
+        <!-- Choose Nail Tech -->
+        <div class="form-group">
+            <label>Choose Nail Tech</label>
+            <select ng-model="booking.nailTech" class="form-select" required>
+                <option value="">Select Nail Tech</option>
+                <option ng-repeat="tech in nailTechs" value="{{tech.id}}">{{tech.name}}</option>
+            </select>
+        </div>
+
+        <!-- Choose Date -->
+        <div class="form-group">
+            <label>Choose Date</label>
+            <input type="date"
+                   ng-model="booking.date"
+                   class="form-select"
+                   min="{{minDate}}"
+                   max="{{maxDate}}"
+                   ng-change="checkAvailability()"
+                   required>
+            <span class="error-message" ng-show="dateFullyBooked">
+                This date is fully booked. Please choose another date.
+            </span>
+        </div>
+
+        <!-- Choose Time -->
+        <div class="form-group">
+            <label>Choose Time</label>
+            <select ng-model="booking.time" class="form-select" required>
+                <option value="">Select Time</option>
+                <option ng-repeat="time in availableTimes" value="{{time}}">{{time}}</option>
+            </select>
+        </div>
+
+        <!-- Choose Services -->
+        <div class="form-group">
+            <label>Choose Services</label>
+            <div class="services-checklist">
+                <div class="service-category">
+                    <h4>Nail Care Services</h4>
+                    <label class="service-checkbox" ng-repeat="service in bookingServices">
+                        <input type="checkbox"
+                               ng-model="service.selected"
+                               ng-change="updateSelectedServices()">
+                        <span class="service-label">
+                            <span class="service-name-check">{{service.name}}</span>
+                            <span class="service-price-check">₱{{service.price}}</span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Book Now Button -->
+        <button type="button"
+                class="book-now-btn"
+                ng-click="submitBooking()"
+                ng-disabled="!isBookingValid()">
+            Book Now
+        </button>
+    </div>
+</div>
+
+<footer>
+    <div class="footer-container">
+        <h2 class="footer-title">Follow our Socials!</h2>
+        <div class="social-links">
+            <a href="https://www.tiktok.com/&#64;destlounge"
+               class="social-item"
+               target="_blank">
+                <i class="fa-brands fa-tiktok"></i>
+                <span>destlounge</span>
+            </a>
+            <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
+                <i class="fa-brands fa-facebook"></i>
+                <span>D'est Lounge</span>
+            </a>
+            <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
+                <i class="fa-brands fa-instagram"></i>
+                <span>destlounge</span>
+            </a>
+        </div>
+    </div>
+</footer>
+
+<style>
+    .booking-container {
+        display: flex;
+        gap: 2rem;
+        padding: 3rem 2rem;
+        background-color: #f5f0eb;
+        min-height: calc(100vh - 400px);
+    }
+
+    /* Service Summary */
+    .service-summary {
+        flex: 0 0 350px;
+        background-color: #e7dfd6;
+        border-radius: 20px;
+        padding: 2rem;
+        height: fit-content;
+        position: sticky;
+        top: 2rem;
+        box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+        .service-summary h2 {
+            font-size: 1.8rem;
+            color: #5d4037;
+            margin: 0 0 1.5rem 0;
+            text-align: center;
+            font-weight: 600;
+        }
+
+    .summary-content {
+        background-color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        min-height: 200px;
+    }
+
+    .summary-items {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+    }
+
+    .service-name {
+        color: #5d4037;
+        font-size: 1rem;
+        font-weight: 500;
+        flex: 1;
+    }
+
+    .service-price {
+        color: #6b4423;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .summary-divider {
+        height: 2px;
+        background-color: #d4c4b0;
+        margin: 1rem 0;
+    }
+
+    .summary-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #5d4037;
+        padding-top: 0.5rem;
+    }
+
+    .total-label {
+        font-size: 1.3rem;
+    }
+
+    .total-price {
+        font-size: 1.4rem;
+        color: #6b4423;
+    }
+
+    .summary-empty {
+        text-align: center;
+        color: #999;
+        padding: 2rem 0;
+        font-style: italic;
+    }
+
+        .summary-empty p {
+            margin: 0;
+        }
+
+    /* Booking Form */
+    .booking-form {
+        flex: 1;
+        background-color: white;
+        border-radius: 20px;
+        padding: 3rem;
+        border: 3px solid #d4c4b0;
+        box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .form-group {
+        margin-bottom: 2rem;
+    }
+
+        .form-group label {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #5d4037;
+            margin-bottom: 0.8rem;
+        }
+
+    /* Form Select - FIXED VERSION with proper padding */
+    .form-select {
+        width: 100%;
+        padding: 1rem 3rem 1rem 1.2rem; /* More right padding for dropdown arrow */
+        font-size: 1rem;
+        border: 2px solid #d4c4b0;
+        border-radius: 25px;
+        background-color: #f9f6f3;
+        outline: none;
+        transition: border-color 0.3s ease;
+        cursor: pointer;
+        height: 52px;
+        box-sizing: border-box;
+        display: block;
+        line-height: 1.5;
+        color: #5d4037;
+        font-family: inherit;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+        .form-select:focus {
+            border-color: #6b4423;
+        }
+
+        /* Select dropdown arrow */
+        .form-select:not([type="date"]) {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%235d4037' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1.2rem center;
+            background-size: 12px;
+        }
+
+        /* Date input specific styling */
+        .form-select[type="date"] {
+            color: #5d4037;
+            font-weight: 400;
+            padding: 1rem 1.2rem; /* Reset padding for date input */
+            position: relative;
+        }
+
+            .form-select[type="date"]::-webkit-calendar-picker-indicator {
+                cursor: pointer;
+                opacity: 0.7;
+                padding: 0;
+                margin: 0;
+                position: absolute;
+                right: 1.2rem;
+            }
+
+            .form-select[type="date"]::-webkit-datetime-edit {
+                padding: 0;
+                display: flex;
+                align-items: center;
+            }
+
+            .form-select[type="date"]::-webkit-datetime-edit-fields-wrapper {
+                padding: 0;
+            }
+
+            .form-select[type="date"]::-webkit-datetime-edit-text {
+                padding: 0 0.3em;
+            }
+
+            .form-select[type="date"]::-webkit-datetime-edit-month-field,
+            .form-select[type="date"]::-webkit-datetime-edit-day-field,
+            .form-select[type="date"]::-webkit-datetime-edit-year-field {
+                padding: 0 0.2em;
+            }
+
+        /* Placeholder styling for empty selects */
+        .form-select option:first-child {
+            color: #999;
+        }
+
+        .form-select:invalid {
+            color: #999;
+        }
+
+        .form-select option {
+            color: #5d4037;
+            padding: 0.5rem;
+        }
+
+    /* Fix for select dropdown options */
+    select.form-select {
+        padding-right: 3rem; /* Ensure space for arrow */
+    }
+
+        /* Ensure the selected text is visible */
+        select.form-select option:checked {
+            background-color: #6b4423;
+            color: white;
+        }
+
+    /* Error message */
+    .error-message {
+        display: block;
+        color: #dc3545;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+        font-weight: 500;
+    }
+
+    /* Services Checklist */
+    .services-checklist {
+        background-color: #f9f6f3;
+        border: 2px solid #d4c4b0;
+        border-radius: 15px;
+        padding: 1.5rem;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+        /* Custom scrollbar for services list */
+        .services-checklist::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .services-checklist::-webkit-scrollbar-track {
+            background: #e7dfd6;
+            border-radius: 10px;
+        }
+
+        .services-checklist::-webkit-scrollbar-thumb {
+            background: #6b4423;
+            border-radius: 10px;
+        }
+
+            .services-checklist::-webkit-scrollbar-thumb:hover {
+                background: #5d3a1f;
+            }
+
+    .service-category {
+        margin-bottom: 1.5rem;
+    }
+
+        .service-category:last-child {
+            margin-bottom: 0;
+        }
+
+        .service-category h4 {
+            font-size: 1.2rem;
+            color: #6b4423;
+            margin: 0 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #d4c4b0;
+            font-weight: 600;
+        }
+
+    .service-checkbox {
+        display: flex;
+        align-items: center;
+        padding: 0.8rem;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: background-color 0.2s ease;
+    }
+
+        .service-checkbox:hover {
+            background-color: #e7dfd6;
+        }
+
+        .service-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 1rem;
+            cursor: pointer;
+            flex-shrink: 0;
+            accent-color: #6b4423;
+        }
+
+    .service-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex: 1;
+        gap: 1rem;
+    }
+
+    .service-name-check {
+        color: #5d4037;
+        font-size: 1rem;
+        font-weight: 500;
+        flex: 1;
+    }
+
+    .service-price-check {
+        color: #6b4423;
+        font-weight: 600;
+        font-size: 1rem;
+        white-space: nowrap;
+    }
+
+    /* Book Now Button */
+    .book-now-btn {
+        width: 100%;
+        padding: 1.2rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: white;
+        background-color: #6b4423;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 2rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+        .book-now-btn:hover:not(:disabled) {
+            background-color: #5d3a1f;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .book-now-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .book-now-btn:disabled {
+            background-color: #9a9a9a;
+            cursor: not-allowed;
+            opacity: 0.6;
+            box-shadow: none;
+        }
+
+    /* Responsive Design */
+    @@media (max-width: 968px) {
+        .booking-container {
+            flex-direction: column;
+        }
+
+        .service-summary {
+            flex: 1;
+            position: static;
+            width: 100%;
+        }
+
+        .booking-form {
+            padding: 2rem;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .booking-container {
+            padding: 2rem 1rem;
+        }
+
+        .service-summary {
+            padding: 1.5rem;
+        }
+
+            .service-summary h2 {
+                font-size: 1.5rem;
+            }
+
+        .booking-form {
+            padding: 1.5rem;
+        }
+
+        .form-group label {
+            font-size: 1rem;
+        }
+
+        .form-select {
+            font-size: 0.95rem;
+            height: 48px;
+            padding: 0.9rem 2.5rem 0.9rem 1rem;
+        }
+
+        .book-now-btn {
+            font-size: 1.1rem;
+            padding: 1rem;
+        }
+    }
+</style>
