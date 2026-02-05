@@ -24,6 +24,32 @@
         </div>
     </div>
 </header>
+
+<div class="profile-container">
+    <aside class="sidebar">
+        <nav class="profile-nav">
+            <a href="@Url.Action("ProfilePage","Main")" class="nav-item active">Profile</a>
+            <a href="@Url.Action("CurrentBookingPage","Main")" class="nav-item">Current booking</a>
+            <a href="@Url.Action("ReviewPage","Main")" class="nav-item">To Review</a>
+        </nav>
+    </aside>
+
+    <main class="profile-content">
+        <div class="profile-card">
+            <h2 class="profile-heading">Profile</h2>
+
+            <div class="profile-info">
+                <p class="profile-name">@ViewBag.UserName</p>
+                <p class="profile-email">@ViewBag.UserEmail</p>
+                <p class="profile-label">Contact Number</p>
+                <p class="profile-value">@ViewBag.ContactNumber</p>
+                <p class="profile-label">Address</p>
+                <p class="profile-value">@ViewBag.Address</p>
+            </div>
+        </div>
+    </main>
+</div>
+
 <footer>
     <div class="footer-container">
         <h2 class="footer-title">Follow our Socials!</h2>
@@ -45,3 +71,171 @@
         </div>
     </div>
 </footer>
+
+<style>
+    /* ===== SHARED CONTAINER & SIDEBAR ===== */
+.profile-container {
+    display: flex;
+    min-height: calc(100vh - 200px);
+    background-color: #f5f0eb;
+}
+
+.sidebar {
+    width: 280px;
+    background-color: #d4c4b5;
+    padding: 0;
+    min-height: 100%;
+}
+
+.profile-nav {
+    display: flex;
+    flex-direction: column;
+    padding-top: 40px;
+}
+
+.profile-nav .nav-item {
+    padding: 20px 35px;
+    color: #5a4a3a;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+    display: block;
+}
+
+.profile-nav .nav-item:hover {
+    background-color: #c9b5a3;
+    border-left-color: #6b5544;
+}
+
+.profile-nav .nav-item.active {
+    background-color: #c9b5a3;
+    font-weight: 600;
+    border-left-color: #6b5544;
+}
+
+.profile-content {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 80px 40px;
+}
+
+/* ===== PROFILE PAGE SPECIFIC ===== */
+.profile-card {
+    background-color: #e8ddd1;
+    border-radius: 30px;
+    padding: 50px 60px;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.profile-heading {
+    color: #6b5544;
+    font-size: 32px;
+    font-weight: 600;
+    margin-bottom: 40px;
+    text-align: left;
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.profile-name {
+    color: #5a4a3a;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.profile-email {
+    color: #5a4a3a;
+    font-size: 18px;
+    margin: 0;
+    margin-bottom: 10px;
+}
+
+.profile-label {
+    color: #6b5544;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 15px 0 5px 0;
+}
+
+.profile-value {
+    color: #5a4a3a;
+    font-size: 16px;
+    margin: 0;
+}
+
+/* ===== RESPONSIVE ===== */
+@@media (max-width: 768px) {
+    .profile-container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        padding: 20px 0;
+    }
+
+    .profile-nav {
+        flex-direction: row;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-top: 0;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .profile-nav .nav-item {
+        white-space: nowrap;
+        padding: 15px 20px;
+        border-left: none;
+        border-bottom: 4px solid transparent;
+    }
+
+    .profile-nav .nav-item:hover {
+        border-left-color: transparent;
+        border-bottom-color: #6b5544;
+    }
+
+    .profile-nav .nav-item.active {
+        border-left-color: transparent;
+        border-bottom-color: #6b5544;
+    }
+
+    .profile-content {
+        padding: 40px 20px;
+    }
+
+    .profile-card {
+        padding: 30px 25px;
+    }
+
+    .profile-heading {
+        font-size: 26px;
+        margin-bottom: 30px;
+    }
+}
+
+@@media (max-width: 480px) {
+    .profile-card {
+        padding: 25px 20px;
+        border-radius: 20px;
+    }
+
+    .profile-content {
+        padding: 30px 15px;
+    }
+
+    .profile-heading {
+        font-size: 24px;
+    }
+}
+</style>

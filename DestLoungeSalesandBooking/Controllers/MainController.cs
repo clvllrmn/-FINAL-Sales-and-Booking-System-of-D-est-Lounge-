@@ -46,6 +46,42 @@ namespace DestLoungeSalesandBooking.Controllers
         {
             return View();
         }
+        public ActionResult AdminHomepage()
+        {
+            return View();
+        }
+        public ActionResult AdminContactPage() 
+        {
+            return View();
+        }
+        public ActionResult AdminFAQsPage()
+        {
+            return View();
+        }
+        public ActionResult AdminBookingPage()
+        {
+            return View();
+        }
+        public ActionResult AdminServicePage()
+        {
+            return View();
+        }
+        public ActionResult AdminInboxPage()
+        {
+            return View();
+        }
+        public ActionResult AdminSalesPage()
+        {
+            return View();
+        }
+        public ActionResult CurrentBookingPage()
+        {
+            return View();
+        }
+        public ActionResult ReviewPage()
+        {
+            return View();
+        }
 
         // POST: SignupPage - Handle form submission
         [HttpPost]

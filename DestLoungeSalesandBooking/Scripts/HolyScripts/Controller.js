@@ -313,3 +313,70 @@ app.directive('compareTo', function () {
         }
     };
 });
+
+
+// Sample bookings data
+
+
+//$scope.selectedFilter = 'all';
+//$scope.filteredBookings = $scope.bookings;
+
+//// Filter bookings based on selected tab
+//$scope.filterBookings = function (filter) {
+//    $scope.selectedFilter = filter;
+
+//    if (filter === 'all') {
+//        $scope.filteredBookings = $scope.bookings;
+//    } else if (filter === 'today') {
+//        $scope.filteredBookings = $scope.bookings.filter(function (booking) {
+//            var today = new Date();
+//            return booking.date.toDateString() === today.toDateString();
+//        });
+//    } else if (filter === 'upcoming') {
+//        $scope.filteredBookings = $scope.bookings.filter(function (booking) {
+//            return booking.status === 'upcoming';
+//        });
+//    } else if (filter === 'completed') {
+//        $scope.filteredBookings = $scope.bookings.filter(function (booking) {
+//            return booking.status === 'completed';
+//        });
+//    }
+//};
+
+// Mark booking as complete
+//$scope.markAsComplete = function (bookingId) {
+//    if (confirm('Mark this booking as complete?')) {
+//        var booking = $scope.bookings.find(function (b) { return b.id === bookingId; });
+//        if (booking) {
+//            booking.status = 'completed';
+//            console.log('Booking marked as complete:', bookingId);
+//            // TODO: Call backend to update booking status
+//            // $http.post('/api/bookings/complete', { id: bookingId });
+//        }
+//    }
+//};
+
+
+// Add these functions inside your controller (after the services data)
+
+//$scope.editService = function (index) {
+//    console.log('Editing service:', index);
+//    alert('Edit service: ' + $scope.services[index].name);
+//    // TODO: Implement edit functionality
+//    // You can redirect to edit page or open a modal
+//};
+
+//$scope.deleteService = function (index) {
+//    if (confirm('Are you sure you want to delete ' + $scope.services[index].name + '?')) {
+//        console.log('Deleting service:', index);
+//        $scope.services.splice(index, 1);
+//        // TODO: Call backend to delete from database
+//    }
+//};
+
+//$scope.addNewService = function () {
+//    console.log('Adding new service');
+//    alert('Add new service');
+//    // TODO: Implement add functionality
+//    // You can redirect to add page or open a modal
+//};
