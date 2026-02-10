@@ -249,6 +249,153 @@
             });
         };
 
+        // ===================== ADMIN BOOKING LIST (LOAD + FILTER + UI STATE) =====================
+
+        // Holds all bookings from backend
+        $scope.bookings = [];
+        $scope.filteredBookings = [];
+        $scope.selectedFilter = 'all';
+
+        // Helper: parse ASP.NET JSON date "/Date(1770...)/"
+        function parseNetDate(netDateStr) {
+            if (!netDateStr) return null;
+            // supports "/Date(177069...) /"
+            var match = /\/Date\((\d+)\)\//.exec(netDateStr);
+            if (match && match[1]) return new Date(parseInt(match[1], 10));
+            return new Date(netDateStr); // fallback
+        }
+
+        function pad2(n) { return String(n).padStart(2, "0"); }
+
+        function formatDateTime(d, startTime, endTime) {
+            // d: Date
+            if (!d) return "N/A";
+            var day = pad2(d.getDate());
+            var mon = pad2(d.getMonth() + 1);
+            var yr = d.getFullYear();
+
+            // startTime/endTime from DB are like "10:00:00"
+            var st = (startTime || "").substring(0, 5);
+            var et = (endTime || "").substring(0, 5);
+
+            return `${day}/${mon}/${yr} ${st}-${et}`;
+        }
+
+        // Extract cancel reason from Notes (since you append: " | Cancel reason: ...")
+        function extractCancelReason(notes) {
+            if (!notes) return "";
+            var key = "Cancel reason:";
+            var idx = notes.indexOf(key);
+            if (idx === -1) return "";
+            return notes.substring(idx + key.length).trim();
+        }
+
+        // Load list from backend (you already have /booking/List working)
+        $scope.loadBookings = function () {
+            return $http.get("/booking/List").then(function (resp) {
+                var rows = resp.data || [];
+
+                // Map backend shape -> UI shape used by AdminBookingPage.cshtml
+                $scope.bookings = rows.map(function (b) {
+                    var dateObj = parseNetDate(b.BookingDate);
+                    var status = (b.Status || "Pending").trim();
+
+                    // Service label: if you still don’t join tbl_services, show fallback
+                    // Your Notes currently contain "Services: X | NailTech: Y | Downpayment: Z"
+                    var serviceLabel = "ServiceId #" + b.ServiceId;
+                    if (b.Notes && b.Notes.indexOf("Services:") !== -1) {
+                        // quick extract after "Services:"
+                        var s = b.Notes.split("|")[0]; // "Services: ..."
+                        serviceLabel = s.replace("Services:", "").trim();
+                    }
+
+                    return {
+                        // keep original ids
+                        bookingId: b.BookingId,
+
+                        // UI fields your cshtml uses
+                        clientName: "Customer #" + b.CustomerId,
+                        service: serviceLabel,
+                        dateTime: formatDateTime(dateObj, b.StartTime, b.EndTime),
+                        contact: b.Notes ? b.Notes : "N/A",
+
+                        // status
+                        status: status,
+
+                        // cancel reason for display
+                        cancelReason: extractCancelReason(b.Notes),
+
+                        // keep raw if needed later
+                        _raw: b
+                    };
+                });
+
+                // Apply current filter
+                $scope.filterBookings($scope.selectedFilter);
+            }).catch(function (err) {
+                console.error("loadBookings error:", err);
+                alert("❌ Failed to load bookings. Check console.");
+            });
+        };
+
+        // Filters
+        $scope.filterBookings = function (filter) {
+            $scope.selectedFilter = filter;
+
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            function parseCardDateTime(card) {
+                // card.dateTime = "dd/MM/yyyy HH:mm-HH:mm"
+                // we’ll parse the date part only
+                if (!card || !card.dateTime || card.dateTime === "N/A") return null;
+                var datePart = card.dateTime.split(" ")[0]; // dd/MM/yyyy
+                var parts = datePart.split("/");
+                if (parts.length !== 3) return null;
+                var dd = parseInt(parts[0], 10);
+                var mm = parseInt(parts[1], 10);
+                var yy = parseInt(parts[2], 10);
+                var d = new Date(yy, mm - 1, dd);
+                d.setHours(0, 0, 0, 0);
+                return d;
+            }
+
+            if (filter === 'all') {
+                // ✅ THIS IS THE IMPORTANT FIX: include Cancelled in history
+                $scope.filteredBookings = $scope.bookings;
+
+            } else if (filter === 'today') {
+                $scope.filteredBookings = $scope.bookings.filter(function (b) {
+                    var d = parseCardDateTime(b);
+                    return d && d.getTime() === today.getTime();
+                });
+
+            } else if (filter === 'upcoming') {
+                $scope.filteredBookings = $scope.bookings.filter(function (b) {
+                    var d = parseCardDateTime(b);
+                    // upcoming: future dates, and not cancelled
+                    return d && d.getTime() > today.getTime() && b.status !== 'Cancelled';
+                });
+
+            } else if (filter === 'completed') {
+                $scope.filteredBookings = $scope.bookings.filter(function (b) {
+                    return b.status === 'Completed';
+                });
+
+            } else if (filter === 'cancelled') {
+                $scope.filteredBookings = $scope.bookings.filter(function (b) {
+                    return b.status === 'Cancelled';
+                });
+            }
+        };
+
+        // Call this once when admin page loads
+        // (safe even if you open other pages; it will just fail silently if endpoint not reachable)
+        if (window.location.pathname.toLowerCase().indexOf("adminbookingpage") !== -1) {
+            $scope.loadBookings();
+        }
+
+
         // ===== STATUS UPDATE + CANCEL (BACKEND) =====
 
         $scope.updateBookingStatus = function (bookingId, newStatus) {
@@ -260,15 +407,27 @@
                 data: $httpParamSerializerJQLike(payload),
                 headers: { "Content-Type": "application/x-www-form-urlencoded" }
             }).then(function (resp) {
+
+                // ✅ Update locally so it stays visible + badge changes
+                var card = $scope.bookings.find(b => b.bookingId === bookingId);
+                if (card) card.status = newStatus;
+
+                // Re-apply filter (so it moves to Completed tab etc.)
+                $scope.filterBookings($scope.selectedFilter);
+
+                alert(resp.data.message || "Updated.");
                 return resp.data;
+
             }).catch(function (err) {
                 console.error(err);
-                return { success: false, message: "Update failed" };
+                alert("❌ Update failed");
             });
         };
 
+
         $scope.cancelBooking = function (bookingId) {
             var reason = prompt("Cancel reason (optional):") || "";
+
             var payload = { bookingId: bookingId, reason: reason };
 
             return $http({
@@ -277,129 +436,29 @@
                 data: $httpParamSerializerJQLike(payload),
                 headers: { "Content-Type": "application/x-www-form-urlencoded" }
             }).then(function (resp) {
-                return resp.data;
-            }).catch(function (err) {
-                console.error(err);
-                return { success: false, message: "Cancel failed" };
-            });
-        };
 
-        // ===== ADMIN BOOKINGS (READ + FILTER + ACTION BUTTONS) =====
-
-        $scope.selectedFilter = 'all';
-        $scope.bookings = [];
-        $scope.filteredBookings = [];
-
-        function mvcDateToJsDate(mvcDate) {
-            if (!mvcDate) return null;
-            var m = /\/Date\((\d+)\)\//.exec(mvcDate);
-            if (m) return new Date(parseInt(m[1], 10));
-            var d = new Date(mvcDate);
-            return isNaN(d.getTime()) ? null : d;
-        }
-
-        function formatDateTime(row) {
-            var d = mvcDateToJsDate(row.BookingDate);
-            var dateStr = d ? d.toLocaleDateString() : "N/A";
-            var st = row.StartTime ? String(row.StartTime).substring(0, 5) : "";
-            var et = row.EndTime ? String(row.EndTime).substring(0, 5) : "";
-            return dateStr + " " + st + "-" + et;
-        }
-
-        function extractServiceName(row) {
-            if (row.Notes && row.Notes.indexOf("Services:") >= 0) {
-                var after = row.Notes.split("Services:")[1].trim();
-                var servicePart = after.split("|")[0].trim();
-                return servicePart || ("ServiceId #" + row.ServiceId);
-            }
-            return "ServiceId #" + row.ServiceId;
-        }
-
-        $scope.loadBookings = function () {
-            $http.get("/Booking/List").then(function (resp) {
-                var rows = resp.data || [];
-
-                $scope.bookings = rows.map(function (r) {
-                    return {
-                        BookingId: r.BookingId,
-                        CustomerId: r.CustomerId,
-                        ServiceId: r.ServiceId,
-                        Status: r.Status,
-                        Notes: r.Notes,
-                        clientName: "Customer #" + r.CustomerId,
-                        service: extractServiceName(r),
-                        dateTime: formatDateTime(r),
-                        contact: "N/A"
-                    };
-                });
+                // ✅ Update locally so it DOESN’T disappear
+                var card = $scope.bookings.find(b => b.bookingId === bookingId);
+                if (card) {
+                    card.status = "Cancelled";
+                    card.cancelReason = reason;
+                    // optional: also append to contact/notes display
+                    if (reason) card.contact = (card.contact || "") + " | Cancel reason: " + reason;
+                }
 
                 $scope.filterBookings($scope.selectedFilter);
+
+                alert(resp.data.message || "Cancelled.");
+                return resp.data;
+
             }).catch(function (err) {
-                console.error("loadBookings error:", err);
+                console.error(err);
+                alert("❌ Cancel failed");
             });
         };
 
-        $scope.filterBookings = function (filter) {
-            $scope.selectedFilter = filter;
 
-            if (filter === 'all') {
-                $scope.filteredBookings = $scope.bookings;
-                return;
-            }
-
-            if (filter === 'today') {
-                var todayStr = new Date().toLocaleDateString();
-                $scope.filteredBookings = $scope.bookings.filter(function (b) {
-                    return b.dateTime && b.dateTime.indexOf(todayStr) >= 0;
-                });
-                return;
-            }
-
-            if (filter === 'upcoming') {
-                $scope.filteredBookings = $scope.bookings.filter(function (b) {
-                    return b.Status !== "Completed" && b.Status !== "Cancelled";
-                });
-                return;
-            }
-
-            if (filter === 'completed') {
-                $scope.filteredBookings = $scope.bookings.filter(function (b) {
-                    return b.Status === "Completed";
-                });
-                return;
-            }
-
-            $scope.filteredBookings = $scope.bookings;
-        };
-
-        $scope.approveBooking = function (bookingId) {
-            if (!confirm("Approve this booking?")) return;
-            $scope.updateBookingStatus(bookingId, "Approved").then(function (res) {
-                alert(res.message || "Approved.");
-                $scope.loadBookings();
-            });
-        };
-
-        $scope.markAsComplete = function (bookingId) {
-            if (!confirm("Mark this booking as Completed?")) return;
-            $scope.updateBookingStatus(bookingId, "Completed").then(function (res) {
-                alert(res.message || "Completed.");
-                $scope.loadBookings();
-            });
-        };
-
-        $scope.cancelBookingAdmin = function (bookingId) {
-            if (!confirm("Cancel this booking?")) return;
-            $scope.cancelBooking(bookingId).then(function (res) {
-                alert(res.message || "Cancelled.");
-                $scope.loadBookings();
-            });
-        };
-
-        // Load bookings automatically (for AdminBookingPage)
-        setTimeout(function () {
-            $scope.loadBookings();
-        }, 0);
+        
 
         // ===== EXISTING FUNCTIONS =====
 
