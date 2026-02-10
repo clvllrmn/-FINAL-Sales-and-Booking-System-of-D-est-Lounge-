@@ -91,16 +91,56 @@
                     </div>
                     <div class="info-content">
                         <h3>Contact:</h3>
-                        <p>{{booking.contact}}</p>
+                        <p>{{booking.Notes || 'N/A'}}</p>
                     </div>
                 </div>
 
-                <button class="booking-complete-btn" ng-click="markAsComplete(booking.id)" ng-if="booking.status !== 'completed'">
-                    Booking Complete
-                </button>
-                <div class="completed-badge" ng-if="booking.status === 'completed'">
+                <!-- ACTION BUTTONS -->
+                <div style="margin-top:1.5rem; display:flex; gap:0.75rem; flex-wrap:wrap;">
+                    <!-- Approve (only show if not Approved/Completed/Cancelled) -->
+                    <button class="booking-complete-btn"
+                            style="flex:1; background:#8b6f47;"
+                            ng-click="approveBooking(booking.BookingId)"
+                            ng-if="booking.Status !== 'Approved' && booking.Status !== 'Completed' && booking.Status !== 'Cancelled'">
+                        Approve
+                    </button>
+
+                    <!-- Complete (only show if Approved or Pending; hide if Cancelled/Completed) -->
+                    <button class="booking-complete-btn"
+                            style="flex:1;"
+                            ng-click="markAsComplete(booking.BookingId)"
+                            ng-if="booking.Status !== 'Completed' && booking.Status !== 'Cancelled'">
+                        Booking Complete
+                    </button>
+
+                    <!-- Cancel (only show if not Completed/Cancelled) -->
+                    <button class="booking-complete-btn"
+                            style="flex:1; background:#b0413e;"
+                            ng-click="cancelBookingAdmin(booking.BookingId)"
+                            ng-if="booking.Status !== 'Completed' && booking.Status !== 'Cancelled'">
+                        Cancel
+                    </button>
+                </div>
+
+                <!-- STATUS BADGES -->
+                <div class="completed-badge"
+                     ng-if="booking.Status === 'Completed'"
+                     style="background:#4a7c59;">
                     <i class="fa-solid fa-check"></i> Completed
                 </div>
+
+                <div class="completed-badge"
+                     ng-if="booking.Status === 'Approved'"
+                     style="background:#8b6f47;">
+                    <i class="fa-solid fa-thumbs-up"></i> Approved
+                </div>
+
+                <div class="completed-badge"
+                     ng-if="booking.Status === 'Cancelled'"
+                     style="background:#b0413e;">
+                    <i class="fa-solid fa-xmark"></i> Cancelled
+                </div>
+
             </div>
         </div>
     </div>

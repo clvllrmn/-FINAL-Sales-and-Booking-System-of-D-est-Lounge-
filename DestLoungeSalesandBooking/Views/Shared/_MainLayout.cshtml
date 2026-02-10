@@ -6,17 +6,20 @@
     <title>@ViewBag.Title</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
-<body ng-app="DestLoungeSalesandBooking" >
+<body ng-app="DestLoungeSalesandBooking">
     <div>
         @RenderBody()
     </div>
 
-    <script src="~/Scripts/jquery-3.7.0.min.js"></script>
+    
     <script src="~/Scripts/angular.min.js"></script>
     <script src="~/Scripts/HolyScripts/Module.js"></script>
     <script src="~/Scripts/HolyScripts/Service.js"></script>
     <script src="~/Scripts/HolyScripts/Controller.js"></script>
-   
+
+    @RenderSection("scripts", required: false)
+
+
 </body>
 </html>
 

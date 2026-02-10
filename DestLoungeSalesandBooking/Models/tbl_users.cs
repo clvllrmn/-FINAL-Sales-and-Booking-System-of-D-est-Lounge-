@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace DestLoungeSalesandBooking.Models.Maps
+namespace DestLoungeSalesandBooking.Models
+
 {
     public class tbl_users
     {
