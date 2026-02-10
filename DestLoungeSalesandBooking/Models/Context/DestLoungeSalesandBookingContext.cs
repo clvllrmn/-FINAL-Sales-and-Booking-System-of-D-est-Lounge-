@@ -18,10 +18,7 @@ namespace DestLoungeSalesandBooking.Models.Context
 
         // DbSets
         public virtual DbSet<tbl_users> tbl_users { get; set; }
-        /* 
-         public virtual DbSet<tbl_services> tbl_services { get; set; }
-         public virtual DbSet<tbl_booking_services> tbl_booking_services { get; set; }
-         public virtual DbSet<tbl_nail_techs> tbl_nail_techs { get; set; }*/
+        
 
         public virtual DbSet<tbl_sales> tbl_sales { get; set; }
         public virtual DbSet<tbl_sale_items> tbl_sale_items { get; set; }
@@ -34,10 +31,7 @@ namespace DestLoungeSalesandBooking.Models.Context
             // Apply configurations
             modelBuilder.Configurations.Add(new tblUsersMap());
             modelBuilder.Configurations.Add(new tbl_bookings_Map());
-            /*  
-              modelBuilder.Configurations.Add(new tbl_services_Map());
-              modelBuilder.Configurations.Add(new tbl_booking_services_Map());
-              modelBuilder.Configurations.Add(new tbl_nail_techs_Map());*/
+            
 
             base.OnModelCreating(modelBuilder);
         }
