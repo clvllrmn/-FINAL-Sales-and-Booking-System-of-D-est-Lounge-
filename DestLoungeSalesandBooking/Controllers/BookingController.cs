@@ -89,7 +89,6 @@ namespace DestLoungeSalesandBooking.Controllers
         public ActionResult List()
         {
             var items = db.tbl_bookings
-                .Where(b => b.Status != "Cancelled")
                 .OrderByDescending(b => b.CreatedAt)
                 .Take(50)
                 .Select(b => new
@@ -108,6 +107,7 @@ namespace DestLoungeSalesandBooking.Controllers
 
             return Json(items, JsonRequestBehavior.AllowGet);
         }
+
 
         // POST: /Booking/UpdateStatus
         // body: bookingId=1&status=Approved
