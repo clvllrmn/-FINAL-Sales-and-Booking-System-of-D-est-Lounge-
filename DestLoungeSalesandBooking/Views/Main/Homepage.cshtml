@@ -1,5 +1,7 @@
 ﻿@{
     Layout = "~/Views/Shared/_MainLayout.cshtml";
+    var userFirstName = Session["UserFirstName"] as string;
+    var isLoggedIn = Session["UserID"] != null;
 }
 <header>
     <div class="header-container">
@@ -15,16 +17,25 @@
             <a href="@Url.Action("FAQsPage","Main")">FAQs</a>
         </nav>
         <div class="header-actions">
-            <a href="@Url.Action("LoginPage","Main")" class="login-link">
-                <i class="fa-regular fa-user"></i> LOGIN/SIGNUP
-            </a>
+            @if (isLoggedIn)
+            {
+                <span class="welcome-text">Welcome, @userFirstName!</span>
+                <a href="@Url.Action("Logout","Account")" class="login-link">
+                    <i class="fa-solid fa-sign-out-alt"></i> LOGOUT
+                </a>
+            }
+            else
+            {
+                <a href="@Url.Action("LoginPage","Main")" class="login-link">
+                    <i class="fa-regular fa-user"></i> LOGIN/SIGNUP
+                </a>
+            }
             <a href="@Url.Action("ContactPage","Main")" class="email-icon">
                 <i class="fa-solid fa-envelope"></i>
             </a>
         </div>
     </div>
 </header>
-
 <div class="banner-container">
     <div class="banner-text">
         <h1 class="hello">HELLO.</h1>
@@ -33,7 +44,6 @@
         <h2 class="today">TODAY.</h2>
     </div>
 </div>
-
 <div class="services-intro">
     <div class="divider-line"></div>
     <div class="service-text">
@@ -41,7 +51,6 @@
         <p class="service-tagline">Nailed it, every time.</p>
     </div>
 </div>
-
 <!-- Polaroid Images Section -->
 <div class="polaroid-section">
     <div class="polaroid-card">
@@ -63,7 +72,6 @@
         <div class="polaroid-caption">=========</div>
     </div>
 </div>
-
 <!-- D'est Description Box -->
 <div class="dest-description">
     <h3 class="dest-title">D'est</h3>
@@ -73,7 +81,6 @@
         pause from everyday.
     </p>
 </div>
-
 <footer>
     <div class="footer-container">
         <h2 class="footer-title">Follow our Socials!</h2>
@@ -95,7 +102,6 @@
         </div>
     </div>
 </footer>
-
 <style>
     body {
         margin: 0;
@@ -105,5 +111,11 @@
         background-position: center;
         background-repeat: no-repeat;
         background-attachment: fixed;
+    }
+
+    .welcome-text {
+        color: #333;
+        margin-right: 15px;
+        font-weight: 500;
     }
 </style>

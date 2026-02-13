@@ -74,6 +74,10 @@ namespace DestLoungeSalesandBooking.Controllers
         {
             return View();
         }
+        public ActionResult ForgotPasswordPage()
+        {
+            return View();
+        }
         public ActionResult CurrentBookingPage()
         {
             return View();
@@ -82,7 +86,26 @@ namespace DestLoungeSalesandBooking.Controllers
         {
             return View();
         }
+ 
 
+        // ═══════════════════════════════════════════════════════════
+        // FIX 1: Add this action to MainController.cs
+        // (alongside your other GET actions like AdminHomepage, etc.)
+        // ═══════════════════════════════════════════════════════════
+
+        public ActionResult AdminChangePasswordPage()
+        {
+            // Guard: only logged-in admins can reach this page
+            if (Session["RoleID"] == null || (int)Session["RoleID"] != 1)
+            {
+                TempData["ErrorMessage"] = "Unauthorized access.";
+                return RedirectToAction("LoginPage", "Main");
+            }
+            return View();
+        }
+
+
+        
         // POST: SignupPage - Handle form submission
         [HttpPost]
         [ValidateAntiForgeryToken]
