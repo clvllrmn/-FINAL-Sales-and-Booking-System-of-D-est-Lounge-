@@ -26,7 +26,7 @@
 </aside>
 
 <!-- Main Content Area -->
-<div class="main-content">
+<div class="main-content" ng-controller="DestLoungeSalesandBookingController">
     <!-- Contact Section -->
     <div class="contact-container">
         <div class="map-section">
@@ -43,8 +43,12 @@
         <div class="contact-info">
             <div class="contact-header">
                 <h1 class="contact-title">D'est Lounge</h1>
+                <button class="add-contact-btn" ng-click="openAddContactModal()">
+                    <i class="fa-solid fa-plus"></i> Add Contact Info
+                </button>
             </div>
 
+            <!-- Default Contact Info Items -->
             <div class="info-item">
                 <div class="info-content">
                     <i class="fa-solid fa-location-dot"></i>
@@ -54,10 +58,10 @@
                     </div>
                 </div>
                 <div class="admin-controls">
-                    <button class="edit-btn" onclick="editInfo('address')">
+                    <button class="edit-btn" ng-click="editContact({id: 1, type: 'address', title: 'Find us at', details: ['35 M. Cruz St. Sta. Elena St.']})">
                         <i class="fa-solid fa-pen"></i>
                     </button>
-                    <button class="delete-btn" onclick="deleteInfo('address')">
+                    <button class="delete-btn" ng-click="deleteContactById(1)">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
@@ -73,10 +77,10 @@
                     </div>
                 </div>
                 <div class="admin-controls">
-                    <button class="edit-btn" onclick="editInfo('hours')">
+                    <button class="edit-btn" ng-click="editContact({id: 2, type: 'hours', title: 'Business Hours', details: ['9am to 7pm (mon-thurs)', '8am to 8pm (fri-sun)']})">
                         <i class="fa-solid fa-pen"></i>
                     </button>
-                    <button class="delete-btn" onclick="deleteInfo('hours')">
+                    <button class="delete-btn" ng-click="deleteContactById(2)">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
@@ -91,10 +95,10 @@
                     </div>
                 </div>
                 <div class="admin-controls">
-                    <button class="edit-btn" onclick="editInfo('phone')">
+                    <button class="edit-btn" ng-click="editContact({id: 3, type: 'phone', title: 'Call us!', details: ['+63 912 345 6789']})">
                         <i class="fa-solid fa-pen"></i>
                     </button>
-                    <button class="delete-btn" onclick="deleteInfo('phone')">
+                    <button class="delete-btn" ng-click="deleteContactById(3)">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
@@ -109,14 +113,117 @@
                     </div>
                 </div>
                 <div class="admin-controls">
-                    <button class="edit-btn" onclick="editInfo('email')">
+                    <button class="edit-btn" ng-click="editContact({id: 4, type: 'email', title: 'Email us!', details: ['destlounge@gmail.com']})">
                         <i class="fa-solid fa-pen"></i>
                     </button>
-                    <button class="delete-btn" onclick="deleteInfo('email')">
+                    <button class="delete-btn" ng-click="deleteContactById(4)">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
             </div>
+
+            <!-- Dynamic Contact Info Items (Added by Admin) -->
+            <div class="info-item" ng-repeat="contact in additionalContactInfo">
+                <div class="info-content">
+                    <i class="fa-solid" ng-class="getIconClass(contact.type)"></i>
+                    <div>
+                        <h3>{{contact.title}}</h3>
+                        <p ng-repeat="line in contact.details">
+                            <a ng-if="contact.type === 'phone'" href="tel:{{line}}">{{line}}</a>
+                            <a ng-if="contact.type === 'email'" href="mailto:{{line}}">{{line}}</a>
+                            <span ng-if="contact.type !== 'phone' && contact.type !== 'email'">{{line}}</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="admin-controls">
+                    <button class="edit-btn" ng-click="editContact(contact)">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="delete-btn" ng-click="deleteContact(contact)">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Contact Modal -->
+    <div class="modal-overlay" ng-show="showContactModal" ng-click="closeContactModal()">
+        <div class="contact-modal" ng-click="$event.stopPropagation()">
+            <h2 class="modal-title">{{isEditMode ? 'Edit Contact Info' : 'Add Contact Info'}}</h2>
+
+            <form name="contactForm" novalidate>
+                <!-- Contact Type -->
+                <div class="form-group">
+                    <label for="contactType">Contact Type</label>
+                    <select id="contactType"
+                            name="contactType"
+                            class="form-input"
+                            ng-model="currentContact.type"
+                            ng-change="updateContactTitle()"
+                            required>
+                        <option value="">Select Type</option>
+                        <option value="address">Address</option>
+                        <option value="hours">Business Hours</option>
+                        <option value="phone">Phone Number</option>
+                        <option value="email">Email</option>
+                        <option value="social">Social Media</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <span class="error-message" ng-show="contactForm.contactType.$invalid && contactForm.contactType.$dirty">
+                        Please select a contact type
+                    </span>
+                </div>
+
+                <!-- Title -->
+                <div class="form-group">
+                    <label for="contactTitle">Title</label>
+                    <input type="text"
+                           id="contactTitle"
+                           name="contactTitle"
+                           class="form-input"
+                           placeholder="e.g., Find us at, Call us, Email us"
+                           ng-model="currentContact.title"
+                           required>
+                    <span class="error-message" ng-show="contactForm.contactTitle.$invalid && contactForm.contactTitle.$dirty">
+                        Title is required
+                    </span>
+                </div>
+
+                <!-- Details (Multiple Lines) -->
+                <div class="form-group">
+                    <label>Contact Details</label>
+                    <div ng-repeat="detail in currentContact.details track by $index" class="detail-row">
+                        <input type="text"
+                               class="form-input detail-input"
+                               placeholder="Enter detail (e.g., phone number, address line)"
+                               ng-model="currentContact.details[$index]"
+                               required>
+                        <button type="button"
+                                class="remove-detail-btn"
+                                ng-click="removeDetail($index)"
+                                ng-if="currentContact.details.length > 1">
+                            <i class="fa-solid fa-minus"></i>
+                        </button>
+                    </div>
+                    <button type="button" class="add-detail-btn" ng-click="addDetail()">
+                        <i class="fa-solid fa-plus"></i> Add Another Line
+                    </button>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="modal-actions">
+                    <button type="button" class="cancel-modal-btn" ng-click="closeContactModal()">
+                        Cancel
+                    </button>
+                    <button type="button"
+                            class="save-btn"
+                            ng-click="saveContact()"
+                            ng-disabled="contactForm.$invalid || !hasValidDetails()">
+                        {{isEditMode ? 'Update' : 'Add'}} Contact Info
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -263,6 +370,8 @@
         border-radius: 3.125rem;
         border: 0.1875rem solid #5a4a3a;
         box-shadow: 0.25rem 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
+        max-height: calc(100vh - 10rem);
+        overflow-y: auto;
     }
 
     .contact-header {
@@ -274,9 +383,34 @@
         font-size: 3.5rem;
         font-weight: 600;
         color: #6b4423;
-        margin: 0;
+        margin: 0 0 1.5rem 0;
         font-family: 'Brush Script MT', cursive;
         font-style: italic;
+    }
+
+    .add-contact-btn {
+        background-color: #6b4423;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: 'Georgia', serif;
+    }
+
+    .add-contact-btn:hover {
+        background-color: #5d3a1f;
+        transform: scale(1.05);
+    }
+
+    .add-contact-btn i {
+        font-size: 0.85rem;
     }
 
     .info-item {
@@ -380,6 +514,177 @@
         font-size: 0.875rem;
     }
 
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .contact-modal {
+        background-color: white;
+        padding: 2.5rem;
+        border-radius: 10px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-title {
+        color: #5d4037;
+        margin-top: 0;
+        margin-bottom: 2rem;
+        font-size: 2rem;
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+        text-align: left;
+    }
+
+    .form-group label {
+        display: block;
+        color: #5d4037;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 1rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.9rem 1.2rem;
+        font-size: 1rem;
+        border: 2px solid #d4c4b0;
+        border-radius: 8px;
+        box-sizing: border-box;
+        outline: none;
+        transition: border-color 0.3s ease;
+        font-family: 'Georgia', serif;
+    }
+
+    .form-input:focus {
+        border-color: #8b6f47;
+    }
+
+    .form-input.ng-invalid.ng-dirty {
+        border-color: #dc3545;
+    }
+
+    select.form-input {
+        cursor: pointer;
+    }
+
+    .detail-row {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .detail-input {
+        flex: 1;
+    }
+
+    .remove-detail-btn {
+        background-color: #c84b4b;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 2.5rem;
+        height: 2.5rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+        flex-shrink: 0;
+    }
+
+    .remove-detail-btn:hover {
+        background-color: #a03834;
+        transform: scale(1.1);
+    }
+
+    .add-detail-btn {
+        background-color: #8b6f47;
+        color: white;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 0.5rem;
+        font-family: 'Georgia', serif;
+    }
+
+    .add-detail-btn:hover {
+        background-color: #7a5f3d;
+    }
+
+    .error-message {
+        color: #dc3545;
+        font-size: 0.85rem;
+        margin-top: 0.3rem;
+        display: block;
+    }
+
+    .modal-actions {
+        margin-top: 2rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    .cancel-modal-btn,
+    .save-btn {
+        padding: 0.9rem 2.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Georgia', serif;
+    }
+
+    .cancel-modal-btn {
+        color: #5d4037;
+        background-color: #e7dfd6;
+    }
+
+    .cancel-modal-btn:hover {
+        background-color: #d4c4b0;
+    }
+
+    .save-btn {
+        color: white;
+        background-color: #6b4423;
+    }
+
+    .save-btn:hover:not(:disabled) {
+        background-color: #5d3a1f;
+        transform: scale(1.02);
+    }
+
+    .save-btn:disabled {
+        background-color: #9a9a9a;
+        cursor: not-allowed;
+    }
+
     /* Footer */
     footer {
         background-color: rgba(198, 175, 151, 0.7);
@@ -452,26 +757,3 @@
         }
     }
 </style>
-
-<script>
-    function editInfo(type) {
-        // Implement edit functionality
-        console.log('Editing info:', type);
-        // Example: window.location.href = '@Url.Action("EditContactInfo", "Admin")?type=' + type;
-        alert('Edit ' + type + ' information');
-    }
-
-    function deleteInfo(type) {
-        if (confirm('Are you sure you want to delete this ' + type + ' information?')) {
-            // Implement delete functionality
-            console.log('Deleting info:', type);
-            // Example AJAX call:
-            // $.post('@Url.Action("DeleteContactInfo", "Admin")', { type: type }, function(result) {
-            //     if (result.success) {
-            //         location.reload();
-            //     }
-            // });
-            alert('Delete ' + type + ' information');
-        }
-    }
-</script>
