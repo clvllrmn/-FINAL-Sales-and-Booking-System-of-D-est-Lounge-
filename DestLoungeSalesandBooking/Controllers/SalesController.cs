@@ -1,13 +1,10 @@
-﻿using System;
+﻿using DestLoungeSalesandBooking.Models.Context;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Web.Mvc;
-using DestLoungeSalesandBooking.Models;
-using DestLoungeSalesandBooking.Models.Context;
-using System.Data.Entity;
-using MySql.Data.MySqlClient;
-using System.Configuration;
-
-
 
 namespace DestLoungeSalesandBooking.Controllers
 {
@@ -15,245 +12,115 @@ namespace DestLoungeSalesandBooking.Controllers
     {
         private readonly DestLoungeSalesandBookingContext db = new DestLoungeSalesandBookingContext();
 
-        // GET: /Sales/List
-        public ActionResult List()
+        // GET: /Sales/Analytics?range=today|week|month
+        [HttpGet]
+        public ActionResult Analytics(string range = "week")
         {
-            var items = db.tbl_sales
-                .OrderByDescending(s => s.CreatedAt)
-                .Take(50)
+            range = (range ?? "week").Trim().ToLowerInvariant();
+
+            DateTime today = DateTime.Today;
+            DateTime start;
+            DateTime endExclusive;
+
+            if (range == "today")
+            {
+                start = today;
+                endExclusive = today.AddDays(1);
+            }
+            else if (range == "month")
+            {
+                start = new DateTime(today.Year, today.Month, 1);
+                endExclusive = start.AddMonths(1);
+            }
+            else // default: week
+            {
+                // Monday-based week
+                int diff = ((int)today.DayOfWeek - (int)DayOfWeek.Monday);
+                if (diff < 0) diff += 7;
+                start = today.AddDays(-diff);
+                endExclusive = start.AddDays(7);
+                range = "week";
+            }
+
+            var completed = db.tbl_bookings
+                .Where(b => b.Status == "Completed" && b.BookingDate >= start && b.BookingDate < endExclusive)
                 .ToList();
 
-            return Json(items, JsonRequestBehavior.AllowGet);
-        }
-
-        // POST: /Sales/Create
-        // Creates empty sale header. Items are added via AddItem.
-        [HttpPost]
-        public ActionResult Create(int? bookingId, int? customerId, string paymentMethod = "Cash", decimal discount = 0)
-        {
-            var sale = new tbl_sales
-            {
-                BookingId = bookingId,
-                CustomerId = customerId,
-                PaymentMethod = paymentMethod,
-                Discount = discount,
-                Status = "Paid",
-                Subtotal = 0,
-                Total = 0,
-                CreatedAt = DateTime.Now
-            };
-
-            db.tbl_sales.Add(sale);
-            db.SaveChanges();
-
-            return Json(new { success = true, saleId = sale.SaleId });
-        }
-
-        // POST: /Sales/AddItem
-        // Adds item and recomputes totals.
-        [HttpPost]
-        public ActionResult AddItem(int saleId, string itemType, int itemId, string itemName, int qty, decimal unitPrice)
-        {
-            if (qty <= 0) return Json(new { success = false, message = "Qty must be >= 1" });
-            if (unitPrice < 0) return Json(new { success = false, message = "UnitPrice cannot be negative" });
-
-            itemType = (itemType ?? "").Trim();
-
-            if (itemType != "Service" && itemType != "Product")
-                return Json(new { success = false, message = "ItemType must be 'Service' or 'Product'." });
-
-            var sale = db.tbl_sales.FirstOrDefault(s => s.SaleId == saleId);
-            if (sale == null) return Json(new { success = false, message = "Sale not found." });
-
-            var lineTotal = qty * unitPrice;
-
-            var item = new tbl_sale_items
-            {
-                SaleId = saleId,
-                ItemType = itemType,
-                ItemId = itemId,
-                ItemName = itemName ?? "",
-                Qty = qty,
-                UnitPrice = unitPrice,
-                LineTotal = lineTotal
-            };
-
-            db.tbl_sale_items.Add(item);
-            db.SaveChanges();
-
-            // Recompute totals
-            var subtotal = db.tbl_sale_items
-                .Where(i => i.SaleId == saleId)
-                .Select(i => (decimal?)i.LineTotal)
-                .Sum() ?? 0;
-
-            sale.Subtotal = subtotal;
-            sale.Total = Math.Max(0, sale.Subtotal - sale.Discount);
-            db.SaveChanges();
-
-            return Json(new
-            {
-                success = true,
-                message = "Item added.",
-                subtotal = sale.Subtotal,
-                discount = sale.Discount,
-                total = sale.Total
-            });
-        }
-
-        // GET: /Sales/Details?saleId=1
-        public ActionResult Details(int saleId)
-        {
-            var sale = db.tbl_sales.FirstOrDefault(s => s.SaleId == saleId);
-            if (sale == null) return Content("Sale not found.");
-
-            var items = db.tbl_sale_items.Where(i => i.SaleId == saleId).ToList();
-
-            return Json(new { sale, items }, JsonRequestBehavior.AllowGet);
-        }
-
-        // GET: /Sales/TestCreate
-        public ActionResult TestCreate()
-        {
-            var sale = new tbl_sales
-            {
-                BookingId = 1,
-                CustomerId = 1,
-                PaymentMethod = "Cash",
-                Discount = 0,
-                Status = "Paid",
-                Subtotal = 0,
-                Total = 0,
-                CreatedAt = DateTime.Now
-            };
-
-            db.tbl_sales.Add(sale);
-            db.SaveChanges();
-
-            return Content("Created sale. SaleId = " + sale.SaleId);
-        }
-
-        // GET: /Sales/TestAddItem?saleId=1
-        public ActionResult TestAddItem(int saleId)
-        {
-            var item = new tbl_sale_items
-            {
-                SaleId = saleId,
-                ItemType = "Service",
-                ItemId = 1,
-                ItemName = "Test Service",
-                Qty = 1,
-                UnitPrice = 250,
-                LineTotal = 250
-            };
-
-            db.tbl_sale_items.Add(item);
-            db.SaveChanges();
-
-            var sale = db.tbl_sales.First(s => s.SaleId == saleId);
-            var subtotal = db.tbl_sale_items.Where(i => i.SaleId == saleId).Sum(i => i.LineTotal);
-            sale.Subtotal = subtotal;
-            sale.Total = Math.Max(0, sale.Subtotal - sale.Discount);
-            db.SaveChanges();
-
-            return Content("Added item. Subtotal=" + sale.Subtotal + " Total=" + sale.Total);
-        }
-
-
-        // GET: /Sales/Daily?days=30
-        public ActionResult Daily(int days = 30)
-        {
-            var from = DateTime.Today.AddDays(-days + 1);
-
-            // Pull from DB first (MySQL provider limitations)
-            var sales = db.tbl_sales
-                .Where(s => s.CreatedAt >= from)
-                .ToList();
-
-            var data = sales
-                .GroupBy(s => s.CreatedAt.Date)
+            // group by date
+            var byDay = completed
+                .GroupBy(b => b.BookingDate.Date)
+                .OrderBy(g => g.Key)
                 .Select(g => new
                 {
-                    Date = g.Key.ToString("yyyy-MM-dd"),
-                    SalesCount = g.Count(),
-                    TotalSales = g.Sum(x => x.Total),
-                    TotalDiscount = g.Sum(x => x.Discount)
+                    Date = g.Key,
+                    Revenue = g.Sum(x => ExtractDownpayment(x.Notes))
                 })
-                .OrderBy(x => x.Date)
                 .ToList();
 
-            return Json(data, JsonRequestBehavior.AllowGet);
-        }
+            // build chart points
+            var points = new List<object>();
 
-
-        // GET: /Sales/Weekly?weeks=8
-        public ActionResult Weekly(int weeks = 8)
-        {
-            var from = DateTime.Today.AddDays(-(weeks * 7) + 1);
-
-            var sales = db.tbl_sales
-                .Where(s => s.CreatedAt >= from)
-                .ToList();
-
-            var data = sales
-                .GroupBy(s => s.CreatedAt.Date)
-                .Select(g => new
-                {
-                    Date = g.Key.ToString("yyyy-MM-dd"),
-                    TotalSales = g.Sum(x => x.Total)
-                })
-                .OrderBy(x => x.Date)
-                .ToList();
-
-            return Json(data, JsonRequestBehavior.AllowGet);
-        }
-
-
-        // GET: /Sales/SeedSales
-        public ActionResult SeedSales()
-        {
-            var cs = ConfigurationManager.ConnectionStrings["db_destloungesaleandbooking"].ConnectionString;
-
-            using (var conn = new MySqlConnection(cs))
+            if (range == "today")
             {
-                conn.Open();
-
-                // Insert 5 rows, different dates
-                for (int i = 0; i < 5; i++)
+                // single point
+                decimal rev = byDay.Sum(x => x.Revenue);
+                points.Add(new { label = today.ToString("ddd", CultureInfo.InvariantCulture), value = rev });
+            }
+            else if (range == "week")
+            {
+                // always 7 days Mon-Sun (even if 0)
+                for (int i = 0; i < 7; i++)
                 {
-                    var created = DateTime.Today.AddDays(-i).AddHours(10);
-
-                    var cmd = conn.CreateCommand();
-                    cmd.CommandText = @"
-                    INSERT INTO tbl_sales
-                    (BookingId, CustomerId, Subtotal, Discount, Total, PaymentMethod, Status, CreatedAt)
-                    VALUES
-                    (@BookingId, @CustomerId, @Subtotal, @Discount, @Total, @PaymentMethod, @Status, @CreatedAt); ";
-                    cmd.Parameters.AddWithValue("@BookingId", 1);
-                    cmd.Parameters.AddWithValue("@CustomerId", 1);
-                    cmd.Parameters.AddWithValue("@Subtotal", 500 + (i * 50));
-                    cmd.Parameters.AddWithValue("@Discount", 0);
-                    cmd.Parameters.AddWithValue("@Total", 500 + (i * 50));
-                    cmd.Parameters.AddWithValue("@PaymentMethod", "Cash");
-                    cmd.Parameters.AddWithValue("@Status", "Paid");
-                    cmd.Parameters.AddWithValue("@CreatedAt", created);
-
-                    cmd.ExecuteNonQuery();
+                    var d = start.AddDays(i).Date;
+                    var found = byDay.FirstOrDefault(x => x.Date == d);
+                    points.Add(new
+                    {
+                        label = d.ToString("ddd", CultureInfo.InvariantCulture),
+                        value = (found != null ? found.Revenue : 0m)
+                    });
+                }
+            }
+            else // month
+            {
+                int days = DateTime.DaysInMonth(start.Year, start.Month);
+                for (int day = 1; day <= days; day++)
+                {
+                    var d = new DateTime(start.Year, start.Month, day);
+                    var found = byDay.FirstOrDefault(x => x.Date == d);
+                    points.Add(new
+                    {
+                        label = day.ToString(),
+                        value = (found != null ? found.Revenue : 0m)
+                    });
                 }
             }
 
-            return Content("Seeded 5 sales rows.");
+            decimal totalRevenue = byDay.Sum(x => x.Revenue);
+            int totalBookings = completed.Count;
+
+            return Json(new
+            {
+                range,
+                start = start.ToString("yyyy-MM-dd"),
+                endExclusive = endExclusive.ToString("yyyy-MM-dd"),
+                totalRevenue,
+                totalBookings,
+                points
+            }, JsonRequestBehavior.AllowGet);
         }
 
-
-        // GET: /Sales/Count
-        public ActionResult Count()
+        // Notes example contains: "Downpayment: 479"
+        private decimal ExtractDownpayment(string notes)
         {
-            var count = db.tbl_sales.Count();
-            return Content("tbl_sales rows = " + count);
+            if (string.IsNullOrWhiteSpace(notes)) return 0m;
+
+            var match = Regex.Match(notes, @"Downpayment:\s*([0-9]+(\.[0-9]+)?)", RegexOptions.IgnoreCase);
+            if (!match.Success) return 0m;
+
+            if (decimal.TryParse(match.Groups[1].Value, NumberStyles.Number, CultureInfo.InvariantCulture, out var v))
+                return v;
+
+            return 0m;
         }
-
-
-
     }
 }

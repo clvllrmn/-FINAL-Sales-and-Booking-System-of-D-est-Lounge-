@@ -493,6 +493,87 @@
                 }
             }
         };
+
+        // ===================== SALES ANALYTICS (Completed bookings revenue) =====================
+
+        $scope.salesRange = "week";
+        $scope.sales = { totalRevenue: 0, totalBookings: 0, points: [], range: "week" };
+
+        var salesChartInstance = null;
+
+        $scope.setSalesRange = function (range) {
+            $scope.salesRange = range;
+            $scope.loadSalesAnalytics(range);
+        };
+
+        $scope.loadSalesAnalytics = function (range) {
+            range = range || $scope.salesRange || "week";
+
+            return $http.get("/Sales/Analytics", { params: { range: range } })
+                .then(function (resp) {
+                    $scope.sales = resp.data || {};
+                    $scope.renderSalesChart($scope.sales.points || []);
+                })
+                .catch(function (err) {
+                    console.error("Sales analytics error:", err);
+                    alert("❌ Failed to load Sales analytics. Check console.");
+                });
+        };
+
+        $scope.renderSalesChart = function (points) {
+            // Needs Chart.js loaded
+            if (!window.Chart) {
+                console.warn("Chart.js not found. Load Chart.js in _MainLayout or this page.");
+                return;
+            }
+
+            var labels = (points || []).map(p => p.label);
+            var data = (points || []).map(p => Number(p.value || 0));
+
+            var canvas = document.getElementById("salesChart");
+            if (!canvas) return;
+
+            var ctx = canvas.getContext("2d");
+
+            if (salesChartInstance) {
+                salesChartInstance.destroy();
+                salesChartInstance = null;
+            }
+
+            salesChartInstance = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Total Revenue",
+                        data: data,
+                        tension: 0.35,
+                        fill: false,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        };
+
+        // Auto-load ONLY on AdminSalesPage
+        if (window.location.pathname.toLowerCase().indexOf("adminsalespage") !== -1) {
+            setTimeout(function () {
+                $scope.$applyAsync(function () {
+                    $scope.loadSalesAnalytics($scope.salesRange);
+                });
+            }, 0);
+        }
+
     });
 
 app.directive('compareTo', function () {
@@ -509,3 +590,5 @@ app.directive('compareTo', function () {
         }
     };
 });
+
+
