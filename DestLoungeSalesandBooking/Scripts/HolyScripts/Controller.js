@@ -5,7 +5,149 @@
         $scope.showPassword = false;
         $scope.showTerms = false;
 
-        // Services data for Services Page
+        // ===== CONTACT PAGE - LOAD FROM DATABASE =====
+        $scope.contactInfo = [];
+
+        $scope.loadContactInfo = function () {
+            $http.get('/Contact/GetAllContact')
+                .then(function (response) {
+                    if (response.data.success) {
+                        $scope.contactInfo = response.data.data.map(function (contact) {
+                            return {
+                                contactID: contact.contactID,
+                                infoType: contact.infoType,
+                                label: contact.label,
+                                value: contact.value,
+                                icon: contact.icon
+                            };
+                        });
+                        console.log('Contact info loaded:', $scope.contactInfo);
+                    } else {
+                        console.error('Failed to load contact info:', response.data.message);
+                        alert('Failed to load contact info');
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error loading contact info:', error);
+                    alert('Error loading contact info. Please refresh the page.');
+                });
+        };
+
+        // ===== CONTACT CRUD =====
+
+        $scope.addNewContact = function () {
+            console.log('Add contact clicked');
+            var infoType = prompt('Enter Info Type (address, hours, phone, email):');
+            if (!infoType) return;
+
+            var label = prompt('Enter Label (e.g., "Find us at"):');
+            if (!label) return;
+
+            var value = prompt('Enter Value (contact information):');
+            if (!value) return;
+
+            var icon = prompt('Enter Font Awesome Icon Class (e.g., "fa-solid fa-location-dot"):');
+            if (!icon) return;
+
+            $http({
+                method: 'POST',
+                url: '/Contact/CreateContact',
+                data: $httpParamSerializerJQLike({
+                    infoType: infoType.trim(),
+                    label: label.trim(),
+                    value: value.trim(),
+                    icon: icon.trim()
+                }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+                .then(function (response) {
+                    if (response.data.success) {
+                        alert('Contact info created successfully!');
+                        $scope.loadContactInfo();
+                    } else {
+                        alert('Error: ' + response.data.message);
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error creating contact info:', error);
+                    alert('Error creating contact info');
+                });
+        };
+
+        $scope.editContact = function (index) {
+            console.log('Edit contact clicked, index:', index);
+            var contact = $scope.contactInfo[index];
+
+            var infoType = prompt('Edit Info Type:', contact.infoType);
+            if (infoType === null) return;
+
+            var label = prompt('Edit Label:', contact.label);
+            if (label === null) return;
+
+            var value = prompt('Edit Value:', contact.value);
+            if (value === null) return;
+
+            var icon = prompt('Edit Icon Class:', contact.icon);
+            if (icon === null) return;
+
+            $http({
+                method: 'POST',
+                url: '/Contact/UpdateContact/' + contact.contactID,
+                data: $httpParamSerializerJQLike({
+                    infoType: infoType.trim(),
+                    label: label.trim(),
+                    value: value.trim(),
+                    icon: icon.trim()
+                }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+                .then(function (response) {
+                    if (response.data.success) {
+                        alert('Contact info updated successfully!');
+                        $scope.loadContactInfo();
+                    } else {
+                        alert('Error: ' + response.data.message);
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error updating contact info:', error);
+                    alert('Error updating contact info');
+                });
+        };
+
+        $scope.deleteContact = function (index) {
+            console.log('Delete contact clicked, index:', index);
+            var contact = $scope.contactInfo[index];
+
+            if (confirm('Are you sure you want to delete this contact info?')) {
+                $http({
+                    method: 'POST',
+                    url: '/Contact/DeleteContact/' + contact.contactID,
+                    data: {},
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                })
+                    .then(function (response) {
+                        if (response.data.success) {
+                            alert('Contact info deleted successfully!');
+                            $scope.loadContactInfo();
+                        } else {
+                            alert('Error: ' + response.data.message);
+                        }
+                    })
+                    .catch(function (error) {
+                        console.error('Error deleting contact info:', error);
+                        alert('Error deleting contact info');
+                    });
+            }
+        };
+
+        // Load contact info when page loads
+        var currentPath = window.location.pathname.toLowerCase();
+        if (currentPath.indexOf("admincontactpage") !== -1 || currentPath.indexOf("contactpage") !== -1) {
+            $scope.loadContactInfo();
+        }
+
+        // ===== SERVICES PAGE =====
         $scope.services = [
             { name: "Gel Manicure", image: "~/Content/Pictures/service1.jpg", category: "manicure" },
             { name: "French Manicure", image: "~/Content/Pictures/service2.jpg", category: "manicure" },
@@ -26,30 +168,130 @@
             return service.category === $scope.selectedCategory;
         };
 
-        // FAQs data
-        $scope.faqs = [
-            { question: "What is your Opening Hours?", answer: "We are open Monday to Thursday from 9am to 7pm, and Friday to Sunday from 8am to 9pm.", isOpen: true },
-            { question: "Do I need to make an appointment?", answer: "While walk-ins are welcome, we recommend making an appointment to ensure availability and minimize wait time.", isOpen: true },
-            { question: "What is your last call?", answer: "An hour before closing time for a quick service like manicure and pedicure. 2 hours before closing time for longer services like intricate nail art,softgel, and extensions.", isOpen: true },
-            { question: "What are your payment methods?", answer: "We accept payments in cash and mobile payment through Gcash.", isOpen: true },
-            { question: "Do you accept walk-ins?", answer: "Yes! We do! But we highly recommend that you book an appointment to secure your time slot especially during the weekends.", isOpen: true },
-            { question: "What is your booking policy?", answer: "A non-refundable down payment equivalent of 40% of the estimated cost is required to secure and confirm any booking.", isOpen: true }
-        ];
+        // ===== FAQs - LOAD FROM DATABASE =====
+        $scope.faqs = [];
+
+        $scope.loadFAQs = function () {
+            $http.get('/FAQ/GetAllFAQs')
+                .then(function (response) {
+                    if (response.data.success) {
+                        $scope.faqs = response.data.data.map(function (faq) {
+                            return {
+                                faqId: faq.faqId,
+                                question: faq.question,
+                                answer: faq.answer,
+                                isOpen: false
+                            };
+                        });
+                    } else {
+                        console.error('Failed to load FAQs:', response.data.message);
+                        alert('Failed to load FAQs');
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error loading FAQs:', error);
+                    alert('Error loading FAQs. Please refresh the page.');
+                });
+        };
 
         $scope.toggleFaq = function (index) {
             $scope.faqs[index].isOpen = !$scope.faqs[index].isOpen;
         };
 
-        // ===== BOOKING PAGE DATA =====
+        // ===== FAQ CRUD =====
 
-        // Nail Technicians
+        $scope.addNewFaq = function () {
+            var question = prompt('Enter FAQ Question:');
+            if (!question) return;
+
+            var answer = prompt('Enter FAQ Answer:');
+            if (!answer) return;
+
+            $http({
+                method: 'POST',
+                url: '/FAQ/CreateFAQ',
+                data: $httpParamSerializerJQLike({ question: question.trim(), answer: answer.trim() }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+                .then(function (response) {
+                    if (response.data.success) {
+                        alert('FAQ created successfully!');
+                        $scope.loadFAQs();
+                    } else {
+                        alert('Error: ' + response.data.message);
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error creating FAQ:', error);
+                    alert('Error creating FAQ');
+                });
+        };
+
+        $scope.editFaq = function (index) {
+            var faq = $scope.faqs[index];
+
+            var question = prompt('Edit FAQ Question:', faq.question);
+            if (question === null) return;
+
+            var answer = prompt('Edit FAQ Answer:', faq.answer);
+            if (answer === null) return;
+
+            $http({
+                method: 'POST',
+                url: '/FAQ/UpdateFAQ/' + faq.faqId,
+                data: $httpParamSerializerJQLike({ question: question.trim(), answer: answer.trim() }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+                .then(function (response) {
+                    if (response.data.success) {
+                        alert('FAQ updated successfully!');
+                        $scope.loadFAQs();
+                    } else {
+                        alert('Error: ' + response.data.message);
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error updating FAQ:', error);
+                    alert('Error updating FAQ');
+                });
+        };
+
+        $scope.deleteFaq = function (index) {
+            var faq = $scope.faqs[index];
+
+            if (confirm('Are you sure you want to delete this FAQ?')) {
+                $http({
+                    method: 'POST',
+                    url: '/FAQ/DeleteFAQ/' + faq.faqId,
+                    data: {},
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                })
+                    .then(function (response) {
+                        if (response.data.success) {
+                            alert('FAQ deleted successfully!');
+                            $scope.loadFAQs();
+                        } else {
+                            alert('Error: ' + response.data.message);
+                        }
+                    })
+                    .catch(function (error) {
+                        console.error('Error deleting FAQ:', error);
+                        alert('Error deleting FAQ');
+                    });
+            }
+        };
+
+        // Load FAQs on init
+        $scope.loadFAQs();
+
+        // ===== BOOKING PAGE =====
+
         $scope.nailTechs = [
             { id: 1, name: "Name 1" },
             { id: 2, name: "Name 2" },
             { id: 3, name: "Name 3" }
         ];
 
-        // Services with prices for Booking Page
         $scope.bookingServices = [
             { name: "Manicure", price: 99, selected: false },
             { name: "Pedicure", price: 139, selected: false },
@@ -61,7 +303,6 @@
             { name: "Soft Gel-3 (Long)", price: 699, selected: false }
         ];
 
-        // Booking object
         $scope.booking = {
             nailTech: '',
             date: '',
@@ -69,19 +310,16 @@
             selectedServices: []
         };
 
-        // Monday to Thursday: 9am to 7pm
         $scope.weekdayTimes = [
             "09:00 AM", "11:00 AM", "01:00 PM", "03:00 PM", "05:00 PM", "07:00 PM"
         ];
 
-        // Friday to Sunday: 8am to 9pm
         $scope.weekendTimes = [
             "08:00 AM", "10:00 AM", "12:00 PM", "02:00 PM", "04:00 PM", "06:00 PM", "08:00 PM"
         ];
 
         $scope.availableTimes = [];
 
-        // Set minimum date to today and maximum date to 1 month from today
         var today = new Date();
         var dd = String(today.getDate()).padStart(2, '0');
         var mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -167,14 +405,12 @@
                 !$scope.dateFullyBooked;
         };
 
-        // Submit booking (CONNECTED TO BACKEND)
         $scope.submitBooking = function () {
             if (!$scope.isBookingValid()) {
                 alert("Please complete all booking fields.");
                 return;
             }
 
-            // date to yyyy-MM-dd
             var d = $scope.booking.date;
             var dateObj = (d instanceof Date) ? d : new Date(d);
 
@@ -188,25 +424,20 @@
             var dd = String(dateObj.getDate()).padStart(2, "0");
             var bookingDate = yyyy + "-" + mm + "-" + dd;
 
-            // Convert "09:00 AM" to 24h
             function to24h(t) {
                 var parts = t.trim().split(" ");
                 var hm = parts[0].split(":");
                 var hour = parseInt(hm[0], 10);
                 var min = parseInt(hm[1], 10);
                 var ampm = (parts[1] || "").toUpperCase();
-
                 if (ampm === "PM" && hour < 12) hour += 12;
                 if (ampm === "AM" && hour === 12) hour = 0;
-
                 return { hour: hour, min: min };
             }
 
             var start = to24h($scope.booking.time);
             var startHour = start.hour;
             var startMin = start.min;
-
-            // +2 hours slot
             var endHour = startHour + 2;
             var endMin = startMin;
             if (endHour >= 24) endHour -= 24;
@@ -214,7 +445,6 @@
             var startTime = String(startHour).padStart(2, "0") + ":" + String(startMin).padStart(2, "0");
             var endTime = String(endHour).padStart(2, "0") + ":" + String(endMin).padStart(2, "0");
 
-            // TEMP serviceId
             var serviceId = 1;
 
             var payload = {
@@ -249,39 +479,31 @@
             });
         };
 
-        // ===================== ADMIN BOOKING LIST (LOAD + FILTER + UI STATE) =====================
+        // ===== ADMIN BOOKING LIST =====
 
-        // Holds all bookings from backend
         $scope.bookings = [];
         $scope.filteredBookings = [];
         $scope.selectedFilter = 'all';
 
-        // Helper: parse ASP.NET JSON date "/Date(1770...)/"
         function parseNetDate(netDateStr) {
             if (!netDateStr) return null;
-            // supports "/Date(177069...) /"
             var match = /\/Date\((\d+)\)\//.exec(netDateStr);
             if (match && match[1]) return new Date(parseInt(match[1], 10));
-            return new Date(netDateStr); // fallback
+            return new Date(netDateStr);
         }
 
         function pad2(n) { return String(n).padStart(2, "0"); }
 
         function formatDateTime(d, startTime, endTime) {
-            // d: Date
             if (!d) return "N/A";
             var day = pad2(d.getDate());
             var mon = pad2(d.getMonth() + 1);
             var yr = d.getFullYear();
-
-            // startTime/endTime from DB are like "10:00:00"
             var st = (startTime || "").substring(0, 5);
             var et = (endTime || "").substring(0, 5);
-
             return `${day}/${mon}/${yr} ${st}-${et}`;
         }
 
-        // Extract cancel reason from Notes (since you append: " | Cancel reason: ...")
         function extractCancelReason(notes) {
             if (!notes) return "";
             var key = "Cancel reason:";
@@ -290,47 +512,32 @@
             return notes.substring(idx + key.length).trim();
         }
 
-        // Load list from backend (you already have /booking/List working)
         $scope.loadBookings = function () {
             return $http.get("/booking/List").then(function (resp) {
                 var rows = resp.data || [];
 
-                // Map backend shape -> UI shape used by AdminBookingPage.cshtml
                 $scope.bookings = rows.map(function (b) {
                     var dateObj = parseNetDate(b.BookingDate);
                     var status = (b.Status || "Pending").trim();
 
-                    // Service label: if you still don’t join tbl_services, show fallback
-                    // Your Notes currently contain "Services: X | NailTech: Y | Downpayment: Z"
                     var serviceLabel = "ServiceId #" + b.ServiceId;
                     if (b.Notes && b.Notes.indexOf("Services:") !== -1) {
-                        // quick extract after "Services:"
-                        var s = b.Notes.split("|")[0]; // "Services: ..."
+                        var s = b.Notes.split("|")[0];
                         serviceLabel = s.replace("Services:", "").trim();
                     }
 
                     return {
-                        // keep original ids
                         bookingId: b.BookingId,
-
-                        // UI fields your cshtml uses
                         clientName: "Customer #" + b.CustomerId,
                         service: serviceLabel,
                         dateTime: formatDateTime(dateObj, b.StartTime, b.EndTime),
                         contact: b.Notes ? b.Notes : "N/A",
-
-                        // status
                         status: status,
-
-                        // cancel reason for display
                         cancelReason: extractCancelReason(b.Notes),
-
-                        // keep raw if needed later
                         _raw: b
                     };
                 });
 
-                // Apply current filter
                 $scope.filterBookings($scope.selectedFilter);
             }).catch(function (err) {
                 console.error("loadBookings error:", err);
@@ -338,7 +545,6 @@
             });
         };
 
-        // Filters
         $scope.filterBookings = function (filter) {
             $scope.selectedFilter = filter;
 
@@ -346,10 +552,8 @@
             today.setHours(0, 0, 0, 0);
 
             function parseCardDateTime(card) {
-                // card.dateTime = "dd/MM/yyyy HH:mm-HH:mm"
-                // we’ll parse the date part only
                 if (!card || !card.dateTime || card.dateTime === "N/A") return null;
-                var datePart = card.dateTime.split(" ")[0]; // dd/MM/yyyy
+                var datePart = card.dateTime.split(" ")[0];
                 var parts = datePart.split("/");
                 if (parts.length !== 3) return null;
                 var dd = parseInt(parts[0], 10);
@@ -361,27 +565,21 @@
             }
 
             if (filter === 'all') {
-                // ✅ THIS IS THE IMPORTANT FIX: include Cancelled in history
                 $scope.filteredBookings = $scope.bookings;
-
             } else if (filter === 'today') {
                 $scope.filteredBookings = $scope.bookings.filter(function (b) {
                     var d = parseCardDateTime(b);
                     return d && d.getTime() === today.getTime();
                 });
-
             } else if (filter === 'upcoming') {
                 $scope.filteredBookings = $scope.bookings.filter(function (b) {
                     var d = parseCardDateTime(b);
-                    // upcoming: future dates, and not cancelled
                     return d && d.getTime() > today.getTime() && b.status !== 'Cancelled';
                 });
-
             } else if (filter === 'completed') {
                 $scope.filteredBookings = $scope.bookings.filter(function (b) {
                     return b.status === 'Completed';
                 });
-
             } else if (filter === 'cancelled') {
                 $scope.filteredBookings = $scope.bookings.filter(function (b) {
                     return b.status === 'Cancelled';
@@ -389,14 +587,9 @@
             }
         };
 
-        // Call this once when admin page loads
-        // (safe even if you open other pages; it will just fail silently if endpoint not reachable)
         if (window.location.pathname.toLowerCase().indexOf("adminbookingpage") !== -1) {
             $scope.loadBookings();
         }
-
-
-        // ===== STATUS UPDATE + CANCEL (BACKEND) =====
 
         $scope.updateBookingStatus = function (bookingId, newStatus) {
             var payload = { bookingId: bookingId, status: newStatus };
@@ -407,27 +600,19 @@
                 data: $httpParamSerializerJQLike(payload),
                 headers: { "Content-Type": "application/x-www-form-urlencoded" }
             }).then(function (resp) {
-
-                // ✅ Update locally so it stays visible + badge changes
                 var card = $scope.bookings.find(b => b.bookingId === bookingId);
                 if (card) card.status = newStatus;
-
-                // Re-apply filter (so it moves to Completed tab etc.)
                 $scope.filterBookings($scope.selectedFilter);
-
                 alert(resp.data.message || "Updated.");
                 return resp.data;
-
             }).catch(function (err) {
                 console.error(err);
                 alert("❌ Update failed");
             });
         };
 
-
         $scope.cancelBooking = function (bookingId) {
             var reason = prompt("Cancel reason (optional):") || "";
-
             var payload = { bookingId: bookingId, reason: reason };
 
             return $http({
@@ -436,31 +621,22 @@
                 data: $httpParamSerializerJQLike(payload),
                 headers: { "Content-Type": "application/x-www-form-urlencoded" }
             }).then(function (resp) {
-
-                // ✅ Update locally so it DOESN’T disappear
                 var card = $scope.bookings.find(b => b.bookingId === bookingId);
                 if (card) {
                     card.status = "Cancelled";
                     card.cancelReason = reason;
-                    // optional: also append to contact/notes display
                     if (reason) card.contact = (card.contact || "") + " | Cancel reason: " + reason;
                 }
-
                 $scope.filterBookings($scope.selectedFilter);
-
                 alert(resp.data.message || "Cancelled.");
                 return resp.data;
-
             }).catch(function (err) {
                 console.error(err);
                 alert("❌ Cancel failed");
             });
         };
 
-
-        
-
-        // ===== EXISTING FUNCTIONS =====
+        // ===== MISC UI =====
 
         $scope.openTerms = function (event) {
             if (event) {
@@ -493,47 +669,7 @@
                 }
             }
         };
-
-        // ===================== SALES ANALYTICS (Completed bookings revenue) =====================
-
-        $scope.salesRange = "week";
-        $scope.sales = { totalRevenue: 0, totalBookings: 0, points: [], range: "week" };
-
-        var salesChartInstance = null;
-
-        $scope.setSalesRange = function (range) {
-            $scope.salesRange = range;
-            $scope.loadSalesAnalytics(range);
-        };
-
-        $scope.loadSalesAnalytics = function (range) {
-            range = range || $scope.salesRange || "week";
-
-            return $http.get("/Sales/Analytics", { params: { range: range } })
-                .then(function (resp) {
-                    $scope.sales = resp.data || {};
-                    $scope.renderSalesChart($scope.sales.points || []);
-                })
-                .catch(function (err) {
-                    console.error("Sales analytics error:", err);
-                    alert("❌ Failed to load Sales analytics. Check console.");
-                });
-        };
-
-        $scope.renderSalesChart = function (points) {
-            // Needs Chart.js loaded
-            if (!window.Chart) {
-                console.warn("Chart.js not found. Load Chart.js in _MainLayout or this page.");
-                return;
-            }
-
-            var labels = (points || []).map(p => p.label);
-            var data = (points || []).map(p => Number(p.value || 0));
-
-            var canvas = document.getElementById("salesChart");
-            if (!canvas) return;
-
-            var ctx = canvas.getContext("2d");
+    });
 
             if (salesChartInstance) {
                 salesChartInstance.destroy();
@@ -590,5 +726,3 @@ app.directive('compareTo', function () {
         }
     };
 });
-
-

@@ -226,6 +226,8 @@
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Controllers\ContactController.cs" />
+    <Compile Include="Controllers\FAQController.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\BookingController.cs" />
     <Compile Include="Controllers\MainController.cs" />
@@ -235,11 +237,15 @@
     </Compile>
     <Compile Include="Models\Booking\Booking.cs" />
     <Compile Include="Models\Context\DestLoungeSalesandBookingContext.cs" />
+    <Compile Include="Models\Maps\tbl_contact_Map.cs" />
+    <Compile Include="Models\Maps\tbl_faqs_Map.cs" />
     <Compile Include="Models\Maps\tblUsersMap.cs" />
     <Compile Include="Models\Maps\tbl_bookings_Map.cs" />
     <Compile Include="Models\tbl_bookings.cs" />
     <Compile Include="Models\tbl_sales.cs" />
     <Compile Include="Models\tbl_sale_items.cs" />
+    <Compile Include="Models\tbl_faqs.cs" />
+    <Compile Include="Models\tbl_contact.cs" />
     <Compile Include="Models\tbl_users.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

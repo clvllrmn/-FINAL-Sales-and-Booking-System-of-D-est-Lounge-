@@ -2,31 +2,34 @@
     Layout = "~/Views/Shared/_MainLayout.cshtml";
 }
 
-<!-- Sidebar Navigation -->
-<aside class="sidebar">
-    <div class="logo-container">
-        <a href="@Url.Action("Homepage","Main")">
-            <img src="~/Content/Pictures/DestLogo.png" class="sidebar-logo" alt="D'est Lounge">
-        </a>
-    </div>
-    <nav class="sidebar-nav">
-        <a href="@Url.Action("AdminHomepage","Main")" class="nav-item">HOME</a>
-        <a href="@Url.Action("AdminBookingPage","Main")" class="nav-item">BOOKINGS</a>
-        <a href="@Url.Action("AdminServicePage","Main")" class="nav-item ">SERVICES</a>
-        <a href="@Url.Action("AdminContactPage","Main")" class="nav-item active">CONTACT</a>
-        <a href="@Url.Action("AdminFAQsPage","Main")" class="nav-item">FAQs</a>
-        <a href="@Url.Action("AdminInboxPage","Main")" class="nav-item">INBOX</a>
-        <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
-    </nav>
-    <div class="sidebar-footer">
-        <a href="@Url.Action("LoginPage","Main")" class="admin-link">
-            <i class="fa-regular fa-user"></i> Admin
-        </a>
-    </div>
-</aside>
+<!-- Use the correct module name: DestLoungeSalesandBooking -->
+<div ng-app="DestLoungeSalesandBooking" ng-controller="DestLoungeSalesandBookingController">
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="logo-container">
+            <a href="@Url.Action("Homepage","Main")">
+                <img src="~/Content/Pictures/DestLogo.png" class="sidebar-logo" alt="D'est Lounge">
+            </a>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="@Url.Action("AdminHomepage","Main")" class="nav-item">HOME</a>
+            <a href="@Url.Action("AdminBookingPage","Main")" class="nav-item">BOOKINGS</a>
+            <a href="@Url.Action("AdminServicePage","Main")" class="nav-item">SERVICES</a>
+            <a href="@Url.Action("AdminContactPage","Main")" class="nav-item active">CONTACT</a>
+            <a href="@Url.Action("AdminFAQsPage","Main")" class="nav-item">FAQs</a>
+            <a href="@Url.Action("AdminInboxPage","Main")" class="nav-item">INBOX</a>
+            <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="@Url.Action("LoginPage","Main")" class="admin-link">
+                <i class="fa-regular fa-user"></i> Admin
+            </a>
+        </div>
+    </aside>
 
 <!-- Main Content Area -->
-<div class="main-content" ng-controller="DestLoungeSalesandBookingController">
+<div class="main-content">
     <!-- Contact Section -->
     <div class="contact-container">
         <div class="map-section">
@@ -43,12 +46,8 @@
         <div class="contact-info">
             <div class="contact-header">
                 <h1 class="contact-title">D'est Lounge</h1>
-                <button class="add-contact-btn" ng-click="openAddContactModal()">
-                    <i class="fa-solid fa-plus"></i> Add Contact Info
-                </button>
             </div>
 
-            <!-- Default Contact Info Items -->
             <div class="info-item">
                 <div class="info-content">
                     <i class="fa-solid fa-location-dot"></i>
@@ -58,14 +57,13 @@
                     </div>
                 </div>
                 <div class="admin-controls">
-                    <button class="edit-btn" ng-click="editContact({id: 1, type: 'address', title: 'Find us at', details: ['35 M. Cruz St. Sta. Elena St.']})">
+                    <button class="edit-btn" onclick="editInfo('address')">
                         <i class="fa-solid fa-pen"></i>
                     </button>
-                    <button class="delete-btn" ng-click="deleteContactById(1)">
+                    <button class="delete-btn" onclick="deleteInfo('address')">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
-            </div>
 
             <div class="info-item">
                 <div class="info-content">
@@ -77,28 +75,24 @@
                     </div>
                 </div>
                 <div class="admin-controls">
-                    <button class="edit-btn" ng-click="editContact({id: 2, type: 'hours', title: 'Business Hours', details: ['9am to 7pm (mon-thurs)', '8am to 8pm (fri-sun)']})">
+                    <button class="edit-btn" onclick="editInfo('hours')">
                         <i class="fa-solid fa-pen"></i>
                     </button>
-                    <button class="delete-btn" ng-click="deleteContactById(2)">
+                    <button class="delete-btn" onclick="deleteInfo('hours')">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
             </div>
 
-            <div class="info-item">
-                <div class="info-content">
-                    <i class="fa-solid fa-phone"></i>
-                    <div>
-                        <h3>Call us!</h3>
-                        <p><a href="tel:+639123456789">+63 912 345 6789</a></p>
-                    </div>
+                <!-- Fallback message if no contact info -->
+                <div ng-if="contactInfo.length === 0" class="no-data-message">
+                    <p>No contact information added yet. Click "Add Contact Info" to get started.</p>
                 </div>
                 <div class="admin-controls">
-                    <button class="edit-btn" ng-click="editContact({id: 3, type: 'phone', title: 'Call us!', details: ['+63 912 345 6789']})">
+                    <button class="edit-btn" onclick="editInfo('phone')">
                         <i class="fa-solid fa-pen"></i>
                     </button>
-                    <button class="delete-btn" ng-click="deleteContactById(3)">
+                    <button class="delete-btn" onclick="deleteInfo('phone')">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
@@ -113,117 +107,14 @@
                     </div>
                 </div>
                 <div class="admin-controls">
-                    <button class="edit-btn" ng-click="editContact({id: 4, type: 'email', title: 'Email us!', details: ['destlounge@gmail.com']})">
+                    <button class="edit-btn" onclick="editInfo('email')">
                         <i class="fa-solid fa-pen"></i>
                     </button>
-                    <button class="delete-btn" ng-click="deleteContactById(4)">
+                    <button class="delete-btn" onclick="deleteInfo('email')">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
             </div>
-
-            <!-- Dynamic Contact Info Items (Added by Admin) -->
-            <div class="info-item" ng-repeat="contact in additionalContactInfo">
-                <div class="info-content">
-                    <i class="fa-solid" ng-class="getIconClass(contact.type)"></i>
-                    <div>
-                        <h3>{{contact.title}}</h3>
-                        <p ng-repeat="line in contact.details">
-                            <a ng-if="contact.type === 'phone'" href="tel:{{line}}">{{line}}</a>
-                            <a ng-if="contact.type === 'email'" href="mailto:{{line}}">{{line}}</a>
-                            <span ng-if="contact.type !== 'phone' && contact.type !== 'email'">{{line}}</span>
-                        </p>
-                    </div>
-                </div>
-                <div class="admin-controls">
-                    <button class="edit-btn" ng-click="editContact(contact)">
-                        <i class="fa-solid fa-pen"></i>
-                    </button>
-                    <button class="delete-btn" ng-click="deleteContact(contact)">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add/Edit Contact Modal -->
-    <div class="modal-overlay" ng-show="showContactModal" ng-click="closeContactModal()">
-        <div class="contact-modal" ng-click="$event.stopPropagation()">
-            <h2 class="modal-title">{{isEditMode ? 'Edit Contact Info' : 'Add Contact Info'}}</h2>
-
-            <form name="contactForm" novalidate>
-                <!-- Contact Type -->
-                <div class="form-group">
-                    <label for="contactType">Contact Type</label>
-                    <select id="contactType"
-                            name="contactType"
-                            class="form-input"
-                            ng-model="currentContact.type"
-                            ng-change="updateContactTitle()"
-                            required>
-                        <option value="">Select Type</option>
-                        <option value="address">Address</option>
-                        <option value="hours">Business Hours</option>
-                        <option value="phone">Phone Number</option>
-                        <option value="email">Email</option>
-                        <option value="social">Social Media</option>
-                        <option value="other">Other</option>
-                    </select>
-                    <span class="error-message" ng-show="contactForm.contactType.$invalid && contactForm.contactType.$dirty">
-                        Please select a contact type
-                    </span>
-                </div>
-
-                <!-- Title -->
-                <div class="form-group">
-                    <label for="contactTitle">Title</label>
-                    <input type="text"
-                           id="contactTitle"
-                           name="contactTitle"
-                           class="form-input"
-                           placeholder="e.g., Find us at, Call us, Email us"
-                           ng-model="currentContact.title"
-                           required>
-                    <span class="error-message" ng-show="contactForm.contactTitle.$invalid && contactForm.contactTitle.$dirty">
-                        Title is required
-                    </span>
-                </div>
-
-                <!-- Details (Multiple Lines) -->
-                <div class="form-group">
-                    <label>Contact Details</label>
-                    <div ng-repeat="detail in currentContact.details track by $index" class="detail-row">
-                        <input type="text"
-                               class="form-input detail-input"
-                               placeholder="Enter detail (e.g., phone number, address line)"
-                               ng-model="currentContact.details[$index]"
-                               required>
-                        <button type="button"
-                                class="remove-detail-btn"
-                                ng-click="removeDetail($index)"
-                                ng-if="currentContact.details.length > 1">
-                            <i class="fa-solid fa-minus"></i>
-                        </button>
-                    </div>
-                    <button type="button" class="add-detail-btn" ng-click="addDetail()">
-                        <i class="fa-solid fa-plus"></i> Add Another Line
-                    </button>
-                </div>
-
-                <!-- Modal Actions -->
-                <div class="modal-actions">
-                    <button type="button" class="cancel-modal-btn" ng-click="closeContactModal()">
-                        Cancel
-                    </button>
-                    <button type="button"
-                            class="save-btn"
-                            ng-click="saveContact()"
-                            ng-disabled="contactForm.$invalid || !hasValidDetails()">
-                        {{isEditMode ? 'Update' : 'Add'}} Contact Info
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -251,117 +142,117 @@
     </footer>
 </div>
 
-<style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-        margin: 0;
-        padding: 0;
-        font-family: 'Georgia', serif;
-        background-color: #d4c4b0;
-    }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Georgia', serif;
+            background-color: #d4c4b0;
+        }
 
-    /* Sidebar Styles */
-    .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: 10%;
-        min-width: 9rem;
-        height: 100vh;
-        background-color: #e7dfd6;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 1.25rem 0;
-        z-index: 1000;
-    }
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 10%;
+            min-width: 9rem;
+            height: 100vh;
+            background-color: #e7dfd6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.25rem 0;
+            z-index: 1000;
+        }
 
-    .logo-container {
-        margin-bottom: 2rem;
-    }
+        .logo-container {
+            margin-bottom: 2rem;
+        }
 
-    .sidebar-logo {
-        width: 3.5rem;
-        height: auto;
-    }
+        .sidebar-logo {
+            width: 3.5rem;
+            height: auto;
+        }
 
-    .sidebar-nav {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 0.3rem;
-        width: 100%;
-    }
+        .sidebar-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            width: 100%;
+        }
 
-    .nav-item {
-        color: white;
-        text-decoration: none;
-        padding: 1rem 0.625rem;
-        font-size: 1rem;
-        font-weight: 500;
-        text-align: center;
-        transition: background-color 0.3s;
-        letter-spacing: 0.0625rem;
-        display: block;
-    }
+        .nav-item {
+            color: white;
+            text-decoration: none;
+            padding: 1rem 0.625rem;
+            font-size: 1rem;
+            font-weight: 500;
+            text-align: center;
+            transition: background-color 0.3s;
+            letter-spacing: 0.0625rem;
+            display: block;
+        }
 
-    .nav-item:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-    }
+            .nav-item:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+            }
 
-    .nav-item.active {
-        background-color: rgba(139, 111, 71, 0.5);
-        border-left: 0.25rem solid #8b6f47;
-    }
+            .nav-item.active {
+                background-color: rgba(139, 111, 71, 0.5);
+                border-left: 0.25rem solid #8b6f47;
+            }
 
-    .sidebar-footer {
-        margin-top: auto;
-        padding: 1.25rem 0;
-    }
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 1.25rem 0;
+        }
 
-    .admin-link {
-        color: white;
-        text-decoration: none;
-        font-size: 0.75rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.3125rem;
-    }
+        .admin-link {
+            color: white;
+            text-decoration: none;
+            font-size: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3125rem;
+        }
 
-    .admin-link i {
-        font-size: 1.25rem;
-    }
+            .admin-link i {
+                font-size: 1.25rem;
+            }
 
-    /* Main Content Area */
-    .main-content {
-        margin-left: 10%;
-        min-height: 100vh;
-        background-color: #d4c4b0;
-    }
+        /* Main Content Area */
+        .main-content {
+            margin-left: 10%;
+            min-height: 100vh;
+            background-color: #d4c4b0;
+        }
 
-    /* Contact Container */
-    .contact-container {
-        display: flex;
-        min-height: calc(100vh - 25rem);
-        background-color: #d4c4b0;
-        padding: 3rem;
-        gap: 3rem;
-    }
+        /* Contact Container */
+        .contact-container {
+            display: flex;
+            min-height: calc(100vh - 25rem);
+            background-color: #d4c4b0;
+            padding: 3rem;
+            gap: 3rem;
+        }
 
-    .map-section {
-        flex: 1;
-        min-height: 31.25rem;
-        border: 0.1875rem solid #5a4a3a;
-        border-radius: 0.625rem;
-        overflow: hidden;
-        box-shadow: 0.25rem 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
-    }
+        .map-section {
+            flex: 1;
+            min-height: 31.25rem;
+            border: 0.1875rem solid #5a4a3a;
+            border-radius: 0.625rem;
+            overflow: hidden;
+            box-shadow: 0.25rem 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
+        }
 
     .contact-info {
         flex: 1;
@@ -370,47 +261,20 @@
         border-radius: 3.125rem;
         border: 0.1875rem solid #5a4a3a;
         box-shadow: 0.25rem 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
-        max-height: calc(100vh - 10rem);
-        overflow-y: auto;
     }
 
-    .contact-header {
-        text-align: center;
-        margin-bottom: 2.5rem;
-    }
+        .contact-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
 
     .contact-title {
         font-size: 3.5rem;
         font-weight: 600;
         color: #6b4423;
-        margin: 0 0 1.5rem 0;
+        margin: 0;
         font-family: 'Brush Script MT', cursive;
         font-style: italic;
-    }
-
-    .add-contact-btn {
-        background-color: #6b4423;
-        color: white;
-        border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 25px;
-        font-size: 0.95rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-family: 'Georgia', serif;
-    }
-
-    .add-contact-btn:hover {
-        background-color: #5d3a1f;
-        transform: scale(1.05);
-    }
-
-    .add-contact-btn i {
-        font-size: 0.85rem;
     }
 
     .info-item {
@@ -425,265 +289,96 @@
         position: relative;
     }
 
-    .info-item:hover {
-        transform: translateX(0.625rem);
-        box-shadow: 0.25rem 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
-    }
+            .info-item:hover {
+                transform: translateX(0.625rem);
+                box-shadow: 0.25rem 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+            }
 
-    .info-content {
-        display: flex;
-        align-items: flex-start;
-        gap: 1.5rem;
-        flex: 1;
-    }
+        .info-content {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            flex: 1;
+        }
 
-    .info-item i {
-        font-size: 1.5rem;
-        color: #8b6f47;
-        min-width: 2rem;
-    }
+        .info-item i {
+            font-size: 1.5rem;
+            color: #8b6f47;
+            min-width: 2rem;
+        }
 
-    .info-item h3 {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #6b4423;
-        margin: 0 0 0.5rem 0;
-    }
+        .info-item h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #6b4423;
+            margin: 0 0 0.5rem 0;
+        }
 
-    .info-item p {
-        font-size: 1rem;
-        color: #5a4a3a;
-        margin: 0.2rem 0;
-    }
+        .info-item p {
+            font-size: 1rem;
+            color: #5a4a3a;
+            margin: 0.2rem 0;
+            word-break: break-word;
+        }
 
-    .info-item a {
-        color: #6b4423;
-        text-decoration: none;
-        transition: color 0.3s ease;
-    }
+        .info-item a {
+            color: #6b4423;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
 
-    .info-item a:hover {
-        color: #8b6f47;
-        text-decoration: underline;
-    }
+            .info-item a:hover {
+                color: #8b6f47;
+                text-decoration: underline;
+            }
 
-    /* Admin Controls */
-    .admin-controls {
-        display: flex;
-        gap: 0.5rem;
-        align-items: flex-start;
-    }
+        /* Admin Controls */
+        .admin-controls {
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-start;
+            margin-left: 1rem;
+        }
 
-    .edit-btn,
-    .delete-btn {
-        background: rgba(255, 255, 255, 0.95);
-        border: none;
-        border-radius: 50%;
-        width: 2rem;
-        height: 2rem;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s;
-        box-shadow: 0 0.125rem 0.375rem rgba(0, 0, 0, 0.2);
-    }
+        .edit-btn,
+        .delete-btn {
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 0.125rem 0.375rem rgba(0, 0, 0, 0.2);
+        }
 
-    .edit-btn {
-        color: #4a7c59;
-    }
+        .edit-btn {
+            color: #4a7c59;
+        }
 
-    .edit-btn:hover {
-        background: #4a7c59;
-        color: white;
-        transform: scale(1.1);
-    }
+            .edit-btn:hover {
+                background: #4a7c59;
+                color: white;
+                transform: scale(1.1);
+            }
 
-    .delete-btn {
-        color: #c84b4b;
-    }
+        .delete-btn {
+            color: #c84b4b;
+        }
 
-    .delete-btn:hover {
-        background: #c84b4b;
-        color: white;
-        transform: scale(1.1);
-    }
+            .delete-btn:hover {
+                background: #c84b4b;
+                color: white;
+                transform: scale(1.1);
+            }
 
-    .edit-btn i,
-    .delete-btn i {
-        font-size: 0.875rem;
-    }
-
-    /* Modal Styles */
-    .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.6);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-    }
-
-    .contact-modal {
-        background-color: white;
-        padding: 2.5rem;
-        border-radius: 10px;
-        max-width: 600px;
-        width: 90%;
-        max-height: 90vh;
-        overflow-y: auto;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    .modal-title {
-        color: #5d4037;
-        margin-top: 0;
-        margin-bottom: 2rem;
-        font-size: 2rem;
-        text-align: center;
-    }
-
-    .form-group {
-        margin-bottom: 1.5rem;
-        text-align: left;
-    }
-
-    .form-group label {
-        display: block;
-        color: #5d4037;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        font-size: 1rem;
-    }
-
-    .form-input {
-        width: 100%;
-        padding: 0.9rem 1.2rem;
-        font-size: 1rem;
-        border: 2px solid #d4c4b0;
-        border-radius: 8px;
-        box-sizing: border-box;
-        outline: none;
-        transition: border-color 0.3s ease;
-        font-family: 'Georgia', serif;
-    }
-
-    .form-input:focus {
-        border-color: #8b6f47;
-    }
-
-    .form-input.ng-invalid.ng-dirty {
-        border-color: #dc3545;
-    }
-
-    select.form-input {
-        cursor: pointer;
-    }
-
-    .detail-row {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 0.75rem;
-    }
-
-    .detail-input {
-        flex: 1;
-    }
-
-    .remove-detail-btn {
-        background-color: #c84b4b;
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 2.5rem;
-        height: 2.5rem;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s;
-        flex-shrink: 0;
-    }
-
-    .remove-detail-btn:hover {
-        background-color: #a03834;
-        transform: scale(1.1);
-    }
-
-    .add-detail-btn {
-        background-color: #8b6f47;
-        color: white;
-        border: none;
-        padding: 0.6rem 1.2rem;
-        border-radius: 20px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        margin-top: 0.5rem;
-        font-family: 'Georgia', serif;
-    }
-
-    .add-detail-btn:hover {
-        background-color: #7a5f3d;
-    }
-
-    .error-message {
-        color: #dc3545;
-        font-size: 0.85rem;
-        margin-top: 0.3rem;
-        display: block;
-    }
-
-    .modal-actions {
-        margin-top: 2rem;
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-    }
-
-    .cancel-modal-btn,
-    .save-btn {
-        padding: 0.9rem 2.5rem;
-        font-size: 1rem;
-        font-weight: 600;
-        border: none;
-        border-radius: 25px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-family: 'Georgia', serif;
-    }
-
-    .cancel-modal-btn {
-        color: #5d4037;
-        background-color: #e7dfd6;
-    }
-
-    .cancel-modal-btn:hover {
-        background-color: #d4c4b0;
-    }
-
-    .save-btn {
-        color: white;
-        background-color: #6b4423;
-    }
-
-    .save-btn:hover:not(:disabled) {
-        background-color: #5d3a1f;
-        transform: scale(1.02);
-    }
-
-    .save-btn:disabled {
-        background-color: #9a9a9a;
-        cursor: not-allowed;
-    }
+            .edit-btn i,
+            .delete-btn i {
+                font-size: 0.875rem;
+            }
 
     /* Footer */
     footer {
@@ -692,64 +387,64 @@
         margin-top: 5rem;
     }
 
-    .footer-container {
-        text-align: center;
-    }
-
-    .footer-title {
-        font-size: 2.5rem;
-        font-style: italic;
-        color: #5a4a3a;
-        margin-bottom: 2.1875rem;
-        font-family: 'Brush Script MT', cursive;
-    }
-
-    .social-links {
-        display: flex;
-        justify-content: center;
-        gap: 5rem;
-    }
-
-    .social-item {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        text-decoration: none;
-        color: #5a4a3a;
-        transition: transform 0.3s;
-    }
-
-    .social-item:hover {
-        transform: translateY(-0.1875rem);
-    }
-
-    .social-item i {
-        font-size: 2.25rem;
-    }
-
-    .social-item span {
-        font-size: 1rem;
-        font-weight: 500;
-    }
-
-    /* Responsive Design */
-    @@media (max-width: 60rem) {
-        .contact-container {
-            flex-direction: column;
+        .footer-container {
+            text-align: center;
         }
 
-        .map-section {
-            min-height: 25rem;
+        .footer-title {
+            font-size: 2.5rem;
+            font-style: italic;
+            color: #5a4a3a;
+            margin-bottom: 2.1875rem;
+            font-family: 'Brush Script MT', cursive;
         }
 
-        .sidebar {
-            width: 6%;
-            min-width: 5rem;
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 5rem;
         }
 
-        .main-content {
-            margin-left: 6%;
+        .social-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: #5a4a3a;
+            transition: transform 0.3s;
         }
+
+            .social-item:hover {
+                transform: translateY(-0.1875rem);
+            }
+
+            .social-item i {
+                font-size: 2.25rem;
+            }
+
+            .social-item span {
+                font-size: 1rem;
+                font-weight: 500;
+            }
+
+        /* Responsive Design */
+        @@media (max-width: 60rem) {
+            .contact-container {
+                flex-direction: column;
+            }
+
+            .map-section {
+                min-height: 25rem;
+            }
+
+            .sidebar {
+                width: 6%;
+                min-width: 5rem;
+            }
+
+            .main-content {
+                margin-left: 6%;
+            }
 
         .nav-item {
             font-size: 0.65rem;
@@ -757,3 +452,26 @@
         }
     }
 </style>
+
+<script>
+    function editInfo(type) {
+        // Implement edit functionality
+        console.log('Editing info:', type);
+        // Example: window.location.href = '@Url.Action("EditContactInfo", "Admin")?type=' + type;
+        alert('Edit ' + type + ' information');
+    }
+
+    function deleteInfo(type) {
+        if (confirm('Are you sure you want to delete this ' + type + ' information?')) {
+            // Implement delete functionality
+            console.log('Deleting info:', type);
+            // Example AJAX call:
+            // $.post('@Url.Action("DeleteContactInfo", "Admin")', { type: type }, function(result) {
+            //     if (result.success) {
+            //         location.reload();
+            //     }
+            // });
+            alert('Delete ' + type + ' information');
+        }
+    }
+</script>
