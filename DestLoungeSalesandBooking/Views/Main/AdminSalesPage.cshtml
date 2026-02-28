@@ -26,38 +26,97 @@
 </aside>
 
 <!-- Main Content Area -->
-<div class="main-content">
-    <div class="sales-container">
-        <h1 class="sales-title">Salon's Weekly Analytics</h1>
+<div class="main-content" ng-controller="DestLoungeSalesandBookingController">
+    <div class="bookings-container">
+        <h1 class="bookings-title">Salon's Weekly Analytics</h1>
 
-        <!-- Chart Card -->
-        <div class="chart-card">
-            <canvas id="weeklySalesChart"></canvas>
+        <!-- Range Tabs -->
+        <div class="filter-tabs">
+            <button class="tab-btn" ng-class="{'active': salesRange === 'today'}" ng-click="setSalesRange('today')">Today</button>
+            <button class="tab-btn" ng-class="{'active': salesRange === 'week'}" ng-click="setSalesRange('week')">This Week</button>
+            <button class="tab-btn" ng-class="{'active': salesRange === 'month'}" ng-click="setSalesRange('month')">This Month</button>
         </div>
-    </div>
 
-    <!-- Footer -->
-    <footer>
-        <div class="footer-container">
-            <h2 class="footer-title">Follow our Socials!</h2>
-            <div class="social-links">
-                <a href="https://www.tiktok.com/&#64;destlounge"
-                   class="social-item"
-                   target="_blank">
-                    <i class="fa-brands fa-tiktok"></i>
-                    <span>destlounge</span>
-                </a>
-                <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
-                    <i class="fa-brands fa-facebook"></i>
-                    <span>D'est Lounge</span>
-                </a>
-                <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
-                    <i class="fa-brands fa-instagram"></i>
-                    <span>destlounge</span>
-                </a>
+        <!-- KPI Cards -->
+        <div class="sales-kpis">
+            <div class="kpi-card">
+                <div class="kpi-title">Total Revenue</div>
+                <div class="kpi-value">₱ {{sales.totalRevenue || 0}}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Completed Bookings</div>
+                <div class="kpi-value">{{sales.totalBookings || 0}}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Range</div>
+                <div class="kpi-value">{{sales.range || salesRange}}</div>
             </div>
         </div>
-    </footer>
+
+        <!-- Chart -->
+        <div class="chart-wrap">
+            <canvas id="salesChart" height="110"></canvas>
+        </div>
+    </div>
+</div>
+
+<style>
+    .sales-kpis {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .kpi-card {
+        background-color: rgba(232, 223, 213, 0.9);
+        border-radius: 1.25rem;
+        padding: 1.25rem;
+        box-shadow: 0.25rem 0.25rem 0.75rem rgba(0,0,0,0.08);
+    }
+
+    .kpi-title {
+        color: #5a4a3a;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .kpi-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #6b4423;
+    }
+
+    .chart-wrap {
+        background-color: rgba(232, 223, 213, 0.45);
+        border-radius: 1.25rem;
+        padding: 1.25rem;
+        box-shadow: 0.25rem 0.25rem 0.75rem rgba(0,0,0,0.06);
+    }
+</style>
+
+<!-- Footer -->
+<footer>
+    <div class="footer-container">
+        <h2 class="footer-title">Follow our Socials!</h2>
+        <div class="social-links">
+            <a href="https://www.tiktok.com/&#64;destlounge"
+               class="social-item"
+               target="_blank">
+                <i class="fa-brands fa-tiktok"></i>
+                <span>destlounge</span>
+            </a>
+            <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
+                <i class="fa-brands fa-facebook"></i>
+                <span>D'est Lounge</span>
+            </a>
+            <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
+                <i class="fa-brands fa-instagram"></i>
+                <span>destlounge</span>
+            </a>
+        </div>
+    </div>
+</footer>
 </div>
 
 <style>

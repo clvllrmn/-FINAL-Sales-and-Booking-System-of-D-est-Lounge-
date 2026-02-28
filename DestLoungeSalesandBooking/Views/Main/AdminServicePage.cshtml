@@ -26,9 +26,9 @@
 </aside>
 
 <!-- Main Content Area -->
-<div class="main-content">
+<div class="main-content" ng-controller="DestLoungeSalesandBookingController">
     <!-- Services Section -->
-    <div class="services-page-container" ng-controller="DestLoungeSalesandBookingController">
+    <div class="services-page-container">
         <div class="services-sidebar">
             <h2 class="services-sidebar-title">Services</h2>
             <div class="service-category"
@@ -63,15 +63,116 @@
                     <img ng-src="{{service.image}}" alt="{{service.name}}">
                 </div>
                 <div class="service-name">{{service.name}}</div>
+                <div class="service-price">₱{{service.price}}</div>
             </div>
         </div>
     </div>
 
-    <!-- Book Now Button -->
-    <div class="book-now-container">
-        <button class="book-now-button" onclick="window.location.href='@Url.Action("BookingPage","Main")'">
-            Book Now
+    <!-- Add Service Button -->
+    <div class="add-service-container">
+        <button class="add-service-button" ng-click="openAddServiceModal()">
+            <i class="fa-solid fa-plus"></i> Add Service
         </button>
+    </div>
+
+    <!-- Add/Edit Service Modal -->
+    <div class="modal-overlay" ng-show="showServiceModal" ng-click="closeServiceModal()">
+        <div class="service-modal" ng-click="$event.stopPropagation()">
+            <h2 class="modal-title">{{isEditMode ? 'Edit Service' : 'Add New Service'}}</h2>
+
+            <form name="serviceForm" novalidate>
+                <!-- Service Name -->
+                <div class="form-group">
+                    <label for="serviceName">Service Name</label>
+                    <input type="text"
+                           id="serviceName"
+                           name="serviceName"
+                           class="form-input"
+                           placeholder="Enter service name"
+                           ng-model="currentService.name"
+                           required>
+                    <span class="error-message" ng-show="serviceForm.serviceName.$invalid && serviceForm.serviceName.$dirty">
+                        Service name is required
+                    </span>
+                </div>
+
+                <!-- Category -->
+                <div class="form-group">
+                    <label for="serviceCategory">Category</label>
+                    <select id="serviceCategory"
+                            name="serviceCategory"
+                            class="form-input"
+                            ng-model="currentService.category"
+                            required>
+                        <option value="">Select Category</option>
+                        <option value="manicure">Manicure</option>
+                        <option value="pedicure">Pedicure</option>
+                    </select>
+                    <span class="error-message" ng-show="serviceForm.serviceCategory.$invalid && serviceForm.serviceCategory.$dirty">
+                        Please select a category
+                    </span>
+                </div>
+
+                <!-- Price -->
+                <div class="form-group">
+                    <label for="servicePrice">Price (₱)</label>
+                    <input type="number"
+                           id="servicePrice"
+                           name="servicePrice"
+                           class="form-input"
+                           placeholder="Enter price"
+                           ng-model="currentService.price"
+                           min="0"
+                           step="0.01"
+                           required>
+                    <span class="error-message" ng-show="serviceForm.servicePrice.$invalid && serviceForm.servicePrice.$dirty">
+                        Price is required
+                    </span>
+                </div>
+
+                <!-- Description -->
+                <div class="form-group">
+                    <label for="serviceDescription">Description</label>
+                    <textarea id="serviceDescription"
+                              name="serviceDescription"
+                              class="form-textarea"
+                              placeholder="Enter service description"
+                              ng-model="currentService.description"
+                              rows="4"
+                              required></textarea>
+                    <span class="error-message" ng-show="serviceForm.serviceDescription.$invalid && serviceForm.serviceDescription.$dirty">
+                        Description is required
+                    </span>
+                </div>
+
+                <!-- Image Upload -->
+                <div class="form-group">
+                    <label for="serviceImage">Service Image</label>
+                    <input type="file"
+                           id="serviceImage"
+                           name="serviceImage"
+                           class="form-input-file"
+                           accept="image/*"
+                           onchange="angular.element(this).scope().handleImageUpload(this.files[0])">
+                    <div class="image-preview" ng-show="currentService.image">
+                        <img ng-src="{{currentService.image}}" alt="Service Preview">
+                    </div>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" ng-click="closeServiceModal()">
+                        Cancel
+                    </button>
+                    <button type="button"
+                            class="save-btn"
+                            ng-click="saveService()"
+                            ng-disabled="serviceForm.$invalid">
+                        {{isEditMode ? 'Update Service' : 'Add Service'}}
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Footer -->
@@ -97,6 +198,7 @@
         </div>
     </footer>
 </div>
+
 <style>
     * {
         margin: 0;
@@ -156,14 +258,14 @@
         display: block;
     }
 
-        .nav-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
+    .nav-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
 
-        .nav-item.active {
-            background-color: rgba(139, 111, 71, 0.5);
-            border-left: 0.25rem solid #8b6f47;
-        }
+    .nav-item.active {
+        background-color: rgba(139, 111, 71, 0.5);
+        border-left: 0.25rem solid #8b6f47;
+    }
 
     .sidebar-footer {
         margin-top: auto;
@@ -180,9 +282,9 @@
         gap: 0.3125rem;
     }
 
-        .admin-link i {
-            font-size: 1.25rem;
-        }
+    .admin-link i {
+        font-size: 1.25rem;
+    }
 
     /* Main Content */
     .main-content {
@@ -225,25 +327,25 @@
         transition: all 0.3s ease;
     }
 
-        .service-category:hover {
-            background-color: #d4c4b0;
-        }
+    .service-category:hover {
+        background-color: #d4c4b0;
+    }
 
-        .service-category.active {
-            background-color: #6b4423;
-        }
+    .service-category.active {
+        background-color: #6b4423;
+    }
 
-            .service-category.active h3 {
-                color: white;
-            }
+    .service-category.active h3 {
+        color: white;
+    }
 
-        .service-category h3 {
-            font-size: 1rem;
-            color: #5d4037;
-            margin: 0;
-            text-align: center;
-            transition: color 0.3s ease;
-        }
+    .service-category h3 {
+        font-size: 1rem;
+        color: #5d4037;
+        margin: 0;
+        text-align: center;
+        transition: color 0.3s ease;
+    }
 
     /* Services Content Grid */
     .services-content {
@@ -254,7 +356,7 @@
         align-content: start;
     }
 
-    /* Service Card — matches customer UI */
+    /* Service Card */
     .service-card {
         background-color: white;
         border: 3px solid #3d2817;
@@ -264,9 +366,9 @@
         position: relative;
     }
 
-        .service-card:hover {
-            transform: scale(1.05);
-        }
+    .service-card:hover {
+        transform: scale(1.05);
+    }
 
     .service-image {
         width: 100%;
@@ -276,11 +378,11 @@
         margin-bottom: 1rem;
     }
 
-        .service-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+    .service-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 
     .service-name {
         text-align: center;
@@ -289,6 +391,14 @@
         font-weight: 600;
         letter-spacing: 0.1em;
         padding: 0.5rem 0;
+    }
+
+    .service-price {
+        text-align: center;
+        font-size: 1.2rem;
+        color: #6b4423;
+        font-weight: 700;
+        padding: 0.3rem 0;
     }
 
     /* Admin Controls on Cards */
@@ -320,30 +430,30 @@
         color: #4a7c59;
     }
 
-        .edit-btn:hover {
-            background: #4a7c59;
-            color: white;
-            transform: scale(1.1);
-        }
+    .edit-btn:hover {
+        background: #4a7c59;
+        color: white;
+        transform: scale(1.1);
+    }
 
     .delete-btn {
         color: #c84b4b;
     }
 
-        .delete-btn:hover {
-            background: #c84b4b;
-            color: white;
-            transform: scale(1.1);
-        }
+    .delete-btn:hover {
+        background: #c84b4b;
+        color: white;
+        transform: scale(1.1);
+    }
 
-    /* Book Now Button */
-    .book-now-container {
+    /* Add Service Button */
+    .add-service-container {
         text-align: center;
         padding: 3rem 0;
         background-color: #f5f0eb;
     }
 
-    .book-now-button {
+    .add-service-button {
         padding: 1rem 3rem;
         font-size: 1.2rem;
         font-weight: 600;
@@ -354,12 +464,167 @@
         cursor: pointer;
         transition: background-color 0.3s ease, transform 0.2s ease;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
-        .book-now-button:hover {
-            background-color: #5d3a1f;
-            transform: scale(1.05);
-        }
+    .add-service-button:hover {
+        background-color: #5d3a1f;
+        transform: scale(1.05);
+    }
+
+    .add-service-button i {
+        font-size: 1rem;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .service-modal {
+        background-color: white;
+        padding: 2.5rem;
+        border-radius: 10px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-title {
+        color: #5d4037;
+        margin-top: 0;
+        margin-bottom: 2rem;
+        font-size: 2rem;
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+        text-align: left;
+    }
+
+    .form-group label {
+        display: block;
+        color: #5d4037;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 1rem;
+    }
+
+    .form-input,
+    .form-textarea {
+        width: 100%;
+        padding: 0.9rem 1.2rem;
+        font-size: 1rem;
+        border: 2px solid #d4c4b0;
+        border-radius: 8px;
+        box-sizing: border-box;
+        outline: none;
+        transition: border-color 0.3s ease;
+        font-family: 'Georgia', serif;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+        border-color: #8b6f47;
+    }
+
+    .form-input.ng-invalid.ng-dirty,
+    .form-textarea.ng-invalid.ng-dirty {
+        border-color: #dc3545;
+    }
+
+    select.form-input {
+        cursor: pointer;
+    }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .form-input-file {
+        width: 100%;
+        padding: 0.5rem;
+        font-size: 0.95rem;
+        border: 2px dashed #d4c4b0;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    .image-preview {
+        margin-top: 1rem;
+        text-align: center;
+    }
+
+    .image-preview img {
+        max-width: 100%;
+        max-height: 200px;
+        border: 2px solid #d4c4b0;
+        border-radius: 8px;
+    }
+
+    .error-message {
+        color: #dc3545;
+        font-size: 0.85rem;
+        margin-top: 0.3rem;
+        display: block;
+    }
+
+    .modal-actions {
+        margin-top: 2rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    .cancel-btn,
+    .save-btn {
+        padding: 0.9rem 2.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .cancel-btn {
+        color: #5d4037;
+        background-color: #e7dfd6;
+    }
+
+    .cancel-btn:hover {
+        background-color: #d4c4b0;
+    }
+
+    .save-btn {
+        color: white;
+        background-color: #6b4423;
+    }
+
+    .save-btn:hover:not(:disabled) {
+        background-color: #5d3a1f;
+        transform: scale(1.02);
+    }
+
+    .save-btn:disabled {
+        background-color: #9a9a9a;
+        cursor: not-allowed;
+    }
 
     /* Footer */
     footer {
@@ -403,19 +668,19 @@
         transition: transform 0.3s ease, color 0.3s ease;
     }
 
-        .social-item:hover {
-            transform: scale(1.1);
-            color: #6b4423;
-        }
+    .social-item:hover {
+        transform: scale(1.1);
+        color: #6b4423;
+    }
 
-        .social-item i {
-            font-size: 3rem;
-        }
+    .social-item i {
+        font-size: 3rem;
+    }
 
-        .social-item span {
-            font-size: 1.2rem;
-            font-weight: 500;
-        }
+    .social-item span {
+        font-size: 1.2rem;
+        font-weight: 500;
+    }
 
     /* Responsive */
     @@media (max-width: 1024px) {
@@ -451,4 +716,5 @@
         .services-content {
             grid-template-columns: 1fr;
         }
+    }
 </style>

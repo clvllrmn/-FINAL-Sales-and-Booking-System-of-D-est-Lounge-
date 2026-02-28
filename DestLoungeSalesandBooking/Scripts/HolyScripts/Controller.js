@@ -669,6 +669,46 @@
                 }
             }
         };
+    });
+
+            if (salesChartInstance) {
+                salesChartInstance.destroy();
+                salesChartInstance = null;
+            }
+
+            salesChartInstance = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Total Revenue",
+                        data: data,
+                        tension: 0.35,
+                        fill: false,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        };
+
+        // Auto-load ONLY on AdminSalesPage
+        if (window.location.pathname.toLowerCase().indexOf("adminsalespage") !== -1) {
+            setTimeout(function () {
+                $scope.$applyAsync(function () {
+                    $scope.loadSalesAnalytics($scope.salesRange);
+                });
+            }, 0);
+        }
 
     });
 
