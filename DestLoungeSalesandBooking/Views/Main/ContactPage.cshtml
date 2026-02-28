@@ -2,186 +2,185 @@
     Layout = "~/Views/Shared/_MainLayout.cshtml";
 }
 
-<header>
-    <div class="header-container">
-        <div class="logo">
-            <a href="@Url.Action("Homepage","Main")">
-                <img src="~/Content/Pictures/DestLogo.png" class="logo" alt="D'est Lounge">
-            </a>
-        </div>
-        <nav class="main-nav">
-            <a href="@Url.Action("Homepage","Main")">HOME</a>
-            <a href="@Url.Action("ServicePage","Main")">SERVICES</a>
-            <a href="@Url.Action("ContactPage","Main")">CONTACT</a>
-            <a href="@Url.Action("FAQsPage","Main")">FAQs</a>
-        </nav>
-        <div class="header-actions">
-            <a href="@Url.Action("LoginPage","Main")" class="login-link">
-                <i class="fa-regular fa-user"></i> LOGIN/SIGNUP
-            </a>
-            <a href="@Url.Action("ContactPage","Main")" class="email-icon">
-                <i class="fa-solid fa-envelope"></i>
-            </a>
-        </div>
-    </div>
-</header>
-
-<!-- Contact Section -->
-<div class="contact-container">
-    <div class="map-section">
-        <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d3860.395937262591!2d121.095273!3d14.633452000000002!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397b9004a5de963%3A0x7fad844f4bae6342!2zROKAmWVzdCBMb3VuZ2U!5e0!3m2!1sen!2sph!4v1770789541301!5m2!1sen!2sph" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-    </div>
-
-    <div class="contact-info">
-        <h1 class="contact-title">D'est Lounge</h1>
-
-        <div class="info-item">
-            <i class="fa-solid fa-location-dot"></i>
-            <div>
-                <h3>Find us at</h3>
-                <p>35 M. Cruz St. Sta. Elena St.</p>
+<div ng-app="app" ng-controller="DestLoungeSalesandBookingController">
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <a href="@Url.Action("Homepage","Main")">
+                    <img src="~/Content/Pictures/DestLogo.png" class="logo" alt="D'est Lounge">
+                </a>
+            </div>
+            <nav class="main-nav">
+                <a href="@Url.Action("Homepage","Main")">HOME</a>
+                <a href="@Url.Action("ServicePage","Main")">SERVICES</a>
+                <a href="@Url.Action("ContactPage","Main")">CONTACT</a>
+                <a href="@Url.Action("FAQsPage","Main")">FAQs</a>
+            </nav>
+            <div class="header-actions">
+                <a href="@Url.Action("LoginPage","Main")" class="login-link">
+                    <i class="fa-regular fa-user"></i> LOGIN/SIGNUP
+                </a>
+                <a href="@Url.Action("ContactPage","Main")" class="email-icon">
+                    <i class="fa-solid fa-envelope"></i>
+                </a>
             </div>
         </div>
+    </header>
 
-        <div class="info-item">
-            <i class="fa-regular fa-clock"></i>
-            <div>
-                <h3>Business Hours</h3>
-                <p>9am to 7pm (mon-thurs)</p>
-                <p>8am to 9pm (fri-sun)</p>
-            </div>
+    <!-- Contact Section -->
+    <div class="contact-container">
+        <div class="map-section">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d3860.395937262591!2d121.095273!3d14.633452000000002!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397b9004a5de963%3A0x7fad844f4bae6342!2zROKAmWVzdCBMb3VuZ2U!5e0!3m2!1sen!2sph!4v1770789541301!5m2!1sen!2sph" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
 
-        <div class="info-item">
-            <i class="fa-solid fa-phone"></i>
-            <div>
-                <h3>Call us!</h3>
-                <p><a href="tel:+639123456789">+63 912 345 6789</a></p>
-            </div>
-        </div>
+        <div class="contact-info">
+            <h1 class="contact-title">D'est Lounge</h1>
 
-        <div class="info-item">
-            <i class="fa-solid fa-envelope"></i>
-            <div>
-                <h3>Email us!</h3>
-                <p><a href="mailto:destlounge@gmail.com">destlounge@gmail.com</a></p>
+            <!-- Dynamically load contact info from database -->
+            <div class="info-item" ng-repeat="contact in contactInfo">
+                <i ng-class="contact.icon"></i>
+                <div>
+                    <h3>{{ contact.label }}</h3>
+                    <!-- Handle special cases for phone and email links -->
+                    <p ng-if="contact.infoType === 'phone'">
+                        <a href="tel:{{ contact.value }}">{{ contact.value }}</a>
+                    </p>
+                    <div ng-if="contact.infoType !== 'phone' && contact.infoType !== 'email'" ng-bind-html="contact.value"></div>
+                    <p ng-if="contact.infoType !== 'phone' && contact.infoType !== 'email'">
+                        {{ contact.value }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Fallback if no data loaded -->
+            <div ng-if="contactInfo.length === 0" class="no-data-message">
+                <p>Loading contact information...</p>
             </div>
         </div>
     </div>
-</div>
 
-<footer>
-    <div class="footer-container">
-        <h2 class="footer-title">Follow our Socials!</h2>
-        <div class="social-links">
-            <a href="https://www.tiktok.com/&#64;destlounge"
-               class="social-item"
-               target="_blank">
-                <i class="fa-brands fa-tiktok"></i>
-                <span>destlounge</span>
-            </a>
-            <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
-                <i class="fa-brands fa-facebook"></i>
-                <span>D'est Lounge</span>
-            </a>
-            <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
-                <i class="fa-brands fa-instagram"></i>
-                <span>destlounge</span>
-            </a>
+    <footer>
+        <div class="footer-container">
+            <h2 class="footer-title">Follow our Socials!</h2>
+            <div class="social-links">
+                <a href="https://www.tiktok.com/&#64;destlounge"
+                   class="social-item"
+                   target="_blank">
+                    <i class="fa-brands fa-tiktok"></i>
+                    <span>destlounge</span>
+                </a>
+                <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
+                    <i class="fa-brands fa-facebook"></i>
+                    <span>D'est Lounge</span>
+                </a>
+                <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
+                    <i class="fa-brands fa-instagram"></i>
+                    <span>destlounge</span>
+                </a>
+            </div>
         </div>
-    </div>
-</footer>
+    </footer>
 
-<style>
-    .contact-container {
-        display: flex;
-        min-height: calc(100vh - 400px);
-        background-color: #f5f0eb;
-        padding: 2rem;
-        gap: 2rem;
-    }
-
-    .map-section {
-        flex: 1;
-        min-height: 500px;
-        border: 3px solid #3d2817;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);
-    }
-
-    .contact-info {
-        flex: 1;
-        background-color: white;
-        padding: 3rem;
-        border-radius: 10px;
-        border: 3px solid #3d2817;
-        box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);
-    }
-
-    .contact-title {
-        font-size: 3rem;
-        font-weight: 600;
-        color: #5d4037;
-        margin: 0 0 2rem 0;
-        text-align: center;
-        font-family: 'Brush Script MT', cursive;
-        font-style: italic;
-    }
-
-    .info-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-        padding: 1.5rem;
-        background-color: #f9f6f3;
-        border-radius: 10px;
-        transition: transform 0.3s ease;
-    }
-
-    .info-item:hover {
-        transform: translateX(10px);
-    }
-
-    .info-item i {
-        font-size: 2rem;
-        color: #6b4423;
-        min-width: 40px;
-    }
-
-    .info-item h3 {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #5d4037;
-        margin: 0 0 0.5rem 0;
-    }
-
-    .info-item p {
-        font-size: 1rem;
-        color: #3d2817;
-        margin: 0.2rem 0;
-    }
-
-    .info-item a {
-        color: #6b4423;
-        text-decoration: none;
-        transition: color 0.3s ease;
-    }
-
-    .info-item a:hover {
-        color: #8b6f47;
-        text-decoration: underline;
-    }
-
-    /* Responsive Design */
-    @@media (max-width: 968px) {
+    <style>
         .contact-container {
-            flex-direction: column;
+            display: flex;
+            min-height: calc(100vh - 400px);
+            background-color: #f5f0eb;
+            padding: 2rem;
+            gap: 2rem;
         }
 
         .map-section {
-            min-height: 400px;
+            flex: 1;
+            min-height: 500px;
+            border: 3px solid #3d2817;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);
         }
-    }
-</style>
+
+        .contact-info {
+            flex: 1;
+            background-color: white;
+            padding: 3rem;
+            border-radius: 10px;
+            border: 3px solid #3d2817;
+            box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .contact-title {
+            font-size: 3rem;
+            font-weight: 600;
+            color: #5d4037;
+            margin: 0 0 2rem 0;
+            text-align: center;
+            font-family: 'Brush Script MT', cursive;
+            font-style: italic;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background-color: #f9f6f3;
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+
+            .info-item:hover {
+                transform: translateX(10px);
+            }
+
+            .info-item i {
+                font-size: 2rem;
+                color: #6b4423;
+                min-width: 40px;
+            }
+
+            .info-item h3 {
+                font-size: 1.2rem;
+                font-weight: 600;
+                color: #5d4037;
+                margin: 0 0 0.5rem 0;
+            }
+
+            .info-item p {
+                font-size: 1rem;
+                color: #3d2817;
+                margin: 0.2rem 0;
+            }
+
+            .info-item a {
+                color: #6b4423;
+                text-decoration: none;
+                transition: color 0.3s ease;
+            }
+
+                .info-item a:hover {
+                    color: #8b6f47;
+                    text-decoration: underline;
+                }
+
+        .no-data-message {
+            text-align: center;
+            padding: 2rem;
+            color: #8b6f47;
+            font-style: italic;
+        }
+
+        /* Responsive Design */
+        @@media (max-width: 968px) {
+            .contact-container {
+                flex-direction: column;
+            }
+
+            .map-section {
+                min-height: 400px;
+            }
+        }
+    </style>
+
+
+</div>

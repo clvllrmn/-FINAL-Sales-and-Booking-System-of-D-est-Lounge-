@@ -36,7 +36,7 @@
                 Property(t => t.password)
                     .HasColumnName("password")
                     .IsRequired()
-                    .HasMaxLength(255);
+                    .HasMaxLength(200);
                 Property(t => t.coNum)
                     .HasColumnName("coNum")
                     .IsRequired();
