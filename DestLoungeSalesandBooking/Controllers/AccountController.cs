@@ -74,19 +74,23 @@ namespace DestLoungeSalesandBooking.Controllers
             return RedirectToAction("LoginPage", "Main");
         }
 
-        // GET: Account/ForgotPassword
+        // GET: Account/ForgotPassword - Redirects to the page
         public ActionResult ForgotPassword()
         {
             return RedirectToAction("ForgotPasswordPage", "Main");
         }
 
+        // ─────────────────────────────────────────────
         // POST: Account/ResetPassword (For regular users)
+        // Handles password reset from ForgotPasswordPage
+        // ─────────────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult ResetPassword(string email, string currentPassword, string newPassword, string confirmPassword)
         {
             try
             {
+                // Validate all fields are provided
                 if (string.IsNullOrWhiteSpace(email) ||
                     string.IsNullOrWhiteSpace(currentPassword) ||
                     string.IsNullOrWhiteSpace(newPassword) ||
@@ -96,12 +100,14 @@ namespace DestLoungeSalesandBooking.Controllers
                     return RedirectToAction("ForgotPasswordPage", "Main");
                 }
 
+                // Check if new passwords match
                 if (newPassword != confirmPassword)
                 {
                     TempData["ErrorMessage"] = "New passwords do not match.";
                     return RedirectToAction("ForgotPasswordPage", "Main");
                 }
 
+                // Validate password strength
                 bool hasLower = newPassword.Any(char.IsLower);
                 bool hasUpper = newPassword.Any(char.IsUpper);
                 bool hasDigit = newPassword.Any(char.IsDigit);
@@ -121,6 +127,7 @@ namespace DestLoungeSalesandBooking.Controllers
                     return RedirectToAction("ForgotPasswordPage", "Main");
                 }
 
+                // Find user by email
                 var user = db.tbl_users.FirstOrDefault(u => u.email.ToLower() == email.ToLower().Trim());
 
                 if (user == null)
@@ -129,6 +136,7 @@ namespace DestLoungeSalesandBooking.Controllers
                     return RedirectToAction("ForgotPasswordPage", "Main");
                 }
 
+                // Verify current password
                 string hashedCurrentPassword = HashPassword(currentPassword);
                 if (user.password != hashedCurrentPassword)
                 {
@@ -136,6 +144,7 @@ namespace DestLoungeSalesandBooking.Controllers
                     return RedirectToAction("ForgotPasswordPage", "Main");
                 }
 
+                // Check if new password is same as current password
                 string hashedNewPassword = HashPassword(newPassword);
                 if (user.password == hashedNewPassword)
                 {
@@ -143,6 +152,7 @@ namespace DestLoungeSalesandBooking.Controllers
                     return RedirectToAction("ForgotPasswordPage", "Main");
                 }
 
+                // Update password
                 user.password = hashedNewPassword;
                 user.updatedAt = DateTime.Now;
                 db.SaveChanges();
@@ -158,7 +168,10 @@ namespace DestLoungeSalesandBooking.Controllers
             }
         }
 
-        // GET: Account/ChangePassword (Admin only)
+        // ─────────────────────────────────────────────
+        // GET: Account/ChangePassword  (Admin only)
+        // Just redirects to the view in Views/Main/
+        // ─────────────────────────────────────────────
         public ActionResult ChangePassword()
         {
             if (Session["RoleID"] == null || (int)Session["RoleID"] != 1)
@@ -169,7 +182,10 @@ namespace DestLoungeSalesandBooking.Controllers
             return RedirectToAction("AdminChangePasswordPage", "Main");
         }
 
-        // POST: Account/ChangePassword (Admin only)
+        // ─────────────────────────────────────────────
+        // POST: Account/ChangePassword  (Admin only)
+        // Form in AdminChangePasswordPage.cshtml posts here
+        // ─────────────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult ChangePassword(string currentPassword, string newPassword, string confirmNewPassword)
