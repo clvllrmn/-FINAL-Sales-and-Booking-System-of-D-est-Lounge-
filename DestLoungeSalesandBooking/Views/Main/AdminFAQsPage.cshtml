@@ -2,6 +2,7 @@
     Layout = "~/Views/Shared/_MainLayout.cshtml";
 }
 
+@Html.AntiForgeryToken()
 <!-- Sidebar Navigation -->
 <aside class="sidebar">
     <div class="logo-container">
@@ -144,14 +145,14 @@
         display: block;
     }
 
-    .nav-item:hover {
-        background-color: rgba(90, 74, 58, 0.1);
-    }
+        .nav-item:hover {
+            background-color: rgba(90, 74, 58, 0.1);
+        }
 
-    .nav-item.active {
-        background-color: rgba(139, 111, 71, 0.3);
-        border-left: 0.25rem solid #8b6f47;
-    }
+        .nav-item.active {
+            background-color: rgba(139, 111, 71, 0.3);
+            border-left: 0.25rem solid #8b6f47;
+        }
 
     .sidebar-footer {
         margin-top: auto;
@@ -168,9 +169,9 @@
         gap: 0.3125rem;
     }
 
-    .admin-link i {
-        font-size: 1.25rem;
-    }
+        .admin-link i {
+            font-size: 1.25rem;
+        }
 
     /* Main Content Area */
     .main-content {
@@ -216,14 +217,14 @@
         position: relative;
     }
 
-    .faq-card:hover {
-        transform: translateY(-0.3125rem);
-        box-shadow: 0.375rem 0.375rem 1rem rgba(0, 0, 0, 0.3);
-    }
+        .faq-card:hover {
+            transform: translateY(-0.3125rem);
+            box-shadow: 0.375rem 0.375rem 1rem rgba(0, 0, 0, 0.3);
+        }
 
-    .faq-card.active {
-        background-color: #5d3a1f;
-    }
+        .faq-card.active {
+            background-color: #5d3a1f;
+        }
 
     /* Admin Controls */
     .admin-controls {
@@ -254,26 +255,26 @@
         color: #4a7c59;
     }
 
-    .edit-btn:hover {
-        background: #4a7c59;
-        color: white;
-        transform: scale(1.1);
-    }
+        .edit-btn:hover {
+            background: #4a7c59;
+            color: white;
+            transform: scale(1.1);
+        }
 
     .delete-btn {
         color: #c84b4b;
     }
 
-    .delete-btn:hover {
-        background: #c84b4b;
-        color: white;
-        transform: scale(1.1);
-    }
+        .delete-btn:hover {
+            background: #c84b4b;
+            color: white;
+            transform: scale(1.1);
+        }
 
-    .edit-btn i,
-    .delete-btn i {
-        font-size: 0.875rem;
-    }
+        .edit-btn i,
+        .delete-btn i {
+            font-size: 0.875rem;
+        }
 
     .faq-question {
         display: flex;
@@ -283,20 +284,20 @@
         padding-top: 2rem;
     }
 
-    .faq-question h3 {
-        color: white;
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin: 0;
-        line-height: 1.4;
-        flex: 1;
-    }
+        .faq-question h3 {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+            line-height: 1.4;
+            flex: 1;
+        }
 
-    .faq-question i {
-        color: white;
-        font-size: 1.2rem;
-        transition: transform 0.3s ease;
-    }
+        .faq-question i {
+            color: white;
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
 
     .faq-answer {
         margin-top: 1.5rem;
@@ -305,12 +306,12 @@
         animation: fadeIn 0.3s ease;
     }
 
-    .faq-answer p {
-        color: white;
-        font-size: 1rem;
-        line-height: 1.6;
-        margin: 0;
-    }
+        .faq-answer p {
+            color: white;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin: 0;
+        }
 
     /* Add FAQ Button */
     .add-faq-container {
@@ -332,11 +333,11 @@
         box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.2);
     }
 
-    .add-faq-btn:hover {
-        background-color: #5d3a1f;
-        transform: translateY(-0.125rem);
-        box-shadow: 0 0.375rem 0.75rem rgba(0, 0, 0, 0.3);
-    }
+        .add-faq-btn:hover {
+            background-color: #5d3a1f;
+            transform: translateY(-0.125rem);
+            box-shadow: 0 0.375rem 0.75rem rgba(0, 0, 0, 0.3);
+        }
 
     @@keyframes fadeIn {
         from {
@@ -384,18 +385,18 @@
         transition: transform 0.3s;
     }
 
-    .social-item:hover {
-        transform: translateY(-0.1875rem);
-    }
+        .social-item:hover {
+            transform: translateY(-0.1875rem);
+        }
 
-    .social-item i {
-        font-size: 2.25rem;
-    }
+        .social-item i {
+            font-size: 2.25rem;
+        }
 
-    .social-item span {
-        font-size: 1rem;
-        font-weight: 500;
-    }
+        .social-item span {
+            font-size: 1rem;
+            font-weight: 500;
+        }
 
     /* Responsive Design */
     @@media (max-width: 64rem) {
