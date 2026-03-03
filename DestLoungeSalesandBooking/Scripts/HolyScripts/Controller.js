@@ -13,13 +13,12 @@
             $http.get('/FAQ/GetAllFAQs')
                 .then(function (response) {
                     if (response.data.success) {
-                        // Map database fields to UI fields
                         $scope.faqs = response.data.data.map(function (faq) {
                             return {
                                 faqId: faq.faqId,
                                 question: faq.question,
                                 answer: faq.answer,
-                                isOpen: false // For accordion
+                                isOpen: false
                             };
                         });
                     } else {
@@ -35,27 +34,18 @@
             $scope.faqs[index].isOpen = !$scope.faqs[index].isOpen;
         };
 
-        // Replace your FAQ CRUD functions (addNewFaq, editFaq, deleteFaq) with these:
-
-        // ===== FAQ CRUD OPERATIONS WITH CSRF TOKEN =====
-
         $scope.addNewFaq = function () {
             var question = prompt('Enter FAQ Question:');
             if (!question || !question.trim()) return;
-
             var answer = prompt('Enter FAQ Answer:');
             if (!answer || !answer.trim()) return;
-
-            // Get CSRF token from the hidden input field
             var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
             var tokenValue = tokenElement ? tokenElement.value : '';
-
             var payload = {
                 question: question.trim(),
                 answer: answer.trim(),
                 __RequestVerificationToken: tokenValue
             };
-
             $http({
                 method: 'POST',
                 url: '/FAQ/CreateFAQ',
@@ -78,23 +68,17 @@
 
         $scope.editFaq = function (index) {
             var faq = $scope.faqs[index];
-
             var question = prompt('Edit FAQ Question:', faq.question);
             if (question === null) return;
-
             var answer = prompt('Edit FAQ Answer:', faq.answer);
             if (answer === null) return;
-
-            // Get CSRF token from the hidden input field
             var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
             var tokenValue = tokenElement ? tokenElement.value : '';
-
             var payload = {
                 question: question.trim(),
                 answer: answer.trim(),
                 __RequestVerificationToken: tokenValue
             };
-
             $http({
                 method: 'POST',
                 url: '/FAQ/UpdateFAQ/' + faq.faqId,
@@ -117,16 +101,12 @@
 
         $scope.deleteFaq = function (index) {
             var faq = $scope.faqs[index];
-
             if (confirm('Are you sure you want to delete this FAQ?')) {
-                // Get CSRF token from the hidden input field
                 var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
                 var tokenValue = tokenElement ? tokenElement.value : '';
-
                 var payload = {
                     __RequestVerificationToken: tokenValue
                 };
-
                 $http({
                     method: 'POST',
                     url: '/FAQ/DeleteFAQ/' + faq.faqId,
@@ -148,7 +128,6 @@
             }
         };
 
-        // Load FAQs when page loads
         $scope.loadFAQs();
 
         // ===== SERVICES DATA =====
@@ -173,15 +152,12 @@
         };
 
         // ===== BOOKING PAGE DATA =====
-
-        // Nail Technicians
         $scope.nailTechs = [
             { id: 1, name: "Name 1" },
             { id: 2, name: "Name 2" },
             { id: 3, name: "Name 3" }
         ];
 
-        // Services with prices for Booking Page
         $scope.bookingServices = [
             { name: "Manicure", price: 99, selected: false },
             { name: "Pedicure", price: 139, selected: false },
@@ -193,7 +169,6 @@
             { name: "Soft Gel-3 (Long)", price: 699, selected: false }
         ];
 
-        // Booking object
         $scope.booking = {
             nailTech: '',
             date: '',
@@ -201,19 +176,10 @@
             selectedServices: []
         };
 
-        // Monday to Thursday: 9am to 7pm
-        $scope.weekdayTimes = [
-            "09:00 AM", "11:00 AM", "01:00 PM", "03:00 PM", "05:00 PM", "07:00 PM"
-        ];
-
-        // Friday to Sunday: 8am to 9pm
-        $scope.weekendTimes = [
-            "08:00 AM", "10:00 AM", "12:00 PM", "02:00 PM", "04:00 PM", "06:00 PM", "08:00 PM"
-        ];
-
+        $scope.weekdayTimes = ["09:00 AM", "11:00 AM", "01:00 PM", "03:00 PM", "05:00 PM", "07:00 PM"];
+        $scope.weekendTimes = ["08:00 AM", "10:00 AM", "12:00 PM", "02:00 PM", "04:00 PM", "06:00 PM", "08:00 PM"];
         $scope.availableTimes = [];
 
-        // Set minimum date to today and maximum date to 1 month from today
         var today = new Date();
         var dd = String(today.getDate()).padStart(2, '0');
         var mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -233,14 +199,12 @@
         $scope.checkAvailability = function () {
             if ($scope.booking.date) {
                 var selectedDate;
-
                 if ($scope.booking.date instanceof Date) {
                     selectedDate = $scope.booking.date;
                 } else {
                     var parts = $scope.booking.date.split('-');
                     selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
                 }
-
                 var selectedDateStr = $scope.booking.date;
                 if ($scope.booking.date instanceof Date) {
                     var year = selectedDate.getFullYear();
@@ -248,9 +212,7 @@
                     var day = String(selectedDate.getDate()).padStart(2, '0');
                     selectedDateStr = year + '-' + month + '-' + day;
                 }
-
                 $scope.dateFullyBooked = $scope.fullyBookedDates.indexOf(selectedDateStr) !== -1;
-
                 if ($scope.dateFullyBooked) {
                     $scope.booking.time = '';
                     $scope.availableTimes = [];
@@ -261,7 +223,6 @@
                     } else {
                         $scope.availableTimes = $scope.weekdayTimes;
                     }
-
                     if ($scope.booking.time && $scope.availableTimes.indexOf($scope.booking.time) === -1) {
                         $scope.booking.time = '';
                     }
@@ -299,52 +260,40 @@
                 !$scope.dateFullyBooked;
         };
 
-        // Submit booking
         $scope.submitBooking = function () {
             if (!$scope.isBookingValid()) {
                 alert("Please complete all booking fields.");
                 return;
             }
-
             var d = $scope.booking.date;
             var dateObj = (d instanceof Date) ? d : new Date(d);
-
             if (isNaN(dateObj.getTime())) {
                 alert("Invalid date.");
                 return;
             }
-
             var yyyy = dateObj.getFullYear();
             var mm = String(dateObj.getMonth() + 1).padStart(2, "0");
             var dd = String(dateObj.getDate()).padStart(2, "0");
             var bookingDate = yyyy + "-" + mm + "-" + dd;
-
             function to24h(t) {
                 var parts = t.trim().split(" ");
                 var hm = parts[0].split(":");
                 var hour = parseInt(hm[0], 10);
                 var min = parseInt(hm[1], 10);
                 var ampm = (parts[1] || "").toUpperCase();
-
                 if (ampm === "PM" && hour < 12) hour += 12;
                 if (ampm === "AM" && hour === 12) hour = 0;
-
                 return { hour: hour, min: min };
             }
-
             var start = to24h($scope.booking.time);
             var startHour = start.hour;
             var startMin = start.min;
-
             var endHour = startHour + 2;
             var endMin = startMin;
             if (endHour >= 24) endHour -= 24;
-
             var startTime = String(startHour).padStart(2, "0") + ":" + String(startMin).padStart(2, "0");
             var endTime = String(endHour).padStart(2, "0") + ":" + String(endMin).padStart(2, "0");
-
             var serviceId = 1;
-
             var payload = {
                 customerId: 1,
                 serviceId: serviceId,
@@ -355,7 +304,6 @@
                 downpayment: String($scope.calculateTotal() || ""),
                 notes: "Services: " + ($scope.booking.selectedServices || []).map(s => s.name).join(", ")
             };
-
             $http({
                 method: "POST",
                 url: "/Booking/Create",
@@ -378,7 +326,6 @@
         };
 
         // ===================== ADMIN BOOKING LIST ======================
-
         $scope.bookings = [];
         $scope.filteredBookings = [];
         $scope.selectedFilter = 'all';
@@ -397,10 +344,8 @@
             var day = pad2(d.getDate());
             var mon = pad2(d.getMonth() + 1);
             var yr = d.getFullYear();
-
             var st = (startTime || "").substring(0, 5);
             var et = (endTime || "").substring(0, 5);
-
             return `${day}/${mon}/${yr} ${st}-${et}`;
         }
 
@@ -415,17 +360,14 @@
         $scope.loadBookings = function () {
             return $http.get("/booking/List").then(function (resp) {
                 var rows = resp.data || [];
-
                 $scope.bookings = rows.map(function (b) {
                     var dateObj = parseNetDate(b.BookingDate);
                     var status = (b.Status || "Pending").trim();
-
                     var serviceLabel = "ServiceId #" + b.ServiceId;
                     if (b.Notes && b.Notes.indexOf("Services:") !== -1) {
                         var s = b.Notes.split("|")[0];
                         serviceLabel = s.replace("Services:", "").trim();
                     }
-
                     return {
                         bookingId: b.BookingId,
                         clientName: "Customer #" + b.CustomerId,
@@ -437,7 +379,6 @@
                         _raw: b
                     };
                 });
-
                 $scope.filterBookings($scope.selectedFilter);
             }).catch(function (err) {
                 console.error("loadBookings error:", err);
@@ -447,10 +388,8 @@
 
         $scope.filterBookings = function (filter) {
             $scope.selectedFilter = filter;
-
             var today = new Date();
             today.setHours(0, 0, 0, 0);
-
             function parseCardDateTime(card) {
                 if (!card || !card.dateTime || card.dateTime === "N/A") return null;
                 var datePart = card.dateTime.split(" ")[0];
@@ -463,7 +402,6 @@
                 d.setHours(0, 0, 0, 0);
                 return d;
             }
-
             if (filter === 'all') {
                 $scope.filteredBookings = $scope.bookings;
             } else if (filter === 'today') {
@@ -493,22 +431,17 @@
 
         $scope.updateBookingStatus = function (bookingId, newStatus) {
             var payload = { bookingId: bookingId, status: newStatus };
-
             return $http({
                 method: "POST",
                 url: "/Booking/UpdateStatus",
                 data: $httpParamSerializerJQLike(payload),
                 headers: { "Content-Type": "application/x-www-form-urlencoded" }
             }).then(function (resp) {
-
                 var card = $scope.bookings.find(b => b.bookingId === bookingId);
                 if (card) card.status = newStatus;
-
                 $scope.filterBookings($scope.selectedFilter);
-
                 alert(resp.data.message || "Updated.");
                 return resp.data;
-
             }).catch(function (err) {
                 console.error(err);
                 alert("❌ Update failed");
@@ -517,28 +450,22 @@
 
         $scope.cancelBooking = function (bookingId) {
             var reason = prompt("Cancel reason (optional):") || "";
-
             var payload = { bookingId: bookingId, reason: reason };
-
             return $http({
                 method: "POST",
                 url: "/Booking/Cancel",
                 data: $httpParamSerializerJQLike(payload),
                 headers: { "Content-Type": "application/x-www-form-urlencoded" }
             }).then(function (resp) {
-
                 var card = $scope.bookings.find(b => b.bookingId === bookingId);
                 if (card) {
                     card.status = "Cancelled";
                     card.cancelReason = reason;
                     if (reason) card.contact = (card.contact || "") + " | Cancel reason: " + reason;
                 }
-
                 $scope.filterBookings($scope.selectedFilter);
-
                 alert(resp.data.message || "Cancelled.");
                 return resp.data;
-
             }).catch(function (err) {
                 console.error(err);
                 alert("❌ Cancel failed");
@@ -546,10 +473,8 @@
         };
 
         // ===================== SALES ANALYTICS ======================
-
         $scope.salesRange = "week";
         $scope.sales = { totalRevenue: 0, totalBookings: 0, points: [], range: "week" };
-
         var salesChartInstance = null;
 
         $scope.setSalesRange = function (range) {
@@ -559,7 +484,6 @@
 
         $scope.loadSalesAnalytics = function (range) {
             range = range || $scope.salesRange || "week";
-
             return $http.get("/Sales/Analytics", { params: { range: range } })
                 .then(function (resp) {
                     $scope.sales = resp.data || {};
@@ -576,20 +500,15 @@
                 console.warn("Chart.js not found. Load Chart.js in _MainLayout or this page.");
                 return;
             }
-
             var labels = (points || []).map(p => p.label);
             var data = (points || []).map(p => Number(p.value || 0));
-
             var canvas = document.getElementById("salesChart");
             if (!canvas) return;
-
             var ctx = canvas.getContext("2d");
-
             if (salesChartInstance) {
                 salesChartInstance.destroy();
                 salesChartInstance = null;
             }
-
             salesChartInstance = new Chart(ctx, {
                 type: "line",
                 data: {
@@ -623,8 +542,169 @@
             }, 0);
         }
 
-        // ===== UTILITY FUNCTIONS =====
+        // ===== CONTACT DATA - LOAD FROM DATABASE =====
+        $scope.contactInfo = [];
 
+        $scope.loadContactInfo = function () {
+            $http.get('/Contact/GetAllContact')
+                .then(function (response) {
+                    if (response.data.success) {
+                        $scope.contactInfo = response.data.data.map(function (contact) {
+                            return {
+                                contactID: contact.contactID,
+                                infoType: contact.infoType,
+                                label: contact.label,
+                                value: contact.value,
+                                icon: contact.icon
+                            };
+                        });
+                        console.log('Contacts loaded:', $scope.contactInfo);
+                    } else {
+                        console.error('Failed to load contact info:', response.data.message);
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error loading contact info:', error);
+                });
+        };
+
+        // ===== CONTACT CRUD OPERATIONS WITH CSRF TOKEN =====
+
+        $scope.addNewContact = function () {
+            var infoType = prompt('Enter Info Type (address, hours, phone, email, social, other):');
+            if (!infoType || !infoType.trim()) return;
+
+            var label = prompt('Enter Label (e.g., "Find us at", "Call us"):');
+            if (!label || !label.trim()) return;
+
+            var value = prompt('Enter Value (contact information):');
+            if (!value || !value.trim()) return;
+
+            var icon = prompt('Enter Font Awesome Icon Class (e.g., "fa-solid fa-location-dot"):');
+            if (!icon || !icon.trim()) return;
+
+            var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            var tokenValue = tokenElement ? tokenElement.value : '';
+
+            var payload = {
+                infoType: infoType.trim(),
+                label: label.trim(),
+                value: value.trim(),
+                icon: icon.trim(),
+                __RequestVerificationToken: tokenValue
+            };
+
+            $http({
+                method: 'POST',
+                url: '/Contact/CreateContact',
+                data: $httpParamSerializerJQLike(payload),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+                .then(function (response) {
+                    if (response.data.success) {
+                        alert('Contact info created successfully!');
+                        $scope.loadContactInfo();
+                    } else {
+                        alert('Error: ' + response.data.message);
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error creating contact info:', error);
+                    alert('Error creating contact info');
+                });
+        };
+
+        $scope.editContact = function (index) {
+            var contact = $scope.contactInfo[index];
+
+            var infoType = prompt('Edit Info Type:', contact.infoType);
+            if (infoType === null) return;
+
+            var label = prompt('Edit Label:', contact.label);
+            if (label === null) return;
+
+            // For multi-line values (like Business Hours with <br>), strip HTML
+            var displayValue = contact.value.replace(/<br>/g, '\n');
+
+            var value = prompt('Edit Value (use line breaks for multiple lines):', displayValue);
+            if (value === null) return;
+
+            // Convert line breaks back to <br>
+            var formattedValue = value.replace(/\n/g, '<br>');
+
+            var icon = prompt('Edit Icon Class:', contact.icon);
+            if (icon === null) return;
+
+            var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            var tokenValue = tokenElement ? tokenElement.value : '';
+
+            var payload = {
+                infoType: infoType.trim(),
+                label: label.trim(),
+                value: formattedValue.trim(),  // ← Use formatted value
+                icon: icon.trim(),
+                __RequestVerificationToken: tokenValue
+            };
+
+            $http({
+                method: 'POST',
+                url: '/Contact/UpdateContact/' + contact.contactID,
+                data: $httpParamSerializerJQLike(payload),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+                .then(function (response) {
+                    if (response.data.success) {
+                        alert('Contact info updated successfully!');
+                        $scope.loadContactInfo();
+                    } else {
+                        alert('Error: ' + response.data.message);
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error updating contact info:', error);
+                    alert('Error updating contact info');
+                });
+        };
+
+        $scope.deleteContact = function (index) {
+            var contact = $scope.contactInfo[index];
+
+            if (confirm('Are you sure you want to delete this contact info?')) {
+                var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+                var tokenValue = tokenElement ? tokenElement.value : '';
+
+                var payload = {
+                    __RequestVerificationToken: tokenValue
+                };
+
+                $http({
+                    method: 'POST',
+                    url: '/Contact/DeleteContact/' + contact.contactID,
+                    data: $httpParamSerializerJQLike(payload),
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                })
+                    .then(function (response) {
+                        if (response.data.success) {
+                            alert('Contact info deleted successfully!');
+                            $scope.loadContactInfo();
+                        } else {
+                            alert('Error: ' + response.data.message);
+                        }
+                    })
+                    .catch(function (error) {
+                        console.error('Error deleting contact info:', error);
+                        alert('Error deleting contact info');
+                    });
+            }
+        };
+
+        // Load contact info when page loads
+        var currentPath = window.location.pathname.toLowerCase();
+        if (currentPath.indexOf("admincontactpage") !== -1 || currentPath.indexOf("contactpage") !== -1) {
+            $scope.loadContactInfo();
+        }
+
+        // ===== UTILITY FUNCTIONS =====
         $scope.openTerms = function (event) {
             if (event) {
                 event.preventDefault();
@@ -656,9 +736,10 @@
                 }
             }
         };
-    });
 
-// Compare To Directive (for password confirmation)
+    }); // ← CONTROLLER CLOSES HERE (EVERYTHING ABOVE IS INSIDE)
+
+// ===== DIRECTIVE (OUTSIDE CONTROLLER) =====
 app.directive('compareTo', function () {
     return {
         require: "ngModel",
