@@ -2,124 +2,226 @@
     Layout = "~/Views/Shared/_MainLayout.cshtml";
 }
 
-<!-- Sidebar Navigation -->
-<aside class="sidebar">
-    <div class="logo-container">
-        <a href="@Url.Action("Homepage","Main")">
-            <img src="~/Content/Pictures/DestLogo.png" class="sidebar-logo" alt="D'est Lounge">
-        </a>
-    </div>
-    <nav class="sidebar-nav">
-        <a href="@Url.Action("AdminHomepage","Main")" class="nav-item active">HOME</a>
-        <a href="@Url.Action("AdminBookingPage","Main")" class="nav-item">BOOKINGS</a>
-        <a href="@Url.Action("AdminServicePage","Main")" class="nav-item">SERVICES</a>
-        <a href="@Url.Action("AdminContactPage","Main")" class="nav-item">CONTACT</a>
-        <a href="@Url.Action("AdminFAQsPage","Main")" class="nav-item">FAQs</a>
-        <a href="@Url.Action("AdminInboxPage","Main")" class="nav-item">INBOX</a>
-        <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
-    </nav>
+<div ng-app="DestLoungeSalesandBookingModule" ng-controller="DestLoungeSalesandBookingController">
+    @Html.AntiForgeryToken()
 
-    <!-- Settings gear + Logout at the bottom of the sidebar -->
-    <div class="sidebar-footer">
-        <a href="@Url.Action("AdminChangePasswordPage","Main")" class="admin-link" title="Settings">
-            <i class="fa-solid fa-gear"></i>
-            <span>Settings</span>
-        </a>
-        <a href="@Url.Action("Logout","Account")" class="admin-link" title="Logout">
-            <i class="fa-solid fa-right-from-bracket"></i>
-            <span>Logout</span>
-        </a>
-    </div>
-</aside>
-
-<!-- Main Content Area -->
-<div class="main-content">
-    <!-- Banner Section -->
-    <div class="banner-container">
-        <div class="banner-text">
-            <h1 class="hello">HELLO.</h1>
-            <h2 class="youre-looking">YOU'RE LOOKING</h2>
-            <h2 class="gorgeous">gorgeous</h2>
-            <h2 class="today">TODAY.</h2>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="logo-container">
+            <a href="@Url.Action("Homepage","Main")">
+                <img src="~/Content/Pictures/DestLogo.png" class="sidebar-logo" alt="D'est Lounge">
+            </a>
         </div>
-    </div>
+        <nav class="sidebar-nav">
+            <a href="@Url.Action("AdminHomepage","Main")" class="nav-item active">HOME</a>
+            <a href="@Url.Action("AdminBookingPage","Main")" class="nav-item">BOOKINGS</a>
+            <a href="@Url.Action("AdminServicePage","Main")" class="nav-item">SERVICES</a>
+            <a href="@Url.Action("AdminContactPage","Main")" class="nav-item">CONTACT</a>
+            <a href="@Url.Action("AdminFAQsPage","Main")" class="nav-item">FAQs</a>
+            <a href="@Url.Action("AdminInboxPage","Main")" class="nav-item">INBOX</a>
+            <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
+        </nav>
 
-    <!-- Services Section -->
-    <div class="services-intro">
-        <div class="divider-line"></div>
-        <div class="service-text">
-            <h3 class="service-title">nails</h3>
-            <p class="service-tagline">Nailed it, every time.</p>
+        <div class="sidebar-footer">
+            <a href="@Url.Action("AdminChangePasswordPage","Main")" class="admin-link" title="Settings">
+                <i class="fa-solid fa-gear"></i>
+                <span>Settings</span>
+            </a>
+            <a href="@Url.Action("Logout","Account")" class="admin-link" title="Logout">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Logout</span>
+            </a>
         </div>
-    </div>
+    </aside>
 
-    <!-- Polaroid Images Section with Admin Controls -->
-    <div class="polaroid-section">
-        <div class="polaroid-card">
-            <div class="admin-controls">
-                <button class="edit-btn" onclick="editImage(1)"><i class="fa-solid fa-pen"></i></button>
-                <button class="delete-btn" onclick="deleteImage(1)"><i class="fa-solid fa-trash"></i></button>
-            </div>
-            <div class="polaroid-image"><img src="~/Content/Pictures/nail1.jpg" alt="Nail Design 1"></div>
-            <div class="polaroid-caption"><i class="fa-regular fa-heart"></i></div>
-        </div>
-
-        <div class="polaroid-card">
-            <div class="admin-controls">
-                <button class="edit-btn" onclick="editImage(2)"><i class="fa-solid fa-pen"></i></button>
-                <button class="delete-btn" onclick="deleteImage(2)"><i class="fa-solid fa-trash"></i></button>
-            </div>
-            <div class="polaroid-image"><img src="~/Content/Pictures/nail2.jpg" alt="Nail Design 2"></div>
-            <div class="polaroid-caption"><i class="fa-regular fa-heart"></i></div>
-        </div>
-
-        <div class="polaroid-card">
-            <div class="admin-controls">
-                <button class="edit-btn" onclick="editImage(3)"><i class="fa-solid fa-pen"></i></button>
-                <button class="delete-btn" onclick="deleteImage(3)"><i class="fa-solid fa-trash"></i></button>
-            </div>
-            <div class="polaroid-image"><img src="~/Content/Pictures/nail3.jpg" alt="Nail Design 3"></div>
-            <div class="polaroid-caption"><i class="fa-regular fa-heart"></i></div>
-        </div>
-    </div>
-
-    <!-- Add Photo Button -->
-    <div class="add-photo-container">
-        <button class="add-photo-btn" onclick="addNewPhoto()">Add Photo</button>
-    </div>
-
-    <!-- D'est Description Box -->
-    <div class="dest-description">
-        <div class="description-header">
-            <h3 class="dest-title">D'est</h3>
-            <div class="description-controls">
-                <button class="edit-btn" onclick="editDescription()"><i class="fa-solid fa-pen"></i></button>
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Banner Section -->
+        <div class="banner-container">
+            <div class="banner-text">
+                <h1 class="hello">{{bannerText.hello}}</h1>
+                <h2 class="youre-looking">{{bannerText.youre_looking}}</h2>
+                <h2 class="gorgeous">{{bannerText.gorgeous}}</h2>
+                <h2 class="today">{{bannerText.today}}</h2>
             </div>
         </div>
-        <p class="dest-text">
-            is a modern beauty and relaxation space where self-care meets sophistication.
-            A good place to stay where every visit is designed to be a luxurious and calming
-            pause from everyday.
-        </p>
-    </div>
 
-    <!-- Footer -->
-    <footer>
-        <div class="footer-container">
-            <h2 class="footer-title">Follow our Socials!</h2>
-            <div class="social-links">
-                <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank">
-                    <i class="fa-brands fa-tiktok"></i><span>destlounge</span>
-                </a>
-                <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
-                    <i class="fa-brands fa-facebook"></i><span>D'est Lounge</span>
-                </a>
-                <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
-                    <i class="fa-brands fa-instagram"></i><span>destlounge</span>
-                </a>
+        <!-- Services Section -->
+        <div class="services-intro">
+            <div class="divider-line"></div>
+            <div class="service-text">
+                <h3 class="service-title">{{serviceInfo.title}}</h3>
+                <p class="service-tagline">{{serviceInfo.tagline}}</p>
             </div>
         </div>
-    </footer>
+
+        <!-- Polaroid Images Section with Admin Controls -->
+        <div class="polaroid-section">
+            <div class="polaroid-card">
+                <div class="admin-controls">
+                    <button class="edit-btn" onclick="editImage(1)"><i class="fa-solid fa-pen"></i></button>
+                    <button class="delete-btn" onclick="deleteImage(1)"><i class="fa-solid fa-trash"></i></button>
+                </div>
+                <div class="polaroid-image"><img src="~/Content/Pictures/nail1.jpg" alt="Nail Design 1"></div>
+                <div class="polaroid-caption"><i class="fa-regular fa-heart"></i></div>
+            </div>
+
+            <div class="polaroid-card">
+                <div class="admin-controls">
+                    <button class="edit-btn" onclick="editImage(2)"><i class="fa-solid fa-pen"></i></button>
+                    <button class="delete-btn" onclick="deleteImage(2)"><i class="fa-solid fa-trash"></i></button>
+                </div>
+                <div class="polaroid-image"><img src="~/Content/Pictures/nail2.jpg" alt="Nail Design 2"></div>
+                <div class="polaroid-caption"><i class="fa-regular fa-heart"></i></div>
+            </div>
+
+            <div class="polaroid-card">
+                <div class="admin-controls">
+                    <button class="edit-btn" onclick="editImage(3)"><i class="fa-solid fa-pen"></i></button>
+                    <button class="delete-btn" onclick="deleteImage(3)"><i class="fa-solid fa-trash"></i></button>
+                </div>
+                <div class="polaroid-image"><img src="~/Content/Pictures/nail3.jpg" alt="Nail Design 3"></div>
+                <div class="polaroid-caption"><i class="fa-regular fa-heart"></i></div>
+            </div>
+        </div>
+
+        <!-- Add Photo Button -->
+        <div class="add-photo-container">
+            <button class="add-photo-btn" onclick="addNewPhoto()">Add Photo</button>
+        </div>
+
+        <!-- EDIT HOMEPAGE CONTENT SECTION -->
+        <div class="edit-homepage-section">
+            <div class="section-header">
+                <h2>📝 Edit Homepage Content</h2>
+                <p>Update the text that appears on your public homepage</p>
+            </div>
+
+            <div class="content-cards-grid">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3>Banner - Hello</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="current-value">{{bannerText.hello}}</p>
+                        <button class="btn-edit" ng-click="editHomepageText('banner_hello', bannerText.hello)">
+                            <i class="fa-solid fa-pen"></i> Edit
+                        </button>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3>Banner - Looking</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="current-value">{{bannerText.youre_looking}}</p>
+                        <button class="btn-edit" ng-click="editHomepageText('banner_looking', bannerText.youre_looking)">
+                            <i class="fa-solid fa-pen"></i> Edit
+                        </button>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3>Banner - Gorgeous</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="current-value">{{bannerText.gorgeous}}</p>
+                        <button class="btn-edit" ng-click="editHomepageText('banner_gorgeous', bannerText.gorgeous)">
+                            <i class="fa-solid fa-pen"></i> Edit
+                        </button>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3>Banner - Today</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="current-value">{{bannerText.today}}</p>
+                        <button class="btn-edit" ng-click="editHomepageText('banner_today', bannerText.today)">
+                            <i class="fa-solid fa-pen"></i> Edit
+                        </button>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3>Service - Title</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="current-value">{{serviceInfo.title}}</p>
+                        <button class="btn-edit" ng-click="editHomepageText('service_title', serviceInfo.title)">
+                            <i class="fa-solid fa-pen"></i> Edit
+                        </button>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3>Service - Tagline</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="current-value">{{serviceInfo.tagline}}</p>
+                        <button class="btn-edit" ng-click="editHomepageText('service_tagline', serviceInfo.tagline)">
+                            <i class="fa-solid fa-pen"></i> Edit
+                        </button>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3>D'est - Title</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="current-value">{{destInfo.title}}</p>
+                        <button class="btn-edit" ng-click="editHomepageText('dest_title', destInfo.title)">
+                            <i class="fa-solid fa-pen"></i> Edit
+                        </button>
+                    </div>
+                </div>
+
+                <div class="content-card wide">
+                    <div class="card-header">
+                        <h3>D'est - Description</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="current-value">{{destInfo.text}}</p>
+                        <button class="btn-edit" ng-click="editHomepageText('dest_text', destInfo.text)">
+                            <i class="fa-solid fa-pen"></i> Edit
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- D'est Description Box -->
+        <div class="dest-description">
+            <div class="description-header">
+                <h3 class="dest-title">{{destInfo.title}}</h3>
+            </div>
+            <p class="dest-text">{{destInfo.text}}</p>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <div class="footer-container">
+                <h2 class="footer-title">Follow our Socials!</h2>
+                <div class="social-links">
+                    <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank">
+                        <i class="fa-brands fa-tiktok"></i><span>destlounge</span>
+                    </a>
+                    <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
+                        <i class="fa-brands fa-facebook"></i><span>D'est Lounge</span>
+                    </a>
+                    <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
+                        <i class="fa-brands fa-instagram"></i><span>destlounge</span>
+                    </a>
+                </div>
+            </div>
+        </footer>
+    </div>
 </div>
 
 <style>
@@ -148,6 +250,7 @@
         align-items: center;
         padding: 1.25rem 0;
         z-index: 1000;
+        overflow-y: auto;
     }
 
     .logo-container {
@@ -188,7 +291,6 @@
             border-left: 0.25rem solid #8b6f47;
         }
 
-    /* Sidebar footer: Settings + Logout stacked */
     .sidebar-footer {
         margin-top: auto;
         width: 100%;
@@ -222,7 +324,6 @@
             font-size: 1.25rem;
         }
 
-        /* thin divider between Settings and Logout */
         .admin-link + .admin-link {
             border-top: 1px solid rgba(255,255,255,0.15);
         }
@@ -435,6 +536,106 @@
             box-shadow: 0 0.375rem 0.75rem rgba(0,0,0,0.3);
         }
 
+    /* EDIT HOMEPAGE CONTENT SECTION */
+    .edit-homepage-section {
+        padding: 3.75rem;
+        margin: 2.5rem 0;
+        background-color: rgba(232,223,213,0.4);
+        border-top: 2px solid #8b6f47;
+        border-bottom: 2px solid #8b6f47;
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+        .section-header h2 {
+            font-size: 2rem;
+            color: #5a4a3a;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-header p {
+            color: #7a6a5a;
+            font-size: 0.95rem;
+        }
+
+    .content-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .content-card {
+        background-color: white;
+        border-radius: 0.375rem;
+        overflow: hidden;
+        box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.1);
+        transition: all 0.3s;
+    }
+
+        .content-card.wide {
+            grid-column: 1 / -1;
+        }
+
+        .content-card:hover {
+            box-shadow: 0 0.5rem 1.25rem rgba(0,0,0,0.15);
+            transform: translateY(-0.25rem);
+        }
+
+    .card-header {
+        background-color: #e8dfd5;
+        padding: 0.875rem;
+        border-bottom: 1px solid #ddd;
+    }
+
+        .card-header h3 {
+            font-size: 1rem;
+            color: #5a4a3a;
+            margin: 0;
+            font-weight: 600;
+        }
+
+    .card-body {
+        padding: 1.25rem;
+    }
+
+    .current-value {
+        font-size: 0.9rem;
+        color: #333;
+        line-height: 1.5;
+        margin-bottom: 0.875rem;
+        padding: 0.625rem;
+        background-color: #f5f5f5;
+        border-left: 3px solid #8b6f47;
+        border-radius: 0.25rem;
+        max-height: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .btn-edit {
+        background-color: #5a4a3a;
+        color: white;
+        border: none;
+        padding: 0.625rem 1.25rem;
+        border-radius: 0.375rem;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+
+        .btn-edit:hover {
+            background-color: #3a2a1a;
+            transform: translateY(-0.125rem);
+            box-shadow: 0 0.375rem 0.75rem rgba(0,0,0,0.2);
+        }
+
     /* Description */
     .dest-description {
         background-color: rgba(198,175,151,0.85);
@@ -461,11 +662,6 @@
         font-style: italic;
         color: #5a4a3a;
         font-family: 'Brush Script MT', cursive;
-    }
-
-    .description-controls {
-        position: absolute;
-        right: 0;
     }
 
     .dest-text {
@@ -565,6 +761,10 @@
 
         .today {
             font-size: 2.625rem;
+        }
+
+        .content-cards-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>

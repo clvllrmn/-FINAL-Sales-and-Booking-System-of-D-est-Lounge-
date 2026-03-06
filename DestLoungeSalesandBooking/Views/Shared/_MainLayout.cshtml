@@ -11,7 +11,6 @@
         @RenderBody()
     </div>
 
-
     <script src="~/Scripts/angular.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-sanitize.min.js"></script>
     <script src="~/Scripts/HolyScripts/Module.js"></script>
@@ -20,7 +19,7 @@
 
     @RenderSection("scripts", required: false)
 
-
+    @Html.AntiForgeryToken()
 </body>
 </html>
 
@@ -57,18 +56,18 @@
         gap: 2.5rem;
     }
 
-        .main-nav a {
-            color: #5d4037;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.3rem;
-            letter-spacing: 0.5px;
-            transition: color 0.3s ease;
-        }
+    .main-nav a {
+        color: #5d4037;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1.3rem;
+        letter-spacing: 0.5px;
+        transition: color 0.3s ease;
+    }
 
-            .main-nav a:hover {
-                color: #8b6f47;
-            }
+    .main-nav a:hover {
+        color: #8b6f47;
+    }
 
     .header-actions {
         display: flex;
@@ -87,13 +86,13 @@
         transition: color 0.3s ease;
     }
 
-        .login-link:hover {
-            color: #8b6f47;
-        }
+    .login-link:hover {
+        color: #8b6f47;
+    }
 
-        .login-link i {
-            font-size: 1.2rem;
-        }
+    .login-link i {
+        font-size: 1.2rem;
+    }
 
     .email-icon {
         font-size: 1.5rem;
@@ -104,9 +103,9 @@
         align-items: center;
     }
 
-        .email-icon:hover {
-            color: #8b6f47;
-        }
+    .email-icon:hover {
+        color: #8b6f47;
+    }
 
     .banner-container {
         background-color: #e7d7c8;
@@ -219,19 +218,19 @@
         max-width: 200px;
     }
 
-        .polaroid-card:nth-child(2) {
-            transform: rotate(1deg);
-            margin-top: 1rem;
-        }
+    .polaroid-card:nth-child(2) {
+        transform: rotate(1deg);
+        margin-top: 1rem;
+    }
 
-        .polaroid-card:nth-child(3) {
-            transform: rotate(-1deg);
-        }
+    .polaroid-card:nth-child(3) {
+        transform: rotate(-1deg);
+    }
 
-        .polaroid-card:hover {
-            transform: rotate(0deg) scale(1.05);
-            z-index: 10;
-        }
+    .polaroid-card:hover {
+        transform: rotate(0deg) scale(1.05);
+        z-index: 10;
+    }
 
     .polaroid-image {
         width: 100%;
@@ -241,11 +240,11 @@
         margin-bottom: 0.5rem;
     }
 
-        .polaroid-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+    .polaroid-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 
     .polaroid-caption {
         text-align: center;
@@ -323,19 +322,20 @@
         transition: transform 0.3s ease, color 0.3s ease;
     }
 
-        .social-item:hover {
-            transform: scale(1.1);
-            color: #6b4423;
-        }
+    .social-item:hover {
+        transform: scale(1.1);
+        color: #6b4423;
+    }
 
-        .social-item i {
-            font-size: 3rem;
-        }
+    .social-item i {
+        font-size: 3rem;
+    }
 
-        .social-item span {
-            font-size: 1.2rem;
-            font-weight: 500;
-        }
+    .social-item span {
+        font-size: 1.2rem;
+        font-weight: 500;
+    }
+
     /* Login Container */
     .login-container {
         display: flex;
@@ -459,36 +459,12 @@
         align-items: flex-start;
     }
 
-    .form-group {
-        margin-bottom: 1.5rem;
-        text-align: left;
-    }
-
-    .form-input {
-        width: 100%;
-        padding: 0.9rem 1.2rem;
-        font-size: 1rem;
-        border: 2px solid #d4c4b0;
-        border-radius: 25px;
-        box-sizing: border-box;
-        outline: none;
-        transition: border-color 0.3s ease;
-    }
-
     .form-input.half-width {
         width: 100%;
     }
 
-    .form-input:focus {
-        border-color: #8b6f47;
-    }
-
     .form-input.ng-invalid.ng-dirty {
         border-color: #dc3545;
-    }
-
-    .form-input::placeholder {
-        color: #999;
     }
 
     .error-message {
@@ -622,7 +598,6 @@
         color: #8b6f47;
     }
 
-    /* Overlay */
     .terms-container {
         display: flex;
         align-items: center;
@@ -643,17 +618,6 @@
         width: 18px;
         height: 18px;
         cursor: pointer;
-    }
-
-    .terms-link {
-        color: #5d4037;
-        text-decoration: underline;
-        cursor: pointer;
-        transition: color 0.3s ease;
-    }
-
-    .terms-link:hover {
-        color: #8b6f47;
     }
 
     /* Modal Styles */
@@ -863,5 +827,4 @@
             grid-template-columns: 1fr;
         }
     }
-
 </style>

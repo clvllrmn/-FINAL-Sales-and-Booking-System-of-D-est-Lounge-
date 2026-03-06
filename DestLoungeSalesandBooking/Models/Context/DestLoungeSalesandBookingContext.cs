@@ -23,6 +23,7 @@ namespace DestLoungeSalesandBooking.Models.Context
         public virtual DbSet<tbl_sale_items> tbl_sale_items { get; set; }
         public virtual DbSet<tbl_bookings> tbl_bookings { get; set; }
         public virtual DbSet<tbl_contact> tbl_contact { get; set; }  // ADD THIS LINE
+        public virtual DbSet<tbl_homepage_content> tbl_homepage_content { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -31,6 +32,7 @@ namespace DestLoungeSalesandBooking.Models.Context
             modelBuilder.Configurations.Add(new tbl_faqs_Map());
             modelBuilder.Configurations.Add(new tbl_bookings_Map());
             modelBuilder.Configurations.Add(new tbl_contact_Map());  // ADD THIS LINE
+            modelBuilder.Configurations.Add(new tbl_homepage_content_Map());
 
             base.OnModelCreating(modelBuilder);
         }

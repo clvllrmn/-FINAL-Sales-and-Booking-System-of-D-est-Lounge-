@@ -1,11 +1,94 @@
 ﻿app.controller("DestLoungeSalesandBookingController",
     function ($scope, $window, DestLoungeSalesandBookingService, $http, $httpParamSerializerJQLike) {
 
+        // ===== INITIALIZE DEFAULT VALUES =====
+        $scope.bannerText = {
+            hello: 'HELLO.',
+            youre_looking: 'YOU\'RE LOOKING',
+            gorgeous: 'gorgeous',
+            today: 'TODAY.'
+        };
+
+        $scope.serviceInfo = {
+            title: 'nails',
+            tagline: 'Nailed it, every time.'
+        };
+
+        $scope.destInfo = {
+            title: 'D\'est',
+            text: 'is a modern beauty and relaxation space where self-care meets sophistication. A good place to stay where every visit is designed to be a luxurious and calming pause from everyday.'
+        };
+
         $scope.user = {};
         $scope.showPassword = false;
         $scope.showTerms = false;
 
-        // ===== FAQs DATA - LOAD FROM DATABASE =====
+        // ===== LOAD HOMEPAGE CONTENT FROM DATABASE =====
+        $scope.loadHomepageContent = function () {
+            console.log("loadHomepageContent called!");
+            $http.get('/HomePageContent/GetAllContent')
+                .then(function (response) {
+                    console.log("API Response:", response.data);
+                    if (response.data.success) {
+                        var contentMap = {};
+                        angular.forEach(response.data.data, function (item) {
+                            contentMap[item.contentType] = item.contentValue;
+                        });
+                        if (contentMap['banner_hello']) $scope.bannerText.hello = contentMap['banner_hello'];
+                        if (contentMap['banner_looking']) $scope.bannerText.youre_looking = contentMap['banner_looking'];
+                        if (contentMap['banner_gorgeous']) $scope.bannerText.gorgeous = contentMap['banner_gorgeous'];
+                        if (contentMap['banner_today']) $scope.bannerText.today = contentMap['banner_today'];
+                        if (contentMap['service_title']) $scope.serviceInfo.title = contentMap['service_title'];
+                        if (contentMap['service_tagline']) $scope.serviceInfo.tagline = contentMap['service_tagline'];
+                        if (contentMap['dest_title']) $scope.destInfo.title = contentMap['dest_title'];
+                        if (contentMap['dest_text']) $scope.destInfo.text = contentMap['dest_text'];
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error loading homepage content:', error);
+                });
+        };
+        // ===== EDIT HOMEPAGE TEXT =====
+        $scope.editHomepageText = function (contentType, currentValue) {
+            var newValue = prompt('Edit ' + contentType + ':', currentValue);
+            if (newValue === null || newValue === '') return;
+
+            var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            var tokenValue = tokenElement ? tokenElement.value : '';
+
+            $http({
+                method: 'POST',
+                url: '/HomePageContent/UpdateContent',
+                data: $httpParamSerializerJQLike({
+                    contentType: contentType,
+                    contentValue: newValue,
+                    __RequestVerificationToken: tokenValue
+                }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+                .then(function (response) {
+                    if (response.data.success) {
+                        alert('Updated!');
+                        if (contentType === 'banner_hello') $scope.bannerText.hello = newValue;
+                        if (contentType === 'banner_looking') $scope.bannerText.youre_looking = newValue;
+                        if (contentType === 'banner_gorgeous') $scope.bannerText.gorgeous = newValue;
+                        if (contentType === 'banner_today') $scope.bannerText.today = newValue;
+                        if (contentType === 'service_title') $scope.serviceInfo.title = newValue;
+                        if (contentType === 'service_tagline') $scope.serviceInfo.tagline = newValue;
+                        if (contentType === 'dest_title') $scope.destInfo.title = newValue;
+                        if (contentType === 'dest_text') $scope.destInfo.text = newValue;
+                        $scope.loadHomepageContent();
+                    } else {
+                        alert('Error: ' + response.data.message);
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Request error:', error);
+                    alert('Failed to update');
+                });
+        };
+
+        // ===== FAQ FUNCTIONS =====
         $scope.faqs = [];
         $scope.faqSearchText = '';
 
@@ -21,8 +104,6 @@
                                 isOpen: false
                             };
                         });
-                    } else {
-                        console.error('Failed to load FAQs:', response.data.message);
                     }
                 })
                 .catch(function (error) {
@@ -128,9 +209,7 @@
             }
         };
 
-        $scope.loadFAQs();
-
-        // ===== SERVICES DATA =====
+        // ===== SERVICES =====
         $scope.services = [
             { name: "Gel Manicure", image: "~/Content/Pictures/service1.jpg", category: "manicure" },
             { name: "French Manicure", image: "~/Content/Pictures/service2.jpg", category: "manicure" },
@@ -325,7 +404,7 @@
             });
         };
 
-        // ===================== ADMIN BOOKING LIST ======================
+        // ===== ADMIN BOOKING LIST =====
         $scope.bookings = [];
         $scope.filteredBookings = [];
         $scope.selectedFilter = 'all';
@@ -472,7 +551,7 @@
             });
         };
 
-        // ===================== SALES ANALYTICS ======================
+        // ===== SALES ANALYTICS =====
         $scope.salesRange = "week";
         $scope.sales = { totalRevenue: 0, totalBookings: 0, points: [], range: "week" };
         var salesChartInstance = null;
@@ -497,7 +576,7 @@
 
         $scope.renderSalesChart = function (points) {
             if (!window.Chart) {
-                console.warn("Chart.js not found. Load Chart.js in _MainLayout or this page.");
+                console.warn("Chart.js not found.");
                 return;
             }
             var labels = (points || []).map(p => p.label);
@@ -542,7 +621,7 @@
             }, 0);
         }
 
-        // ===== CONTACT DATA - LOAD FROM DATABASE =====
+        // ===== CONTACT DATA =====
         $scope.contactInfo = [];
 
         $scope.loadContactInfo = function () {
@@ -558,9 +637,6 @@
                                 icon: contact.icon
                             };
                         });
-                        console.log('Contacts loaded:', $scope.contactInfo);
-                    } else {
-                        console.error('Failed to load contact info:', response.data.message);
                     }
                 })
                 .catch(function (error) {
@@ -568,24 +644,17 @@
                 });
         };
 
-        // ===== CONTACT CRUD OPERATIONS WITH CSRF TOKEN =====
-
         $scope.addNewContact = function () {
             var infoType = prompt('Enter Info Type (address, hours, phone, email, social, other):');
             if (!infoType || !infoType.trim()) return;
-
             var label = prompt('Enter Label (e.g., "Find us at", "Call us"):');
             if (!label || !label.trim()) return;
-
             var value = prompt('Enter Value (contact information):');
             if (!value || !value.trim()) return;
-
             var icon = prompt('Enter Font Awesome Icon Class (e.g., "fa-solid fa-location-dot"):');
             if (!icon || !icon.trim()) return;
-
             var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
             var tokenValue = tokenElement ? tokenElement.value : '';
-
             var payload = {
                 infoType: infoType.trim(),
                 label: label.trim(),
@@ -593,7 +662,6 @@
                 icon: icon.trim(),
                 __RequestVerificationToken: tokenValue
             };
-
             $http({
                 method: 'POST',
                 url: '/Contact/CreateContact',
@@ -616,36 +684,25 @@
 
         $scope.editContact = function (index) {
             var contact = $scope.contactInfo[index];
-
             var infoType = prompt('Edit Info Type:', contact.infoType);
             if (infoType === null) return;
-
             var label = prompt('Edit Label:', contact.label);
             if (label === null) return;
-
-            // For multi-line values (like Business Hours with <br>), strip HTML
             var displayValue = contact.value.replace(/<br>/g, '\n');
-
             var value = prompt('Edit Value (use line breaks for multiple lines):', displayValue);
             if (value === null) return;
-
-            // Convert line breaks back to <br>
             var formattedValue = value.replace(/\n/g, '<br>');
-
             var icon = prompt('Edit Icon Class:', contact.icon);
             if (icon === null) return;
-
             var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
             var tokenValue = tokenElement ? tokenElement.value : '';
-
             var payload = {
                 infoType: infoType.trim(),
                 label: label.trim(),
-                value: formattedValue.trim(),  // ← Use formatted value
+                value: formattedValue.trim(),
                 icon: icon.trim(),
                 __RequestVerificationToken: tokenValue
             };
-
             $http({
                 method: 'POST',
                 url: '/Contact/UpdateContact/' + contact.contactID,
@@ -668,15 +725,12 @@
 
         $scope.deleteContact = function (index) {
             var contact = $scope.contactInfo[index];
-
             if (confirm('Are you sure you want to delete this contact info?')) {
                 var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
                 var tokenValue = tokenElement ? tokenElement.value : '';
-
                 var payload = {
                     __RequestVerificationToken: tokenValue
                 };
-
                 $http({
                     method: 'POST',
                     url: '/Contact/DeleteContact/' + contact.contactID,
@@ -698,10 +752,24 @@
             }
         };
 
-        // Load contact info when page loads
+        // ===== ON PAGE LOAD =====
         var currentPath = window.location.pathname.toLowerCase();
+        console.log("Current path:", currentPath);
+
         if (currentPath.indexOf("admincontactpage") !== -1 || currentPath.indexOf("contactpage") !== -1) {
             $scope.loadContactInfo();
+        }
+
+        if (currentPath.indexOf("faqspage") !== -1) {
+            $scope.loadFAQs();
+        }
+
+        // Load homepage content on homepage
+        if (currentPath === "/" || currentPath.indexOf("homepage") !== -1) {
+            console.log("Homepage detected, loading content...");
+            $scope.loadHomepageContent();
+        } else {
+            console.log("Not on homepage");
         }
 
         // ===== UTILITY FUNCTIONS =====
@@ -737,9 +805,9 @@
             }
         };
 
-    }); // ← CONTROLLER CLOSES HERE (EVERYTHING ABOVE IS INSIDE)
+    }); // ← CONTROLLER CLOSES HERE
 
-// ===== DIRECTIVE (OUTSIDE CONTROLLER) =====
+// ===== COMPARE DIRECTIVE =====
 app.directive('compareTo', function () {
     return {
         require: "ngModel",

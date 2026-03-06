@@ -104,8 +104,17 @@ namespace DestLoungeSalesandBooking.Controllers
             return View();
         }
 
+        // ADD THIS METHOD TO YOUR EXISTING MainController.cs
+        public ActionResult AdminHomepageEditPage()
+        {
+            if (Session["RoleID"] == null || (int)Session["RoleID"] != 1)
+            {
+                TempData["ErrorMessage"] = "Unauthorized access.";
+                return RedirectToAction("LoginPage", "Main");
+            }
+            return View();
+        }
 
-        
         // POST: SignupPage - Handle form submission
         [HttpPost]
         [ValidateAntiForgeryToken]
