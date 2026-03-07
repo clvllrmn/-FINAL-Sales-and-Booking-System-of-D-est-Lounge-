@@ -1051,6 +1051,8 @@
     <Content Include="Views\Main\ForgotPasswordPage.cshtml" />
     <Content Include="Views\Main\LoggedOutServicePage.cshtml" />
     <Content Include="Views\Main\AdminChangePasswordPage.cshtml" />
+    <Content Include="Views\Main\GalleryPage.cshtml" />
+    <Content Include="Views\Main\AdminGalleryPage.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

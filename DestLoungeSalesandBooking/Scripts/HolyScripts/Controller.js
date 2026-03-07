@@ -1,4 +1,7 @@
-﻿app.controller("DestLoungeSalesandBookingController",
+﻿// FIXED ✅
+var _currentContentType = null;
+
+app.controller("DestLoungeSalesandBookingController",
     function ($scope, $window, DestLoungeSalesandBookingService, $http, $httpParamSerializerJQLike) {
 
         // ===== INITIALIZE DEFAULT VALUES =====
@@ -803,6 +806,13 @@
                     document.querySelector(".signup-button").click();
                 }
             }
+        };
+        $scope.openEditModal = function (contentType, currentValue, label) {
+            _currentContentType = contentType;
+            document.getElementById('modalTitle').textContent = 'Edit: ' + label;
+            document.getElementById('modalInput').value = currentValue || '';
+            document.getElementById('editModal').style.display = 'flex';
+            setTimeout(function () { document.getElementById('modalInput').focus(); }, 100);
         };
 
     }); // ← CONTROLLER CLOSES HERE

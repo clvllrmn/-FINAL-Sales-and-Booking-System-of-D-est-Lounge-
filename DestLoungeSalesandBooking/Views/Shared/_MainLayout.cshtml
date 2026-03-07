@@ -24,9 +24,31 @@
 </html>
 
 <style>
-    body {
+    .nav-logout {
+        margin-top: auto;
+        color: #b8423e;
+        border-top: 1px solid #c9b5a3;
+    }
+
+        .nav-logout:hover {
+            background-color: #f0dbd9;
+            border-left-color: #b8423e;
+            color: #b8423e;
+        }
+
+    .contact-title {
+        font-size: 3rem;
+        font-weight: 600;
+        color: #5d4037;
+        margin: 0 0 2rem 0;
+        text-align: center;
+        font-family: Georgia, 'Times New Roman', serif;
+        font-style: italic;
+    }
+    html, body {
         margin: 0;
         padding: 0;
+        overflow-x:hidden;
     }
 
     header {
@@ -48,7 +70,23 @@
         height: 5rem;
         width: auto;
     }
-
+    .welcome-text {
+        color: #5d4037;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        font-style: italic;
+        padding: 0.4rem 1rem;
+        background-color: #e0cfc2;
+        border-radius: 20px;
+        border: 1.5px solid #c1b2a5;
+        text-decoration: none;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .welcome-text:hover {
+        background-color: #c1b2a5;
+        color: #3d2817;
+    }
     .main-nav {
         margin-left: 3rem;
         margin-right: auto;
@@ -68,7 +106,27 @@
     .main-nav a:hover {
         color: #8b6f47;
     }
+        /* Active nav indicator */
+        .main-nav a.nav-active {
+            color: #6b4423;
+            border-bottom: 2.5px solid #6b4423;
+            padding-bottom: 2px;
+        }
 
+    /* Bell icon (replaces email icon) */
+    .bell-icon {
+        font-size: 1.5rem;
+        color: #5d4037;
+        text-decoration: none;
+        transition: color 0.3s ease, transform 0.2s ease;
+        display: flex;
+        align-items: center;
+    }
+
+        .bell-icon:hover {
+            color: #8b6f47;
+            transform: rotate(15deg);
+        }
     .header-actions {
         display: flex;
         align-items: center;
@@ -286,8 +344,8 @@
         border: 2px solid #d4c4b0;
         border-left: none;
         border-right: none;
-        padding: 2.5rem 2rem;
-        margin: 2rem 0 0 0;
+        padding: 2.5rem 3rem;
+        margin: 0;
         text-align: center;
     }
 
@@ -299,7 +357,7 @@
     .footer-title {
         font-size: 2.5rem;
         font-weight: 700;
-        color: white;
+        color: #6b4423;
         margin: 0 0 2rem 0;
         font-style: italic;
         text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
@@ -785,7 +843,7 @@
 
     .book-now-container {
         text-align: center;
-        padding: 3rem 0;
+        padding: 3rem 0 2rem 0 ;
         background-color: #f5f0eb;
     }
 

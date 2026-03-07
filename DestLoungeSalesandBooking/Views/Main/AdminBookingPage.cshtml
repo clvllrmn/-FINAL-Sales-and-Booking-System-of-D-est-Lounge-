@@ -5,7 +5,7 @@
 <!-- Sidebar Navigation -->
 <aside class="sidebar">
     <div class="logo-container">
-        <a href="@Url.Action("Homepage","Main")">
+        <a href="@Url.Action("AdminHomepage","Main")">
             <img src="~/Content/Pictures/DestLogo.png" class="sidebar-logo" alt="D'est Lounge">
         </a>
     </div>
@@ -17,10 +17,13 @@
         <a href="@Url.Action("AdminFAQsPage","Main")" class="nav-item">FAQs</a>
         <a href="@Url.Action("AdminInboxPage","Main")" class="nav-item">INBOX</a>
         <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
+        <a href="@Url.Action("AdminGalleryPage","Main")" class="nav-item">GALLERY</a>
+
     </nav>
     <div class="sidebar-footer">
-        <a href="@Url.Action("LoginPage","Main")" class="admin-link">
-            <i class="fa-regular fa-user"></i> Admin
+        <a href="@Url.Action("Logout","Account")" class="admin-link" title="Logout">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Logout</span>
         </a>
     </div>
 </aside>
@@ -84,7 +87,7 @@
                 <div class="booking-divider"></div>
 
                 <div class="booking-info-row">
-                    <div class="info-icon"><i class="fa-solid fa-phone"></i></div>
+                    <div class="info-icon"><i class="fa-solid fa-note-sticky"></i></div>                    
                     <div class="info-content">
                         <h3>Notes:</h3>
                         <p>{{booking.contact || 'N/A'}}</p>
@@ -359,7 +362,8 @@
     .booking-actions {
         margin-top: 1.25rem;
         display: grid;
-        gap: 0.75rem;
+        flex-direction: column;
+        gap: 2rem;
     }
 
     .approve-btn {
@@ -372,6 +376,7 @@
         font-size: 1rem;
         font-weight: 600;
         cursor: pointer;
+        margin-top: 2rem;
         font-family: 'Georgia', serif;
     }
 
@@ -399,6 +404,7 @@
         font-weight: 600;
         cursor: pointer;
         font-family: 'Georgia', serif;
+        margin-top: .5rem;
     }
 
     .status-pill {
@@ -408,6 +414,7 @@
         font-size: 1rem;
         font-weight: 700;
         text-align: center;
+        margin-top: .5rem;
     }
 
         .status-pill.approved {
@@ -427,21 +434,27 @@
 
     /* Footer */
     footer {
-        background-color: rgba(198, 175, 151, 0.7);
-        padding: 3.125rem 3.75rem;
-        margin-top: 5rem;
+        background-color: #e7d7c8;
+        border: 2px solid #d4c4b0;
+        border-left: none;
+        border-right: none;
+        padding: 2.5rem 3rem;
+        margin: 0;
+        text-align: center;
     }
 
     .footer-container {
-        text-align: center;
+        padding: 0;
+        margin: 0 auto;
     }
 
     .footer-title {
         font-size: 2.5rem;
+        font-weight: 700;
+        color: #6b4423;
+        margin: 0 0 2rem 0;
         font-style: italic;
-        color: #5a4a3a;
-        margin-bottom: 2.1875rem;
-        font-family: 'Brush Script MT', cursive;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     }
 
     .social-links {

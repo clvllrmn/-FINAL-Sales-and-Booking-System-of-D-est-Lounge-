@@ -5,7 +5,7 @@
 <!-- Sidebar Navigation -->
 <aside class="sidebar">
     <div class="logo-container">
-        <a href="@Url.Action("Homepage","Main")">
+        <a href="@Url.Action("AdminHomepage","Main")">
             <img src="~/Content/Pictures/DestLogo.png" class="sidebar-logo" alt="D'est Lounge">
         </a>
     </div>
@@ -17,10 +17,13 @@
         <a href="@Url.Action("AdminFAQsPage","Main")" class="nav-item">FAQs</a>
         <a href="@Url.Action("AdminInboxPage","Main")" class="nav-item active">INBOX</a>
         <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
+        <a href="@Url.Action("AdminGalleryPage","Main")" class="nav-item">GALLERY</a>
+
     </nav>
     <div class="sidebar-footer">
-        <a href="@Url.Action("LoginPage","Main")" class="admin-link">
-            <i class="fa-regular fa-user"></i> Admin
+        <a href="@Url.Action("Logout","Account")" class="admin-link" title="Logout">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Logout</span>
         </a>
     </div>
 </aside>
@@ -134,7 +137,7 @@
         background-color: #d4c4b0;
     }
 
-    /* Sidebar */
+    /* Sidebar Styles */
     .sidebar {
         position: fixed;
         left: 0;
@@ -168,7 +171,7 @@
     }
 
     .nav-item {
-        color: white;
+        color: #5a4a3a;
         text-decoration: none;
         padding: 1rem 0.625rem;
         font-size: 1rem;
@@ -180,11 +183,11 @@
     }
 
         .nav-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: rgba(90, 74, 58, 0.1);
         }
 
         .nav-item.active {
-            background-color: rgba(139, 111, 71, 0.5);
+            background-color: rgba(139, 111, 71, 0.3);
             border-left: 0.25rem solid #8b6f47;
         }
 
@@ -194,7 +197,7 @@
     }
 
     .admin-link {
-        color: white;
+        color: #5a4a3a;
         text-decoration: none;
         font-size: 0.75rem;
         display: flex;
@@ -356,8 +359,8 @@
         border: 2px solid #d4c4b0;
         border-left: none;
         border-right: none;
-        padding: 2.5rem 2rem;
-        margin: 2rem 0 0 0;
+        padding: 2.5rem 3rem;
+        margin: 0;
         text-align: center;
     }
 
@@ -369,7 +372,7 @@
     .footer-title {
         font-size: 2.5rem;
         font-weight: 700;
-        color: white;
+        color: #6b4423;
         margin: 0 0 2rem 0;
         font-style: italic;
         text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);

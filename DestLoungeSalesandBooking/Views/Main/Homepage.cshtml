@@ -12,17 +12,17 @@
             </a>
         </div>
         <nav class="main-nav">
-            <a href="@Url.Action("Homepage","Main")">HOME</a>
-            <a href="@Url.Action("ServicePage","Main")">SERVICES</a>
-            <a href="@Url.Action("ContactPage","Main")">CONTACT</a>
-            <a href="@Url.Action("FAQsPage","Main")">FAQs</a>
+            <a href="@Url.Action("Homepage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "Homepage" ? "nav-active" : "")">HOME</a>
+            <a href="@Url.Action("ServicePage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ServicePage" ? "nav-active" : "")">SERVICES</a>
+            <a href="@Url.Action("GalleryPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "GalleryPage" ? "nav-active" : "")">GALLERY</a>
+            <a href="@Url.Action("ContactPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ContactPage" ? "nav-active" : "")">CONTACT</a>
+            <a href="@Url.Action("FAQsPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "FAQsPage" ? "nav-active" : "")">FAQs</a>
         </nav>
         <div class="header-actions">
             @if (isLoggedIn)
             {
-                <span class="welcome-text">Welcome, @userFirstName!</span>
-                <a href="@Url.Action("Logout","Account")" class="login-link">
-                    <i class="fa-solid fa-sign-out-alt"></i> LOGOUT
+                <a href="@Url.Action("ProfilePage","Main")" class="welcome-text">
+                    <i class="fa-solid fa-circle-user"></i> Welcome, @userFirstName!
                 </a>
             }
             else
@@ -31,8 +31,8 @@
                     <i class="fa-regular fa-user"></i> LOGIN/SIGNUP
                 </a>
             }
-            <a href="@Url.Action("ContactPage","Main")" class="email-icon">
-                <i class="fa-solid fa-envelope"></i>
+            <a href="#" class="bell-icon" title="Notifications">
+                <i class="fa-solid fa-bell"></i>
             </a>
         </div>
     </div>
@@ -86,9 +86,29 @@
         <p class="dest-text">{{destInfo.text}}</p>
     </div>
 </div>
-
+<footer>
+    <div class="footer-container">
+        <h2 class="footer-title">Follow our Socials!</h2>
+        <div class="social-links">
+            <a href="https://www.tiktok.com/&#64;destlounge"
+               class="social-item"
+               target="_blank">
+                <i class="fa-brands fa-tiktok"></i>
+                <span>destlounge</span>
+            </a>
+            <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
+                <i class="fa-brands fa-facebook"></i>
+                <span>D'est Lounge</span>
+            </a>
+            <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
+                <i class="fa-brands fa-instagram"></i>
+                <span>destlounge</span>
+            </a>
+        </div>
+    </div>
+</footer>
 <style>
-    [ng-cloak] {
+/*    [ng-cloak] {
         display: none !important;
     }
 
@@ -97,4 +117,16 @@
         margin-right: 15px;
         font-weight: 500;
     }
+
+    .welcome-text {
+        color: #5d4037;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        font-style: italic;
+        padding: 0.4rem .5rem;
+        background-color: #e0cfc2;
+        border-radius: 20px;
+        border: 1.5px solid #c1b2a5;
+    }*/
 </style>

@@ -1,26 +1,38 @@
 ﻿@{
     Layout = "~/Views/Shared/_MainLayout.cshtml";
+    var userFirstName = Session["UserFirstName"] as string;
+    var isLoggedIn = Session["UserID"] != null;
 }
 
 <header>
     <div class="header-container">
         <div class="logo">
             <a href="@Url.Action("Homepage","Main")">
-                <img src="~/Content/Pictures/DestLogo.png" class="logo" alt="D'est Lounge">
+                <img src="~/Content/Pictures/DestLogo.png" alt="D'est Lounge">
             </a>
         </div>
         <nav class="main-nav">
-            <a href="@Url.Action("Homepage","Main")">HOME</a>
-            <a href="@Url.Action("ServicePage","Main")">SERVICES</a>
-            <a href="@Url.Action("ContactPage","Main")">CONTACT</a>
-            <a href="@Url.Action("FAQsPage","Main")">FAQs</a>
+            <a href="@Url.Action("Homepage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "Homepage" ? "nav-active" : "")">HOME</a>
+            <a href="@Url.Action("ServicePage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ServicePage" ? "nav-active" : "")">SERVICES</a>
+            <a href="@Url.Action("GalleryPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "GalleryPage" ? "nav-active" : "")">GALLERY</a>
+            <a href="@Url.Action("ContactPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ContactPage" ? "nav-active" : "")">CONTACT</a>
+            <a href="@Url.Action("FAQsPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "FAQsPage" ? "nav-active" : "")">FAQs</a>
         </nav>
         <div class="header-actions">
-            <a href="@Url.Action("LoginPage","Main")" class="login-link">
-                <i class="fa-regular fa-user"></i> LOGIN/SIGNUP
-            </a>
-            <a href="@Url.Action("ContactPage","Main")" class="email-icon">
-                <i class="fa-solid fa-envelope"></i>
+            @if (isLoggedIn)
+            {
+                <a href="@Url.Action("ProfilePage","Main")" class="welcome-text">
+                    <i class="fa-solid fa-circle-user"></i> Welcome, @userFirstName!
+                </a>
+            }
+            else
+            {
+                <a href="@Url.Action("LoginPage","Main")" class="login-link">
+                    <i class="fa-regular fa-user"></i> LOGIN/SIGNUP
+                </a>
+            }
+            <a href="#" class="bell-icon" title="Notifications">
+                <i class="fa-solid fa-bell"></i>
             </a>
         </div>
     </div>
@@ -45,6 +57,57 @@
             </div>
             <div class="summary-empty" ng-show="booking.selectedServices.length === 0">
                 <p>No services selected yet</p>
+            </div>
+        </div>
+    </div>
+    <!-- Payment Confirmation Panel -->
+    <div class="payment-panel" ng-show="showPaymentPanel">
+        <button class="panel-back-btn" ng-click="showPaymentPanel = false">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+
+        <div class="payment-content">
+            <!-- Left: Booking Summary -->
+            <div class="payment-summary">
+                <h2>Your Booking Summary:</h2>
+                <div class="payment-summary-item">
+                    <span class="ps-label">Service:</span>
+                    <span class="ps-value">{{getSelectedServicesText()}}</span>
+                </div>
+                <div class="payment-summary-item">
+                    <span class="ps-label">Date/Time:</span>
+                    <span class="ps-value">
+                        {{booking.date | date:'MMMM d, yyyy'}}<br>
+                        {{booking.time}}
+                    </span>
+                </div>
+                <div class="payment-summary-item">
+                    <span class="ps-label">Nail Tech:</span>
+                    <span class="ps-value">{{getSelectedTechName()}}</span>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="payment-divider"></div>
+
+            <!-- Right: Deposit Info -->
+            <div class="payment-deposit">
+                <h2>Deposit Required!</h2>
+                <p class="deposit-text">
+                    To secure your appointment, a deposit of
+                    <strong>₱{{depositAmount | number:2}}</strong> is required.
+                    The remaining <strong>₱{{remainingAmount | number:2}}</strong>
+                    is due during the time of service.
+                </p>
+                <div class="payment-method">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/GCash_logo.svg/200px-GCash_logo.svg.png"
+                         alt="GCash" class="gcash-logo">
+                    <span><strong>Pay using:</strong> Gcash</span>
+                </div>
+                <button class="pay-now-btn" ng-click="processPayment()">
+                    Pay Now &amp; Confirm Booking
+                </button>
+                <p class="taking-you-text">Taking you to Gcash...</p>
             </div>
         </div>
     </div>
@@ -536,11 +599,196 @@
             padding: 1rem;
         }
     }
+    /* Payment Panel */
+    .payment-panel {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(245, 240, 235, 0.97);
+        z-index: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        box-sizing: border-box;
+    }
+
+    .panel-back-btn {
+        position: absolute;
+        top: 2rem;
+        right: 2rem;
+        background: none;
+        border: 2px solid #d4c4b0;
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        cursor: pointer;
+        color: #5d4037;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        background-color: white;
+    }
+
+        .panel-back-btn:hover {
+            background-color: #e7dfd6;
+            color: #6b4423;
+        }
+
+    .payment-content {
+        background-color: #e7dfd6;
+        border: 2px solid #c1b2a5;
+        border-radius: 20px;
+        padding: 3rem;
+        display: flex;
+        gap: 0;
+        max-width: 900px;
+        width: 100%;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        position: relative;
+    }
+
+    /* Left: Booking Summary */
+    .payment-summary {
+        flex: 1;
+        padding-right: 3rem;
+    }
+
+        .payment-summary h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #3d2817;
+            margin: 0 0 2rem 0;
+        }
+
+    .payment-summary-item {
+        display: flex;
+        gap: 0.8rem;
+        margin-bottom: 1.2rem;
+        align-items: flex-start;
+    }
+
+    .ps-label {
+        font-weight: 700;
+        color: #3d2817;
+        font-size: 1rem;
+        white-space: nowrap;
+    }
+
+    .ps-value {
+        color: #5d4037;
+        font-size: 1rem;
+        line-height: 1.5;
+    }
+
+    /* Divider */
+    .payment-divider {
+        width: 2px;
+        background-color: #c1b2a5;
+        margin: 0 3rem;
+        border-radius: 2px;
+    }
+
+    /* Right: Deposit */
+    .payment-deposit {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+        .payment-deposit h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #3d2817;
+            margin: 0 0 1.2rem 0;
+        }
+
+    .deposit-text {
+        font-size: 1rem;
+        color: #3d2817;
+        line-height: 1.6;
+        margin: 0 0 1.5rem 0;
+    }
+
+        .deposit-text strong {
+            font-weight: 700;
+            color: #3d2817;
+        }
+
+    .payment-method {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 1.5rem;
+        font-size: 1rem;
+        color: #3d2817;
+    }
+
+    .gcash-logo {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+    }
+
+    .pay-now-btn {
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 700;
+        color: white;
+        background-color: #3d2817;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        align-self: flex-end;
+    }
+
+        .pay-now-btn:hover {
+            background-color: #2a1a0e;
+            transform: translateY(-2px);
+        }
+
+    .taking-you-text {
+        font-size: 0.85rem;
+        color: #8b6f47;
+        text-align: right;
+        margin: 0.5rem 0 0 0;
+        font-style: italic;
+    }
+
+    @@media (max-width: 768px) {
+        .payment-content {
+            flex-direction: column;
+            padding: 2rem;
+        }
+
+        .payment-summary {
+            padding-right: 0;
+            padding-bottom: 2rem;
+        }
+
+        .payment-divider {
+            width: 100%;
+            height: 2px;
+            margin: 0 0 2rem 0;
+        }
+
+        .pay-now-btn {
+            align-self: stretch;
+            text-align: center;
+        }
+    }
 </style>
 
 @section scripts {
-<script src="~/Scripts/angular.min.js"></script>
-<script src="~/Scripts/app/booking-page.js"></script>
+    <script src="~/Scripts/angular.min.js"></script>
+    <script src="~/Scripts/app/booking-page.js"></script>
 }
 
 

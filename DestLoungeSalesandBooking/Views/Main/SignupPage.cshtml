@@ -9,17 +9,18 @@
             </a>
         </div>
         <nav class="main-nav">
-            <a href="@Url.Action("Homepage","Main")">HOME</a>
-            <a href="@Url.Action("ServicePage","Main")">SERVICES</a>
-            <a href="@Url.Action("ContactPage","Main")">CONTACT</a>
-            <a href="@Url.Action("FAQsPage","Main")">FAQs</a>
+            <a href="@Url.Action("Homepage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "Homepage" ? "nav-active" : "")">HOME</a>
+            <a href="@Url.Action("ServicePage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ServicePage" ? "nav-active" : "")">SERVICES</a>
+            <a href="@Url.Action("GalleryPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "GalleryPage" ? "nav-active" : "")">GALLERY</a>
+            <a href="@Url.Action("ContactPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ContactPage" ? "nav-active" : "")">CONTACT</a>
+            <a href="@Url.Action("FAQsPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "FAQsPage" ? "nav-active" : "")">FAQs</a>
         </nav>
         <div class="header-actions">
             <a href="@Url.Action("LoginPage","Main")" class="login-link">
                 <i class="fa-regular fa-user"></i> LOGIN/SIGNUP
             </a>
-            <a href="@Url.Action("ContactPage","Main")" class="email-icon">
-                <i class="fa-solid fa-envelope"></i>
+            <a href="#" class="bell-icon" title="Notifications">
+                <i class="fa-solid fa-bell"></i>
             </a>
         </div>
     </div>

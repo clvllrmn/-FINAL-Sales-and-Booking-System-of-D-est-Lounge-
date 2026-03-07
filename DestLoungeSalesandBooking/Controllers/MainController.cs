@@ -86,6 +86,14 @@ namespace DestLoungeSalesandBooking.Controllers
         {
             return View();
         }
+        public ActionResult GalleryPage()
+        {
+            return View();
+        }
+        public ActionResult AdminGalleryPage()
+        {
+            return View();
+        }
  
 
         // ═══════════════════════════════════════════════════════════

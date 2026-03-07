@@ -5,22 +5,24 @@
 <!-- Sidebar Navigation -->
 <aside class="sidebar">
     <div class="logo-container">
-        <a href="@Url.Action("Homepage","Main")">
+        <a href="@Url.Action("AdminHomepage","Main")">
             <img src="~/Content/Pictures/DestLogo.png" class="sidebar-logo" alt="D'est Lounge">
         </a>
     </div>
     <nav class="sidebar-nav">
-        <a href="@Url.Action("AdminHomepage","Main")" class="nav-item ">HOME</a>
+        <a href="@Url.Action("AdminHomepage","Main")" class="nav-item">HOME</a>
         <a href="@Url.Action("AdminBookingPage","Main")" class="nav-item">BOOKINGS</a>
         <a href="@Url.Action("AdminServicePage","Main")" class="nav-item">SERVICES</a>
         <a href="@Url.Action("AdminContactPage","Main")" class="nav-item">CONTACT</a>
         <a href="@Url.Action("AdminFAQsPage","Main")" class="nav-item">FAQs</a>
         <a href="@Url.Action("AdminInboxPage","Main")" class="nav-item">INBOX</a>
         <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item active">SALES</a>
+        <a href="@Url.Action("AdminGalleryPage","Main")" class="nav-item">GALLERY</a>
     </nav>
     <div class="sidebar-footer">
-        <a href="@Url.Action("LoginPage","Main")" class="admin-link">
-            <i class="fa-regular fa-user"></i> Admin
+        <a href="@Url.Action("Logout","Account")" class="admin-link" title="Logout">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Logout</span>
         </a>
     </div>
 </aside>
@@ -28,7 +30,9 @@
 <!-- Main Content Area -->
 <div class="main-content" ng-controller="DestLoungeSalesandBookingController">
     <div class="bookings-container">
-        <h1 class="bookings-title">Salon's Weekly Analytics</h1>
+
+        <h1 class="bookings-title">Salon's Analytics</h1>
+        <p class="page-subtitle">Track revenue and appointment trends</p>
 
         <!-- Range Tabs -->
         <div class="filter-tabs">
@@ -40,83 +44,54 @@
         <!-- KPI Cards -->
         <div class="sales-kpis">
             <div class="kpi-card">
+                <div class="kpi-icon"><i class="fa-solid fa-peso-sign"></i></div>
                 <div class="kpi-title">Total Revenue</div>
                 <div class="kpi-value">₱ {{sales.totalRevenue || 0}}</div>
             </div>
             <div class="kpi-card">
+                <div class="kpi-icon"><i class="fa-solid fa-calendar-check"></i></div>
                 <div class="kpi-title">Completed Bookings</div>
                 <div class="kpi-value">{{sales.totalBookings || 0}}</div>
             </div>
             <div class="kpi-card">
+                <div class="kpi-icon"><i class="fa-solid fa-clock"></i></div>
                 <div class="kpi-title">Range</div>
-                <div class="kpi-value">{{sales.range || salesRange}}</div>
+                <div class="kpi-value kpi-value-range">{{sales.range || salesRange}}</div>
             </div>
         </div>
 
         <!-- Chart -->
         <div class="chart-wrap">
-            <canvas id="salesChart" height="110"></canvas>
+            <div class="chart-header">
+                <div>
+                    <div class="chart-title">Appointments Over Time</div>
+                    <div class="chart-sub">Revenue from completed appointments</div>
+                </div>
+            </div>
+            <div class="chart-canvas-wrap">
+                <canvas id="salesChart"></canvas>
+            </div>
         </div>
+
     </div>
-</div>
 
-<style>
-    .sales-kpis {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-        gap: 1.25rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .kpi-card {
-        background-color: rgba(232, 223, 213, 0.9);
-        border-radius: 1.25rem;
-        padding: 1.25rem;
-        box-shadow: 0.25rem 0.25rem 0.75rem rgba(0,0,0,0.08);
-    }
-
-    .kpi-title {
-        color: #5a4a3a;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-
-    .kpi-value {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: #6b4423;
-    }
-
-    .chart-wrap {
-        background-color: rgba(232, 223, 213, 0.45);
-        border-radius: 1.25rem;
-        padding: 1.25rem;
-        box-shadow: 0.25rem 0.25rem 0.75rem rgba(0,0,0,0.06);
-    }
-</style>
-
-<!-- Footer -->
-<footer>
-    <div class="footer-container">
-        <h2 class="footer-title">Follow our Socials!</h2>
-        <div class="social-links">
-            <a href="https://www.tiktok.com/&#64;destlounge"
-               class="social-item"
-               target="_blank">
-                <i class="fa-brands fa-tiktok"></i>
-                <span>destlounge</span>
-            </a>
-            <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
-                <i class="fa-brands fa-facebook"></i>
-                <span>D'est Lounge</span>
-            </a>
-            <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
-                <i class="fa-brands fa-instagram"></i>
-                <span>destlounge</span>
-            </a>
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <h2 class="footer-title">Follow our Socials!</h2>
+            <div class="social-links">
+                <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank">
+                    <i class="fa-brands fa-tiktok"></i><span>destlounge</span>
+                </a>
+                <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
+                    <i class="fa-brands fa-facebook"></i><span>D'est Lounge</span>
+                </a>
+                <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
+                    <i class="fa-brands fa-instagram"></i><span>destlounge</span>
+                </a>
+            </div>
         </div>
-    </div>
-</footer>
+    </footer>
 </div>
 
 <style>
@@ -127,8 +102,6 @@
     }
 
     body {
-        margin: 0;
-        padding: 0;
         font-family: 'Georgia', serif;
         background-color: #d4c4b0;
     }
@@ -167,7 +140,7 @@
     }
 
     .nav-item {
-        color: white;
+        color: #5a4a3a;
         text-decoration: none;
         padding: 1rem 0.625rem;
         font-size: 1rem;
@@ -179,11 +152,11 @@
     }
 
         .nav-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: rgba(90,74,58,0.1);
         }
 
         .nav-item.active {
-            background-color: rgba(139, 111, 71, 0.5);
+            background-color: rgba(139,111,71,0.3);
             border-left: 0.25rem solid #8b6f47;
         }
 
@@ -193,7 +166,7 @@
     }
 
     .admin-link {
-        color: white;
+        color: #5a4a3a;
         text-decoration: none;
         font-size: 0.75rem;
         display: flex;
@@ -206,47 +179,173 @@
             font-size: 1.25rem;
         }
 
-    /* Main Content */
+    /* Main */
     .main-content {
         margin-left: 10%;
         min-height: 100vh;
-        background-color: #d4c4b0;
-    }
-
-    /* Sales Page */
-    .sales-container {
-        padding: 2.5rem 3rem;
-        min-height: calc(100vh - 14rem);
+        background-color: #f5f0eb;
         display: flex;
         flex-direction: column;
     }
 
-
-    .sales-title {
-        font-size: 2rem;
-        font-weight: 600;
-        color: #5d4037;
-        margin-bottom: 1.5rem;
-    }
-
-    /* Chart Card */
-    .chart-card {
-        background-color: #f5f0eb;
-        border-radius: 12px;
-        padding: 2rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        width: 100%;
+    .bookings-container {
+        padding: 2.5rem 3rem;
         flex: 1;
     }
 
+    .bookings-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #5a4a3a;
+        margin-bottom: 0.3rem;
+        letter-spacing: 0.5px;
+    }
+
+    .page-subtitle {
+        font-size: 0.95rem;
+        color: #8b6f47;
+        margin-bottom: 2rem;
+        font-style: italic;
+    }
+
+    /* Tabs */
+    .filter-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .tab-btn {
+        background-color: white;
+        border: 2px solid #d4c4b0;
+        color: #8b6f47;
+        font-size: 0.9rem;
+        font-weight: 600;
+        padding: 0.55rem 1.4rem;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        border-radius: 25px;
+        font-family: 'Georgia', serif;
+        letter-spacing: 0.3px;
+    }
+
+        .tab-btn:hover {
+            border-color: #6b4423;
+            color: #6b4423;
+            background-color: #f5f0eb;
+        }
+
+        .tab-btn.active {
+            background-color: #6b4423;
+            border-color: #6b4423;
+            color: white;
+            box-shadow: 0 4px 12px rgba(107,68,35,0.25);
+        }
+
+    /* KPI Cards */
+    .sales-kpis {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .kpi-card {
+        background-color: #e7dfd6;
+        border-radius: 16px;
+        padding: 1.5rem 1.8rem;
+        border: 2px solid #c1b2a5;
+        box-shadow: 3px 3px 10px rgba(0,0,0,0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 5px 6px 16px rgba(0,0,0,0.13);
+        }
+
+    .kpi-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background-color: rgba(107,68,35,0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.5rem;
+    }
+
+        .kpi-icon i {
+            font-size: 1.1rem;
+            color: #6b4423;
+        }
+
+    .kpi-title {
+        color: #8b6f47;
+        font-weight: 600;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .kpi-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #3d2817;
+        line-height: 1.1;
+    }
+
+    .kpi-value-range {
+        font-size: 1.2rem;
+        padding-top: 0.3rem;
+    }
+
+    /* Chart */
+    .chart-wrap {
+        background-color: white;
+        border-radius: 16px;
+        border: 2px solid #d4c4b0;
+        padding: 2rem;
+        box-shadow: 3px 3px 10px rgba(0,0,0,0.08);
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .chart-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #3d2817;
+    }
+
+    .chart-sub {
+        font-size: 0.82rem;
+        color: #8b6f47;
+        margin-top: 0.2rem;
+    }
+
+    .chart-canvas-wrap {
+        position: relative;
+        height: 300px;
+    }
+
+    /* Footer */
     /* Footer */
     footer {
         background-color: #e7d7c8;
         border: 2px solid #d4c4b0;
         border-left: none;
         border-right: none;
-        padding: 2.5rem 2rem;
-        margin: 2rem 0 0 0;
+        padding: 2.5rem 3rem;
+        margin: 0;
         text-align: center;
     }
 
@@ -258,7 +357,7 @@
     .footer-title {
         font-size: 2.5rem;
         font-weight: 700;
-        color: white;
+        color: #6b4423;
         margin: 0 0 2rem 0;
         font-style: italic;
         text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
@@ -267,18 +366,16 @@
     .social-links {
         display: flex;
         justify-content: center;
-        align-items: center;
-        gap: 4rem;
-        flex-wrap: wrap;
+        gap: 5rem;
     }
 
     .social-item {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 0.75rem;
         text-decoration: none;
-        color: #3d2817;
-        transition: transform 0.3s ease, color 0.3s ease;
+        color: #5a4a3a;
+        transition: transform 0.3s;
     }
 
         .social-item:hover {
@@ -287,15 +384,14 @@
         }
 
         .social-item i {
-            font-size: 3rem;
+            font-size: 2.2rem;
         }
 
         .social-item span {
-            font-size: 1.2rem;
+            font-size: 1rem;
             font-weight: 500;
         }
 
-    /* Responsive */
     @@media (max-width: 768px) {
         .sidebar {
             width: 6%;
@@ -311,44 +407,58 @@
             padding: 0.75rem 0.3125rem;
         }
 
-        .sales-container {
-            padding: 1.5rem 1rem;
+        .bookings-container {
+            padding: 1.5rem;
         }
 
-        .chart-card {
-            padding: 1rem;
+        .sales-kpis {
+            grid-template-columns: 1fr;
+        }
+
+        .chart-canvas-wrap {
+            height: 220px;
         }
     }
 </style>
 
-<!-- Chart.js from CDN -->
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var ctx = document.getElementById('weeklySalesChart').getContext('2d');
+    // Waits for AngularJS to finish, then wires up the chart.
+    // setSalesRange() is called by the tab buttons via ng-click in the controller.
+    // The controller calls /Sales/Analytics?range=... and stores the result in $scope.sales.
+    // We expose a global function the controller can call after data loads.
 
-        // Replace these with your actual data from the controller/service
-        var labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        var data = [1, 13, 38, 29, 32, 35, 40];
+    var salesChartInstance = null;
 
-        new Chart(ctx, {
+    function renderSalesChart(points) {
+        var labels = points.map(function (p) { return p.label; });
+        var values = points.map(function (p) { return p.value; });
+
+        var ctx = document.getElementById('salesChart').getContext('2d');
+
+        if (salesChartInstance) {
+            salesChartInstance.destroy();
+        }
+
+        salesChartInstance = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Total Number of Appointments This Week',
-                    data: data,
+                    label: 'Revenue (₱)',
+                    data: values,
                     borderColor: '#6b4423',
-                    backgroundColor: '#6b4423',
-                    borderWidth: 2,
-                    tension: 0,
-                    fill: false,
-                    pointStyle: 'star',
-                    pointRadius: 8,
-                    pointHoverRadius: 10,
+                    backgroundColor: 'rgba(107,68,35,0.08)',
+                    borderWidth: 2.5,
+                    tension: 0.35,
+                    fill: true,
                     pointBackgroundColor: '#6b4423',
-                    pointBorderColor: '#6b4423'
+                    pointBorderColor: 'white',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
                 }]
             },
             options: {
@@ -356,49 +466,41 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'top',
-                        align: 'center',
                         labels: {
                             color: '#5d4037',
-                            font: {
-                                family: 'Georgia',
-                                size: 13
-                            },
-                            usePointStyle: true,
-                            pointStyle: 'circle',
-                            pointStyleWidth: 10
+                            font: { family: 'Georgia', size: 13 },
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#3d2817',
+                        titleColor: '#e7dfd6',
+                        bodyColor: 'white',
+                        padding: 10,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function (ctx) {
+                                return ' ₱' + ctx.parsed.y.toLocaleString();
+                            }
                         }
                     }
                 },
                 scales: {
                     x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            color: '#5d4037',
-                            font: {
-                                family: 'Georgia',
-                                size: 13
-                            }
-                        }
+                        grid: { display: false },
+                        ticks: { color: '#5d4037', font: { family: 'Georgia', size: 12 } }
                     },
                     y: {
                         beginAtZero: true,
-                        grid: {
-                            color: 'rgba(90, 74, 58, 0.1)'
-                        },
+                        grid: { color: 'rgba(90,74,58,0.1)' },
                         ticks: {
                             color: '#5d4037',
-                            font: {
-                                family: 'Georgia',
-                                size: 13
-                            },
-                            stepSize: 10
+                            font: { family: 'Georgia', size: 12 },
+                            callback: function (val) { return '₱' + val.toLocaleString(); }
                         }
                     }
                 }
             }
         });
-    });
+    }
 </script>
