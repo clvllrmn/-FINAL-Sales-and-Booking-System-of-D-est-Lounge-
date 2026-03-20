@@ -194,6 +194,8 @@
     <Compile Include="Models\tbl_bookings.cs" />
     <Compile Include="Models\tbl_homepage_content.cs" />
     <Compile Include="Models\tbl_contact.cs" />
+    <Compile Include="Models\tbl_notifications.cs" />
+    <Compile Include="Models\tbl_review_requests.cs" />
     <Compile Include="Models\tbl_sales.cs" />
     <Compile Include="Models\tbl_sale_items.cs" />
     <Compile Include="Models\tbl_faqs.cs" />

@@ -117,7 +117,6 @@ namespace DestLoungeSalesandBooking.Controllers
             if (string.IsNullOrWhiteSpace(status))
                 return Json(new { success = false, message = "Status is required." });
 
-            // allow only these statuses (edit if your team wants other names)
             var allowed = new[] { "Pending", "Approved", "Completed", "Cancelled" };
             if (!allowed.Contains(status))
                 return Json(new { success = false, message = "Invalid status." });
@@ -126,11 +125,75 @@ namespace DestLoungeSalesandBooking.Controllers
             if (booking == null)
                 return Json(new { success = false, message = "Booking not found." });
 
+            // ✅ 1. TIME VALIDATION (Fix QA Issue #3)
+            if (status == "Completed")
+            {
+                DateTime bookingDateTime = booking.BookingDate.Date + booking.StartTime;
+
+                if (bookingDateTime > DateTime.Now)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Cannot complete a future appointment."
+                    });
+                }
+            }
+
+            // ✅ Update status
             booking.Status = status;
             db.SaveChanges();
 
-            return Json(new { success = true, message = $"Booking #{bookingId} updated to {status}." });
+            // 🔥 TRIGGER ONLY WHEN COMPLETED
+            if (status == "Completed")
+            {
+                // 1. Create Notification
+                CreateNotification(booking.CustomerId,
+                    $"Your booking #{booking.BookingId} is completed! Please leave a review.");
+
+                // 2. Create Review Request
+                CreateReviewRequest(booking.CustomerId, booking.BookingId);
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = $"Booking #{bookingId} updated to {status}."
+            });
         }
+
+        private void CreateNotification(int customerId, string message)
+        {
+            // ⚠️ Make sure you have tbl_notifications table
+            var notif = new tbl_notifications
+            {
+                CustomerId = customerId,
+                Message = message,
+                CreatedAt = DateTime.Now,
+                IsRead = false
+            };
+
+            db.tbl_notifications.Add(notif);
+            db.SaveChanges();
+        }
+
+
+        private void CreateReviewRequest(int customerId, int bookingId)
+        {
+            var review = new tbl_review_requests
+            {
+                CustomerId = customerId,
+                BookingId = bookingId,
+                IsReviewed = false,
+                CreatedAt = DateTime.Now
+            };
+
+            db.tbl_review_requests.Add(review);
+            db.SaveChanges();
+        }
+
+
+
 
         // POST: /Booking/Cancel
         // body: bookingId=1&reason=customer%20not%20available
@@ -176,5 +239,44 @@ namespace DestLoungeSalesandBooking.Controllers
 
             return TimeSpan.TryParse(s, out t);
         }
+
+        public ActionResult GetUserBookings(int userId)
+        {
+            var bookings = db.tbl_bookings
+                .Where(b => b.CustomerId == userId)
+                .OrderByDescending(b => b.CreatedAt)
+                .Select(b => new
+                {
+                    b.BookingId,
+                    b.BookingDate,
+                    StartTime = b.StartTime.ToString(),
+                    EndTime = b.EndTime.ToString(),
+                    b.Status,
+                    b.Notes
+                })
+                .ToList();
+
+            return Json(bookings, JsonRequestBehavior.AllowGet);
+        }
+
+        public ActionResult GetNotifications(int userId)
+        {
+            var notifs = db.tbl_notifications
+                .Where(n => n.CustomerId == userId)
+                .OrderByDescending(n => n.CreatedAt)
+                .Select(n => new
+                {
+                    n.Message,
+                    n.CreatedAt,
+                    n.IsRead
+                })
+                .ToList();
+
+            return Json(notifs, JsonRequestBehavior.AllowGet);
+        }
+
+
+
+
     }
 }

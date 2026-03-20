@@ -815,6 +815,24 @@ app.controller("DestLoungeSalesandBookingController",
             setTimeout(function () { document.getElementById('modalInput').focus(); }, 100);
         };
 
+        $scope.userBookings = [];
+
+        $scope.loadUserBookings = function () {
+            var customerId = 1; // ⚠️ replace later with session
+
+            $http.get("/Booking/GetUserBookings?customerId=" + customerId)
+                .then(function (res) {
+                    $scope.userBookings = res.data;
+                });
+        };
+
+        $scope.loadUserBookings();
+
+        
+
+       
+
+       
     }); // ← CONTROLLER CLOSES HERE
 
 // ===== COMPARE DIRECTIVE =====
@@ -832,3 +850,9 @@ app.directive('compareTo', function () {
         }
     };
 });
+
+
+
+
+
+    

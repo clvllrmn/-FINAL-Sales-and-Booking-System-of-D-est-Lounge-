@@ -25,6 +25,10 @@ namespace DestLoungeSalesandBooking.Models.Context
         public virtual DbSet<tbl_contact> tbl_contact { get; set; }  // ADD THIS LINE
         public virtual DbSet<tbl_homepage_content> tbl_homepage_content { get; set; }
 
+        public DbSet<tbl_notifications> tbl_notifications { get; set; }
+        public DbSet<tbl_review_requests> tbl_review_requests { get; set; }
+
+
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             // Apply configurations
