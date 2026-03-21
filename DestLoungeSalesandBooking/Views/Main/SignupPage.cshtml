@@ -17,7 +17,7 @@
         </nav>
         <div class="header-actions">
             <a href="@Url.Action("LoginPage","Main")" class="login-link">
-                <i class="fa-regular fa-user"></i> LOGIN/SIGNUP
+                <i class="fa-regular fa-user"></i> LOGIN
             </a>
             <a href="#" class="bell-icon" title="Notifications">
                 <i class="fa-solid fa-bell"></i>
@@ -44,170 +44,170 @@
             </div>
         }
 
-        <form name="registerForm"
-              method="post"
-              action="@Url.Action("SignupPage","Main")"
-              novalidate>
+    <form name="registerForm"
+          method="post"
+          action="@Url.Action("SignupPage","Main")"
+          novalidate>
 
-            @Html.AntiForgeryToken()
+        @Html.AntiForgeryToken()
 
-            <!-- FIRST & LAST NAME -->
-            <div class="form-row">
-                <div class="input-wrapper">
-                    <input type="text"
-                           id="FNAME"
-                           name="FNAME"
-                           class="form-input"
-                           placeholder="First Name"
-                           ng-model="user.firstName"
-                           ng-pattern="/^[a-zA-Z\s'-]+$/"
-                           ng-keydown="focusNext($event, 'LNAME')"
-                           required>
-                    <span class="error-message"
-                          ng-show="registerForm.FNAME.$error.pattern && registerForm.FNAME.$dirty">
-                        Only letters allowed
-                    </span>
-                </div>
-
-                <div class="input-wrapper">
-                    <input type="text"
-                           id="LNAME"
-                           name="LNAME"
-                           class="form-input"
-                           placeholder="Last Name"
-                           ng-model="user.lastName"
-                           ng-pattern="/^[a-zA-Z\s'-]+$/"
-                           ng-keydown="focusNext($event, 'EMAIL')"
-                           required>
-                    <span class="error-message"
-                          ng-show="registerForm.LNAME.$error.pattern && registerForm.LNAME.$dirty">
-                        Only letters allowed
-                    </span>
-                </div>
-            </div>
-
-            <!-- EMAIL -->
-            <div class="form-group">
-                <input type="email"
-                       id="EMAIL"
-                       name="EMAIL"
-                       class="form-input"
-                       placeholder="Email"
-                       ng-model="user.email"
-                       ng-keydown="focusNext($event, 'CONTACT')"
-                       required>
-            </div>
-
-            <!-- CONTACT NUMBER -->
-            <div class="form-group">
-                <input type="tel"
-                       id="CONTACT"
-                       name="CONTACT"
-                       class="form-input"
-                       placeholder="Contact Number (11 digits)"
-                       ng-model="user.contactNumber"
-                       ng-pattern="/^\d{11}$/"
-                       ng-minlength="11"
-                       ng-maxlength="11"
-                       maxlength="11"
-                       inputmode="numeric"
-                       ng-keydown="focusNext($event, 'ADDRESS')"
-                       required>
-
-                <span class="error-message"
-                      ng-show="registerForm.CONTACT.$dirty && registerForm.CONTACT.$invalid">
-                    Contact number must be exactly 11 digits
-                </span>
-            </div>
-
-            <!-- ADDRESS -->
-            <div class="form-group">
+        <!-- FIRST & LAST NAME -->
+        <div class="form-row">
+            <div class="input-wrapper">
                 <input type="text"
-                       id="ADDRESS"
-                       name="ADDRESS"
+                       id="FNAME"
+                       name="FNAME"
                        class="form-input"
-                       placeholder="Address"
-                       ng-model="user.address"
-                       ng-minlength="5"
-                       ng-keydown="focusNext($event, 'PASSWORD')"
+                       placeholder="First Name"
+                       ng-model="user.firstName"
+                       ng-pattern="/^[a-zA-Z\s'-]+$/"
+                       ng-keydown="focusNext($event, 'LNAME')"
                        required>
-            </div>
-
-            <!-- PASSWORD -->
-            <div class="form-group password-group">
-                <input type="{{ showPassword ? 'text' : 'password' }}"
-                       id="PASSWORD"
-                       name="PASSWORD"
-                       class="form-input"
-                       placeholder="Password"
-                       ng-model="user.password"
-                       @* Notice the / / wrapping the Razor code below *@
-                       ng-pattern='/@Html.Raw("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{8,}$")/'
-                       ng-keydown="focusNext($event, 'CONFIRMPASSWORD')"
-                       required>
-
-                <i class="fa-solid toggle-password"
-                   ng-class="showPassword ? 'fa-eye-slash' : 'fa-eye'"
-                   ng-click="togglePassword()"></i>
-
                 <span class="error-message"
-                      ng-show="registerForm.PASSWORD.$error.pattern && registerForm.PASSWORD.$dirty">
-                    Password must be 8+ chars with uppercase, lowercase, number, and symbol (@@$!%*?&#)
+                      ng-show="registerForm.FNAME.$error.pattern && registerForm.FNAME.$dirty">
+                    First Name must contain letters only
                 </span>
             </div>
 
-            <!-- CONFIRM PASSWORD -->
-            <div class="form-group password-group">
-                <input type="{{ showPassword ? 'text' : 'password' }}"
-                       id="CONFIRMPASSWORD"
-                       name="CONFIRMPASSWORD"
+            <div class="input-wrapper">
+                <input type="text"
+                       id="LNAME"
+                       name="LNAME"
                        class="form-input"
-                       placeholder="Confirm Password"
-                       ng-model="user.confirmPassword"
-                       compare-to="user.password"
-                       ng-keydown="submitOnEnter($event)"
+                       placeholder="Last Name"
+                       ng-model="user.lastName"
+                       ng-pattern="/^[a-zA-Z\s'-]+$/"
+                       ng-keydown="focusNext($event, 'EMAIL')"
                        required>
-
-                <i class="fa-solid toggle-password"
-                   ng-class="showPassword ? 'fa-eye-slash' : 'fa-eye'"
-                   ng-click="togglePassword()"></i>
-
                 <span class="error-message"
-                      ng-show="registerForm.CONFIRMPASSWORD.$error.compareTo && registerForm.CONFIRMPASSWORD.$dirty">
-                    Passwords do not match
+                      ng-show="registerForm.LNAME.$error.pattern && registerForm.LNAME.$dirty">
+                    Last Name must contain letters only
                 </span>
             </div>
+        </div>
 
-            <!-- TERMS -->
-            <div class="terms-container">
-                <label>
-                    <input type="checkbox" name="acceptTerms" ng-model="user.acceptedTerms" required>
-                    I agree to
-                </label>
-                <span class="terms-link" ng-click="openTerms($event)">Terms and Conditions</span>
-            </div>
+        <!-- EMAIL -->
+        <div class="form-group">
+            <input type="email"
+                   id="EMAIL"
+                   name="EMAIL"
+                   class="form-input"
+                   placeholder="Email"
+                   ng-model="user.email"
+                   ng-keydown="focusNext($event, 'CONTACT')"
+                   required>
+        </div>
+        <!-- CONTACT NUMBER -->
+        <div class="form-group">
+            <input type="tel"
+                   id="CONTACT"
+                   name="CONTACT"
+                   class="form-input"
+                   placeholder="Contact Number (e.g. 09XXXXXXXXX)"
+                   ng-model="user.contactNumber"
+                   ng-pattern="/^09\d{9}$/"
+                   ng-minlength="11"
+                   ng-maxlength="11"
+                   maxlength="11"
+                   inputmode="numeric"
+                   ng-keypress="numbersOnly($event)"
+                   ng-keydown="focusNext($event, 'ADDRESS')"
+                   required>
+
+            <span class="error-message"
+                  ng-show="registerForm.CONTACT.$dirty && registerForm.CONTACT.$invalid">
+                Must be 11 digits and start with 09 (e.g. 09XXXXXXXXX)
+            </span>
+        </div>
+
+        <!-- ADDRESS -->
+        <div class="form-group">
+            <input type="text"
+                   id="ADDRESS"
+                   name="ADDRESS"
+                   class="form-input"
+                   placeholder="Address"
+                   ng-model="user.address"
+                   ng-minlength="5"
+                   ng-keydown="focusNext($event, 'PASSWORD')"
+                   required>
+        </div>
+
+        <!-- PASSWORD -->
+        <div class="form-group password-group">
+            <input type="{{ showPassword ? 'text' : 'password' }}"
+                   id="PASSWORD"
+                   name="PASSWORD"
+                   class="form-input"
+                   placeholder="Password"
+                   ng-model="user.password"
+                   @* Notice the / / wrapping the Razor code below *@
+                   ng-pattern='/@Html.Raw("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{8,}$")/'
+                   ng-keydown="focusNext($event, 'CONFIRMPASSWORD')"
+                   required>
+
+            <i class="fa-solid toggle-password"
+               ng-class="showPassword ? 'fa-eye-slash' : 'fa-eye'"
+               ng-click="togglePassword()"></i>
+
+            <span class="error-message"
+                  ng-show="registerForm.PASSWORD.$error.pattern && registerForm.PASSWORD.$dirty">
+                Password must be 8+ chars with uppercase, lowercase, number, and symbol (@@$!%*?&#)
+            </span>
+        </div>
+
+        <!-- CONFIRM PASSWORD -->
+        <div class="form-group password-group">
+            <input type="{{ showPassword ? 'text' : 'password' }}"
+                   id="CONFIRMPASSWORD"
+                   name="CONFIRMPASSWORD"
+                   class="form-input"
+                   placeholder="Confirm Password"
+                   ng-model="user.confirmPassword"
+                   compare-to="user.password"
+                   ng-keydown="submitOnEnter($event)"
+                   required>
+
+            <i class="fa-solid toggle-password"
+               ng-class="showPassword ? 'fa-eye-slash' : 'fa-eye'"
+               ng-click="togglePassword()"></i>
+
+            <span class="error-message"
+                  ng-show="registerForm.CONFIRMPASSWORD.$error.compareTo && registerForm.CONFIRMPASSWORD.$dirty">
+                Passwords do not match
+            </span>
+        </div>
+
+        <!-- TERMS -->
+        <div class="terms-container">
+            <label>
+                <input type="checkbox" name="acceptTerms" ng-model="user.acceptedTerms" required>
+                I agree to
+            </label>
+            <span class="terms-link" ng-click="openTerms($event)">Terms and Conditions</span>
+        </div>
 
 
-            <!-- LINKS -->
-            <div class="already-account-container">
-                <a href="@Url.Action("LoginPage","Main")" class="already-account">
-                    Already have an account?
-                </a>
-            </div>
+        <!-- LINKS -->
+        <div class="already-account-container">
+            <a href="@Url.Action("LoginPage","Main")" class="already-account">
+                Already have an account?
+            </a>
+        </div>
 
-            <!-- BUTTONS -->
-            <button type="submit"
-                    class="signup-button"
-                    ng-disabled="registerForm.$invalid || !user.acceptedTerms">
-                Sign Up
-            </button>
+        <!-- BUTTONS -->
+        <button type="submit"
+                class="signup-button"
+                ng-disabled="registerForm.$invalid || !user.acceptedTerms">
+            Sign Up
+        </button>
 
-            <button type="button" class="google-button">
-                <i class="fa-brands fa-google"></i>
-                Sign in with Google
-            </button>
+        <button type="button" class="google-button">
+            <i class="fa-brands fa-google"></i>
+            Sign in with Google
+        </button>
 
-        </form>
+    </form>
     </div>
 
     <!-- TERMS MODAL -->
@@ -358,3 +358,30 @@
         </div>
     </div>
 </footer>
+
+<style>
+    .password-group {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+
+        .password-group .form-input {
+            padding-right: 45px;
+        }
+
+    .toggle-password {
+        position: absolute;
+        right: 15px;
+        top: 20px; /* fixed px instead of 50% */
+        transform: none; /* remove the translateY */
+        cursor: pointer;
+        color: #5d4037;
+        font-size: 1.1rem;
+        transition: color 0.2s;
+    }
+
+        .toggle-password:hover {
+            color: #3e2723;
+        }
+</style>

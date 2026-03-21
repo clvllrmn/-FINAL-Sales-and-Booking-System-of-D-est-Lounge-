@@ -828,7 +828,13 @@ app.controller("DestLoungeSalesandBookingController",
 
         $scope.loadUserBookings();
 
-        
+        $scope.numbersOnly = function (event) {
+            var charCode = event.which || event.keyCode;
+            // Allow only digits (0-9)
+            if (charCode < 48 || charCode > 57) {
+                event.preventDefault();
+            }
+        };        
 
        
 
