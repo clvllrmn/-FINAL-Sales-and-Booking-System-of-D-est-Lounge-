@@ -12,7 +12,7 @@ namespace DestLoungeSalesandBooking.Controllers
     {
         private DestLoungeSalesandBookingContext db = new DestLoungeSalesandBookingContext();
 
-        // GET: /Contact/GetAllContact - Returns all active contacts as JSON
+        // GET: /Contact/GetAllContact - Returns all active contacts
         [HttpGet]
         public JsonResult GetAllContact()
         {
@@ -20,16 +20,14 @@ namespace DestLoungeSalesandBooking.Controllers
             {
                 var contacts = db.tbl_contact
                     .Where(c => c.isActive)
-                    .OrderByDescending(c => c.createdAt)
+                    .OrderBy(c => c.contactID)
                     .Select(c => new
                     {
                         contactID = c.contactID,
                         infoType = c.infoType,
                         label = c.label,
                         value = c.value,
-                        icon = c.icon,
-                        createdAt = c.createdAt,
-                        updatedAt = c.updatedAt
+                        icon = c.icon
                     })
                     .ToList();
 
@@ -42,71 +40,53 @@ namespace DestLoungeSalesandBooking.Controllers
             }
         }
 
-        // GET: /Contact/GetContactById/1 - Returns specific contact
+        // GET: /Contact/GetDeletedContacts - Returns all soft-deleted contacts
         [HttpGet]
-        public JsonResult GetContactById(int id)
+        public JsonResult GetDeletedContacts()
         {
             try
             {
-                var contact = db.tbl_contact
-                    .FirstOrDefault(c => c.contactID == id && c.isActive);
-
-                if (contact == null)
-                {
-                    return Json(new { success = false, message = "Contact not found" }, JsonRequestBehavior.AllowGet);
-                }
-
-                return Json(new
-                {
-                    success = true,
-                    data = new
+                var contacts = db.tbl_contact
+                    .Where(c => !c.isActive)
+                    .OrderByDescending(c => c.updatedAt)
+                    .Select(c => new
                     {
-                        contactID = contact.contactID,
-                        infoType = contact.infoType,
-                        label = contact.label,
-                        value = contact.value,
-                        icon = contact.icon,
-                        createdAt = contact.createdAt,
-                        updatedAt = contact.updatedAt
-                    }
-                }, JsonRequestBehavior.AllowGet);
+                        contactID = c.contactID,
+                        infoType = c.infoType,
+                        label = c.label,
+                        value = c.value,
+                        icon = c.icon
+                    })
+                    .ToList();
+
+                return Json(new { success = true, data = contacts }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("GetContactById Error: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("GetDeletedContacts Error: " + ex.Message);
                 return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
 
-        // POST: /Contact/CreateContact - Create new contact
+        // POST: /Contact/CreateContact
         [HttpPost]
         [ValidateAntiForgeryToken]
         public JsonResult CreateContact(string infoType, string label, string value, string icon)
         {
             try
             {
-                // Validate input
-                if (string.IsNullOrWhiteSpace(infoType) || string.IsNullOrWhiteSpace(label) || string.IsNullOrWhiteSpace(value))
+                // ── Only label and value are truly required ──────────────────
+                if (string.IsNullOrWhiteSpace(label) || string.IsNullOrWhiteSpace(value))
                 {
-                    return Json(new { success = false, message = "InfoType, Label, and Value are required" });
+                    return Json(new { success = false, message = "Label and Value are required." });
                 }
 
-                // Check if infoType already exists
-                var existingContact = db.tbl_contact
-                    .FirstOrDefault(c => c.infoType.ToLower() == infoType.ToLower().Trim() && c.isActive);
-
-                if (existingContact != null)
-                {
-                    return Json(new { success = false, message = "This contact info type already exists" });
-                }
-
-                // Create new contact
                 var newContact = new tbl_contact
                 {
-                    infoType = infoType.Trim(),
+                    infoType = (infoType ?? "other").Trim(),
                     label = label.Trim(),
                     value = value.Trim(),
-                    icon = icon ?? "",
+                    icon = (icon ?? "").Trim(),
                     createdAt = DateTime.Now,
                     updatedAt = DateTime.Now,
                     isActive = true
@@ -115,7 +95,7 @@ namespace DestLoungeSalesandBooking.Controllers
                 db.tbl_contact.Add(newContact);
                 db.SaveChanges();
 
-                return Json(new { success = true, message = "Contact info created successfully", contactID = newContact.contactID });
+                return Json(new { success = true, message = "Contact info created successfully.", contactID = newContact.contactID });
             }
             catch (Exception ex)
             {
@@ -124,45 +104,34 @@ namespace DestLoungeSalesandBooking.Controllers
             }
         }
 
-        // POST: /Contact/UpdateContact/1 - Update existing contact
+        // POST: /Contact/UpdateContact/1
         [HttpPost]
-        [Route("Contact/UpdateContact/{id}")]
         [ValidateAntiForgeryToken]
         public JsonResult UpdateContact(int id, string infoType, string label, string value, string icon)
         {
             try
             {
-                // Validate input
-                if (string.IsNullOrWhiteSpace(infoType) || string.IsNullOrWhiteSpace(label) || string.IsNullOrWhiteSpace(value))
+                if (string.IsNullOrWhiteSpace(label) || string.IsNullOrWhiteSpace(value))
                 {
-                    return Json(new { success = false, message = "InfoType, Label, and Value are required" });
+                    return Json(new { success = false, message = "Label and Value are required." });
                 }
 
                 var contact = db.tbl_contact.FirstOrDefault(c => c.contactID == id);
 
                 if (contact == null)
                 {
-                    return Json(new { success = false, message = "Contact info not found" });
+                    return Json(new { success = false, message = "Contact info not found." });
                 }
 
-                // Check if new infoType already exists (excluding current contact)
-                var duplicateInfoType = db.tbl_contact
-                    .FirstOrDefault(c => c.infoType.ToLower() == infoType.ToLower().Trim() && c.contactID != id && c.isActive);
-
-                if (duplicateInfoType != null)
-                {
-                    return Json(new { success = false, message = "This contact info type already exists" });
-                }
-
-                contact.infoType = infoType.Trim();
+                contact.infoType = (infoType ?? "other").Trim();
                 contact.label = label.Trim();
                 contact.value = value.Trim();
-                contact.icon = icon ?? "";
+                contact.icon = (icon ?? "").Trim();
                 contact.updatedAt = DateTime.Now;
 
                 db.SaveChanges();
 
-                return Json(new { success = true, message = "Contact info updated successfully" });
+                return Json(new { success = true, message = "Contact info updated successfully." });
             }
             catch (Exception ex)
             {
@@ -171,7 +140,7 @@ namespace DestLoungeSalesandBooking.Controllers
             }
         }
 
-        // POST: /Contact/DeleteContact/1 - Soft delete contact
+        // POST: /Contact/DeleteContact/1 - Soft delete
         [HttpPost]
         [ValidateAntiForgeryToken]
         public JsonResult DeleteContact(int id)
@@ -182,16 +151,14 @@ namespace DestLoungeSalesandBooking.Controllers
 
                 if (contact == null)
                 {
-                    return Json(new { success = false, message = "Contact info not found" });
+                    return Json(new { success = false, message = "Contact info not found." });
                 }
 
-                // Soft delete
                 contact.isActive = false;
                 contact.updatedAt = DateTime.Now;
-
                 db.SaveChanges();
 
-                return Json(new { success = true, message = "Contact info deleted successfully" });
+                return Json(new { success = true, message = "Contact info deleted successfully." });
             }
             catch (Exception ex)
             {
@@ -200,12 +167,62 @@ namespace DestLoungeSalesandBooking.Controllers
             }
         }
 
+        // POST: /Contact/RestoreContact/1 - Restore soft-deleted contact
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult RestoreContact(int id)
+        {
+            try
+            {
+                var contact = db.tbl_contact.FirstOrDefault(c => c.contactID == id && !c.isActive);
+
+                if (contact == null)
+                {
+                    return Json(new { success = false, message = "Contact not found or already active." });
+                }
+
+                contact.isActive = true;
+                contact.updatedAt = DateTime.Now;
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Contact info restored successfully." });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("RestoreContact Error: " + ex.Message);
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // POST: /Contact/PermanentDeleteContact/1 - Hard delete
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult PermanentDeleteContact(int id)
+        {
+            try
+            {
+                var contact = db.tbl_contact.FirstOrDefault(c => c.contactID == id && !c.isActive);
+
+                if (contact == null)
+                {
+                    return Json(new { success = false, message = "Contact not found or is still active." });
+                }
+
+                db.tbl_contact.Remove(contact);
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Contact permanently deleted." });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("PermanentDeleteContact Error: " + ex.Message);
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                db.Dispose();
-            }
+            if (disposing) db.Dispose();
             base.Dispose(disposing);
         }
     }

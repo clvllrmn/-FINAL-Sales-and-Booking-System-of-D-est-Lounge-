@@ -74,6 +74,87 @@ namespace DestLoungeSalesandBooking.Controllers
             }
         }
 
+        // GET: /FAQ/GetDeletedFAQs - Returns all soft-deleted FAQs
+        [HttpGet]
+        public JsonResult GetDeletedFAQs()
+        {
+            try
+            {
+                var faqs = db.tbl_faqs
+                    .Where(f => !f.isActive)
+                    .OrderByDescending(f => f.updatedAt)
+                    .Select(f => new
+                    {
+                        faqId = f.faqID,
+                        question = f.question,
+                        answer = f.answer,
+                        createdAt = f.createdAt,
+                        updatedAt = f.updatedAt
+                    })
+                    .ToList();
+
+                return Json(new { success = true, data = faqs }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("GetDeletedFAQs Error: " + ex.Message);
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        // POST: /FAQ/RestoreFAQ/1 - Restore a soft-deleted FAQ
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult RestoreFAQ(int id)
+        {
+            try
+            {
+                var faq = db.tbl_faqs.FirstOrDefault(f => f.faqID == id && !f.isActive);
+
+                if (faq == null)
+                {
+                    return Json(new { success = false, message = "FAQ not found or already active" });
+                }
+
+                faq.isActive = true;
+                faq.updatedAt = DateTime.Now;
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "FAQ restored successfully" });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("RestoreFAQ Error: " + ex.Message);
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // POST: /FAQ/PermanentDeleteFAQ/1 - Actually removes from database
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult PermanentDeleteFAQ(int id)
+        {
+            try
+            {
+                var faq = db.tbl_faqs.FirstOrDefault(f => f.faqID == id && !f.isActive);
+
+                if (faq == null)
+                {
+                    return Json(new { success = false, message = "FAQ not found or is still active" });
+                }
+
+                db.tbl_faqs.Remove(faq);
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "FAQ permanently deleted" });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("PermanentDeleteFAQ Error: " + ex.Message);
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
         // POST: /FAQ/CreateFAQ - Create new FAQ
         [HttpPost]
         [ValidateAntiForgeryToken]

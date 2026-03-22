@@ -1,6 +1,7 @@
 ﻿using DestLoungeSalesandBooking.Models;
 using DestLoungeSalesandBooking.Models.Context;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -12,6 +13,24 @@ namespace DestLoungeSalesandBooking.Controllers
     public class AccountController : Controller
     {
         private DestLoungeSalesandBookingContext db = new DestLoungeSalesandBookingContext();
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Lockout tracking (in-memory, shared across all requests)
+        // ─────────────────────────────────────────────────────────────────────
+        private static readonly Dictionary<string, LoginAttemptInfo> _loginAttempts
+            = new Dictionary<string, LoginAttemptInfo>(StringComparer.OrdinalIgnoreCase);
+
+        private static readonly object _lockObj = new object();
+
+        private const int MaxFailedAttempts = 3;
+        private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(5);
+
+        private class LoginAttemptInfo
+        {
+            public int FailedCount { get; set; }
+            public DateTime? LockoutExpiry { get; set; }
+        }
+        // ─────────────────────────────────────────────────────────────────────
 
         // POST: Account/Login
         [HttpPost]
@@ -26,21 +45,75 @@ namespace DestLoungeSalesandBooking.Controllers
                     return RedirectToAction("LoginPage", "Main");
                 }
 
-                var user = db.tbl_users.FirstOrDefault(u => u.email.ToLower() == email.ToLower().Trim());
+                string emailKey = email.Trim().ToLower();
 
-                if (user == null)
+                // ── Step 1: Check if account is currently locked out ──────────
+                lock (_lockObj)
                 {
-                    TempData["ErrorMessage"] = "Invalid email or password.";
-                    return RedirectToAction("LoginPage", "Main");
-                }
+                    if (_loginAttempts.TryGetValue(emailKey, out var attemptInfo))
+                    {
+                        if (attemptInfo.LockoutExpiry.HasValue && attemptInfo.LockoutExpiry.Value > DateTime.Now)
+                        {
+                            double remaining = (attemptInfo.LockoutExpiry.Value - DateTime.Now).TotalSeconds;
+                            int minutes = (int)(remaining / 60);
+                            int seconds = (int)(remaining % 60);
 
+                            string timeMsg = minutes > 0
+                                ? $"{minutes}m {seconds}s"
+                                : $"{seconds}s";
+
+                            TempData["ErrorMessage"] =
+                                $"Account temporarily locked due to too many failed attempts. " +
+                                $"Please try again in {timeMsg}.";
+                            return RedirectToAction("LoginPage", "Main");
+                        }
+                    }
+                }
+                // ─────────────────────────────────────────────────────────────
+
+                // ── Step 2: Validate credentials ──────────────────────────────
+                var user = db.tbl_users.FirstOrDefault(u => u.email.ToLower() == emailKey);
                 string hashedPassword = HashPassword(password);
+                bool credentialsValid = user != null && user.password == hashedPassword;
+                // ─────────────────────────────────────────────────────────────
 
-                if (user.password != hashedPassword)
+                if (!credentialsValid)
                 {
-                    TempData["ErrorMessage"] = "Invalid email or password.";
+                    // ── Step 3: Record the failed attempt ─────────────────────
+                    lock (_lockObj)
+                    {
+                        if (!_loginAttempts.ContainsKey(emailKey))
+                            _loginAttempts[emailKey] = new LoginAttemptInfo();
+
+                        var info = _loginAttempts[emailKey];
+                        info.FailedCount++;
+
+                        if (info.FailedCount >= MaxFailedAttempts)
+                        {
+                            info.LockoutExpiry = DateTime.Now.Add(LockoutDuration);
+                            TempData["ErrorMessage"] =
+                                "Too many failed login attempts. Your account has been locked for 5 minutes.";
+                        }
+                        else
+                        {
+                            int attemptsLeft = MaxFailedAttempts - info.FailedCount;
+                            TempData["ErrorMessage"] =
+                                $"Invalid email or password. " +
+                                $"{attemptsLeft} attempt{(attemptsLeft == 1 ? "" : "s")} remaining before temporary lockout.";
+                        }
+                    }
+                    // ─────────────────────────────────────────────────────────
+
                     return RedirectToAction("LoginPage", "Main");
                 }
+
+                // ── Step 4: Successful login — clear failed attempts ──────────
+                lock (_lockObj)
+                {
+                    if (_loginAttempts.ContainsKey(emailKey))
+                        _loginAttempts.Remove(emailKey);
+                }
+                // ─────────────────────────────────────────────────────────────
 
                 FormsAuthentication.SetAuthCookie(user.email, false);
 
@@ -90,7 +163,6 @@ namespace DestLoungeSalesandBooking.Controllers
         {
             try
             {
-                // Validate all fields are provided
                 if (string.IsNullOrWhiteSpace(email) ||
                     string.IsNullOrWhiteSpace(currentPassword) ||
                     string.IsNullOrWhiteSpace(newPassword) ||
@@ -100,14 +172,12 @@ namespace DestLoungeSalesandBooking.Controllers
                     return RedirectToAction("ForgotPasswordPage", "Main");
                 }
 
-                // Check if new passwords match
                 if (newPassword != confirmPassword)
                 {
                     TempData["ErrorMessage"] = "New passwords do not match.";
                     return RedirectToAction("ForgotPasswordPage", "Main");
                 }
 
-                // Validate password strength
                 bool hasLower = newPassword.Any(char.IsLower);
                 bool hasUpper = newPassword.Any(char.IsUpper);
                 bool hasDigit = newPassword.Any(char.IsDigit);
@@ -127,7 +197,6 @@ namespace DestLoungeSalesandBooking.Controllers
                     return RedirectToAction("ForgotPasswordPage", "Main");
                 }
 
-                // Find user by email
                 var user = db.tbl_users.FirstOrDefault(u => u.email.ToLower() == email.ToLower().Trim());
 
                 if (user == null)
@@ -136,7 +205,6 @@ namespace DestLoungeSalesandBooking.Controllers
                     return RedirectToAction("ForgotPasswordPage", "Main");
                 }
 
-                // Verify current password
                 string hashedCurrentPassword = HashPassword(currentPassword);
                 if (user.password != hashedCurrentPassword)
                 {
@@ -144,7 +212,6 @@ namespace DestLoungeSalesandBooking.Controllers
                     return RedirectToAction("ForgotPasswordPage", "Main");
                 }
 
-                // Check if new password is same as current password
                 string hashedNewPassword = HashPassword(newPassword);
                 if (user.password == hashedNewPassword)
                 {
@@ -152,7 +219,6 @@ namespace DestLoungeSalesandBooking.Controllers
                     return RedirectToAction("ForgotPasswordPage", "Main");
                 }
 
-                // Update password
                 user.password = hashedNewPassword;
                 user.updatedAt = DateTime.Now;
                 db.SaveChanges();
@@ -170,7 +236,6 @@ namespace DestLoungeSalesandBooking.Controllers
 
         // ─────────────────────────────────────────────
         // GET: Account/ChangePassword  (Admin only)
-        // Just redirects to the view in Views/Main/
         // ─────────────────────────────────────────────
         public ActionResult ChangePassword()
         {
@@ -184,7 +249,6 @@ namespace DestLoungeSalesandBooking.Controllers
 
         // ─────────────────────────────────────────────
         // POST: Account/ChangePassword  (Admin only)
-        // Form in AdminChangePasswordPage.cshtml posts here
         // ─────────────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -261,6 +325,9 @@ namespace DestLoungeSalesandBooking.Controllers
             }
         }
 
+        // ─────────────────────────────────────────────
+        // Helper: SHA256 password hashing
+        // ─────────────────────────────────────────────
         private string HashPassword(string password)
         {
             using (SHA256 sha256Hash = SHA256.Create())

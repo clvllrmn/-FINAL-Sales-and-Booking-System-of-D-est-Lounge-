@@ -99,6 +99,39 @@
             </div>
         </div>
 
+        <!-- Trash / Deleted Contacts -->
+        <div class="contact-trash-container">
+            <button class="trash-toggle-btn" ng-click="toggleContactTrash()">
+                <i class="fa-solid fa-trash-can-arrow-up"></i>
+                {{ showContactTrash ? 'Hide Deleted Contacts' : 'View Deleted Contacts' }}
+                <span class="trash-count" ng-if="deletedContacts.length > 0">({{deletedContacts.length}})</span>
+            </button>
+
+            <div class="contact-trash-panel" ng-show="showContactTrash">
+                <h2 class="trash-title">Deleted Contacts</h2>
+
+                <p class="trash-empty" ng-if="deletedContacts.length === 0">No deleted contacts found.</p>
+
+                <div class="deleted-contact-card" ng-repeat="contact in deletedContacts">
+                    <div class="deleted-contact-icon">
+                        <i ng-class="contact.icon"></i>
+                    </div>
+                    <div class="deleted-contact-info">
+                        <h3>{{ contact.label }}</h3>
+                        <p><strong>Type:</strong> {{ contact.infoType }}</p>
+                        <p>{{ contact.value }}</p>
+                    </div>
+                    <div class="deleted-contact-actions">
+                        <button class="restore-btn" ng-click="restoreContact(contact.contactID)">
+                            <i class="fa-solid fa-rotate-left"></i> Restore
+                        </button>
+                        <button class="perm-delete-btn" ng-click="permanentDeleteContact(contact.contactID)">
+                            <i class="fa-solid fa-trash"></i> Delete Forever
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- Footer -->
         <footer>
             <div class="footer-container">
@@ -548,6 +581,148 @@
 
             }
         }
+        /* Contact Trash Panel */
+        .contact-trash-container {
+            margin: 0 3rem 2rem 3rem;
+        }
+
+        .trash-toggle-btn {
+            background: transparent;
+            border: 2px solid #6b4423;
+            color: #6b4423;
+            padding: 0.6rem 1.5rem;
+            border-radius: 1.875rem;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0 auto;
+        }
+
+            .trash-toggle-btn:hover {
+                background-color: #6b4423;
+                color: white;
+            }
+
+        .trash-count {
+            background: #c84b4b;
+            color: white;
+            border-radius: 1rem;
+            padding: 0.1rem 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .contact-trash-panel {
+            margin-top: 1.5rem;
+            background: rgba(107, 68, 35, 0.08);
+            border: 2px dashed #6b4423;
+            border-radius: 1rem;
+            padding: 1.5rem;
+        }
+
+        .trash-title {
+            color: #6b4423;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .trash-empty {
+            color: #8a7060;
+            text-align: center;
+            font-style: italic;
+            padding: 1rem 0;
+        }
+
+        .deleted-contact-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            opacity: 0.85;
+        }
+
+        .deleted-contact-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            background-color: #f0e6dd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8b6f47;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .deleted-contact-info {
+            flex: 1;
+        }
+
+            .deleted-contact-info h3 {
+                color: #4a3020;
+                font-size: 1rem;
+                margin-bottom: 0.2rem;
+            }
+
+            .deleted-contact-info p {
+                color: #7a6050;
+                font-size: 0.875rem;
+                margin: 0.1rem 0;
+            }
+
+        .deleted-contact-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .restore-btn {
+            background: #4a7c59;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 1rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.3s;
+        }
+
+            .restore-btn:hover {
+                background: #3a6048;
+                transform: translateY(-1px);
+            }
+
+        .perm-delete-btn {
+            background: #c84b4b;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 1rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.3s;
+        }
+
+            .perm-delete-btn:hover {
+                background: #a83a3a;
+                transform: translateY(-1px);
+            }
     </style>
 
 </div> <!-- Close ng-app and ng-controller div -->

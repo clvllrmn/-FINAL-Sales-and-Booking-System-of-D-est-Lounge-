@@ -4,103 +4,109 @@
     var isLoggedIn = Session["UserID"] != null;
 }
 
-<header>
-    <div class="header-container">
-        <div class="logo">
-            <a href="@Url.Action("Homepage","Main")">
-                <img src="~/Content/Pictures/DestLogo.png" alt="D'est Lounge">
-            </a>
-        </div>
-        <nav class="main-nav">
-            <a href="@Url.Action("Homepage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "Homepage" ? "nav-active" : "")">HOME</a>
-            <a href="@Url.Action("ServicePage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ServicePage" ? "nav-active" : "")">SERVICES</a>
-            <a href="@Url.Action("GalleryPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "GalleryPage" ? "nav-active" : "")">GALLERY</a>
-            <a href="@Url.Action("ContactPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ContactPage" ? "nav-active" : "")">CONTACT</a>
-            <a href="@Url.Action("FAQsPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "FAQsPage" ? "nav-active" : "")">FAQs</a>
-        </nav>
-        <div class="header-actions">
-            @if (isLoggedIn)
-            {
-                <a href="@Url.Action("ProfilePage","Main")" class="welcome-text">
-                    <i class="fa-solid fa-circle-user"></i> Welcome, @userFirstName!
+@Html.AntiForgeryToken()
+
+<div ng-app="DestLoungeSalesandBooking" ng-controller="DestLoungeSalesandBookingController">
+
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <a href="@Url.Action("Homepage","Main")">
+                    <img src="~/Content/Pictures/DestLogo.png" alt="D'est Lounge">
                 </a>
-            }
-            else
-            {
-                <a href="@Url.Action("LoginPage","Main")" class="login-link">
-                    <i class="fa-regular fa-user"></i> LOGIN
+            </div>
+            <nav class="main-nav">
+                <a href="@Url.Action("Homepage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "Homepage" ? "nav-active" : "")">HOME</a>
+                <a href="@Url.Action("ServicePage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ServicePage" ? "nav-active" : "")">SERVICES</a>
+                <a href="@Url.Action("GalleryPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "GalleryPage" ? "nav-active" : "")">GALLERY</a>
+                <a href="@Url.Action("ContactPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ContactPage" ? "nav-active" : "")">CONTACT</a>
+                <a href="@Url.Action("FAQsPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "FAQsPage" ? "nav-active" : "")">FAQs</a>
+            </nav>
+            <div class="header-actions">
+                @if (isLoggedIn)
+                {
+                    <a href="@Url.Action("ProfilePage","Main")" class="welcome-text">
+                        <i class="fa-solid fa-circle-user"></i> Welcome, @userFirstName!
+                    </a>
+                }
+                else
+                {
+                    <a href="@Url.Action("LoginPage","Main")" class="login-link">
+                        <i class="fa-regular fa-user"></i> LOGIN
+                    </a>
+                }
+                <a href="#" class="bell-icon" title="Notifications">
+                    <i class="fa-solid fa-bell"></i>
                 </a>
-            }
-            <a href="#" class="bell-icon" title="Notifications">
-                <i class="fa-solid fa-bell"></i>
-            </a>
+            </div>
         </div>
-    </div>
-</header>
+    </header>
 
-<!-- Contact Section -->
-<div class="contact-container">
-    <!-- Map Section -->
-    <div class="map-section">
-        <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d3860.395937262591!2d121.095273!3d14.633452000000002!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397b9004a5de963%3A0x7fad844f4bae6342!2zROKAmWVzdCBMb3VuZ2U!5e0!3m2!1sen!2sph!4v1770789541301!5m2!1sen!2sph"
-                width="100%"
-                height="100%"
-                style="border:0;"
-                allowfullscreen=""
-                loading="lazy"
-                referrerpolicy="no-referrer-when-downgrade">
-        </iframe>
-    </div>
+    <!-- Contact Section -->
+    <div class="contact-container">
 
-    <!-- Contact Info Section -->
-    <div class="contact-info">
-        <h1 class="contact-title">D'est Lounge</h1>
+        <!-- Map Section -->
+        <div class="map-section">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d3860.395937262591!2d121.095273!3d14.633452000000002!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397b9004a5de963%3A0x7fad844f4bae6342!2zROKAmWVzdCBMb3VuZ2U!5e0!3m2!1sen!2sph!4v1770789541301!5m2!1sen!2sph"
+                    width="100%"
+                    height="100%"
+                    style="border:0;"
+                    allowfullscreen=""
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+        </div>
 
-        <!-- Dynamically load contact info from database -->
-        <div class="info-item" ng-repeat="contact in contactInfo">
-            <i ng-class="contact.icon"></i>
-            <div>
-                <h3>{{ contact.label }}</h3>
-                <!-- Phone: creates tel: link -->
-                <p ng-if="contact.infoType === 'phone'">
-                    <a href="tel:{{ contact.value }}">{{ contact.value }}</a>
-                </p>
-                <!-- Email: creates mailto: link -->
-                <p ng-if="contact.infoType === 'email'">
-                    <a href="mailto:{{ contact.value }}">{{ contact.value }}</a>
-                </p>
-                <!-- Other types (address, hours, etc): render HTML like <br> tags -->
-                <div ng-if="contact.infoType !== 'phone' && contact.infoType !== 'email'" ng-bind-html="contact.value"></div>
+        <!-- Contact Info Section -->
+        <div class="contact-info">
+            <h1 class="contact-title">D'est Lounge</h1>
+
+            <!-- Loading state -->
+            <div ng-if="contactInfo.length === 0" class="no-data-message">
+                <p>Loading contact information...</p>
+            </div>
+
+            <!-- Contact items from database -->
+            <div class="info-item" ng-repeat="contact in contactInfo">
+                <i ng-class="contact.icon"></i>
+                <div>
+                    <h3>{{ contact.label }}</h3>
+                    <p ng-if="contact.infoType === 'phone'">
+                        <a href="tel:{{ contact.value }}">{{ contact.value }}</a>
+                    </p>
+                    <p ng-if="contact.infoType === 'email'">
+                        <a href="mailto:{{ contact.value }}">{{ contact.value }}</a>
+                    </p>
+                    <div ng-if="contact.infoType !== 'phone' && contact.infoType !== 'email'"
+                         ng-bind-html="contact.value"></div>
+                </div>
             </div>
         </div>
 
-        <!-- Fallback if no data loaded -->
-        <div ng-if="contactInfo.length === 0" class="no-data-message">
-            <p>Loading contact information...</p>
-        </div>
     </div>
-</div>
 
-<!-- Footer -->
-<footer>
-    <div class="footer-container">
-        <h2 class="footer-title">Follow our Socials!</h2>
-        <div class="social-links">
-            <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank">
-                <i class="fa-brands fa-tiktok"></i>
-                <span>destlounge</span>
-            </a>
-            <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
-                <i class="fa-brands fa-facebook"></i>
-                <span>D'est Lounge</span>
-            </a>
-            <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
-                <i class="fa-brands fa-instagram"></i>
-                <span>destlounge</span>
-            </a>
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <h2 class="footer-title">Follow our Socials!</h2>
+            <div class="social-links">
+                <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank">
+                    <i class="fa-brands fa-tiktok"></i>
+                    <span>destlounge</span>
+                </a>
+                <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
+                    <i class="fa-brands fa-facebook"></i>
+                    <span>D'est Lounge</span>
+                </a>
+                <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
+                    <i class="fa-brands fa-instagram"></i>
+                    <span>destlounge</span>
+                </a>
+            </div>
         </div>
-    </div>
-</footer>
+    </footer>
+
+</div> <!-- closes ng-app div -->
 
 <style>
     .contact-container {
@@ -174,6 +180,11 @@
             margin: 0.2rem 0;
         }
 
+        .info-item div {
+            font-size: 1rem;
+            color: #3d2817;
+        }
+
         .info-item a {
             color: #6b4423;
             text-decoration: none;
@@ -192,7 +203,6 @@
         font-style: italic;
     }
 
-    /* Responsive Design */
     @@media (max-width: 968px) {
         .contact-container {
             flex-direction: column;
@@ -203,4 +213,3 @@
         }
     }
 </style>
-

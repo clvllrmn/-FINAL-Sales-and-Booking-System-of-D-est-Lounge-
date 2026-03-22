@@ -63,6 +63,35 @@
                 Add FAQ
             </button>
         </div>
+        <!-- Trash / Deleted FAQs Toggle -->
+        <div class="trash-container">
+            <button class="trash-toggle-btn" ng-click="toggleTrash()">
+                <i class="fa-solid fa-trash-can-arrow-up"></i>
+                {{ showTrash ? 'Hide Deleted FAQs' : 'View Deleted FAQs' }}
+                <span class="trash-count" ng-if="deletedFaqs.length > 0">({{deletedFaqs.length}})</span>
+            </button>
+
+            <div class="trash-panel" ng-show="showTrash">
+                <h2 class="trash-title">Deleted FAQs</h2>
+
+                <p class="trash-empty" ng-if="deletedFaqs.length === 0">No deleted FAQs found.</p>
+
+                <div class="deleted-faq-card" ng-repeat="faq in deletedFaqs">
+                    <div class="deleted-faq-info">
+                        <h3>{{faq.question}}</h3>
+                        <p>{{faq.answer}}</p>
+                    </div>
+                    <div class="deleted-faq-actions">
+                        <button class="restore-btn" ng-click="restoreFaq(faq.faqId)">
+                            <i class="fa-solid fa-rotate-left"></i> Restore
+                        </button>
+                        <button class="perm-delete-btn" ng-click="permanentDeleteFaq(faq.faqId)">
+                            <i class="fa-solid fa-trash"></i> Delete Forever
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Footer -->
@@ -437,4 +466,137 @@
             padding: 0.75rem 0.3125rem;
         }
     }
+    /* Trash Panel */
+    .trash-container {
+        max-width: 87.5rem;
+        margin: 0 auto;
+        padding: 0 0 2rem 0;
+    }
+
+    .trash-toggle-btn {
+        background: transparent;
+        border: 2px solid #6b4423;
+        color: #6b4423;
+        padding: 0.6rem 1.5rem;
+        border-radius: 1.875rem;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0 auto;
+    }
+
+        .trash-toggle-btn:hover {
+            background-color: #6b4423;
+            color: white;
+        }
+
+    .trash-count {
+        background: #c84b4b;
+        color: white;
+        border-radius: 50%;
+        padding: 0.1rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .trash-panel {
+        margin-top: 1.5rem;
+        background: rgba(107, 68, 35, 0.08);
+        border: 2px dashed #6b4423;
+        border-radius: 1rem;
+        padding: 1.5rem;
+    }
+
+    .trash-title {
+        color: #6b4423;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .trash-empty {
+        color: #8a7060;
+        text-align: center;
+        font-style: italic;
+        padding: 1rem 0;
+    }
+
+    .deleted-faq-card {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        opacity: 0.85;
+    }
+
+    .deleted-faq-info {
+        flex: 1;
+    }
+
+        .deleted-faq-info h3 {
+            color: #4a3020;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .deleted-faq-info p {
+            color: #7a6050;
+            font-size: 0.875rem;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+    .deleted-faq-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .restore-btn {
+        background: #4a7c59;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 1rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: all 0.3s;
+    }
+
+        .restore-btn:hover {
+            background: #3a6048;
+            transform: translateY(-1px);
+        }
+
+    .perm-delete-btn {
+        background: #c84b4b;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 1rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: all 0.3s;
+    }
+
+        .perm-delete-btn:hover {
+            background: #a83a3a;
+            transform: translateY(-1px);
+        }
 </style>

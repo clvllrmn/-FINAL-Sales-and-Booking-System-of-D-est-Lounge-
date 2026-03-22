@@ -211,7 +211,75 @@ app.controller("DestLoungeSalesandBookingController",
                     });
             }
         };
+        // ===== DELETED FAQs (TRASH) =====
+        $scope.deletedFaqs = [];
+        $scope.showTrash = false;
 
+        $scope.toggleTrash = function () {
+            $scope.showTrash = !$scope.showTrash;
+            if ($scope.showTrash) {
+                $scope.loadDeletedFaqs();
+            }
+        };
+
+        $scope.loadDeletedFaqs = function () {
+            $http.get('/FAQ/GetDeletedFAQs')
+                .then(function (response) {
+                    if (response.data.success) {
+                        $scope.deletedFaqs = response.data.data;
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error loading deleted FAQs:', error);
+                });
+        };
+
+        $scope.restoreFaq = function (faqId) {
+            if (!confirm('Restore this FAQ?')) return;
+            var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            var tokenValue = tokenElement ? tokenElement.value : '';
+
+            $http({
+                method: 'POST',
+                url: '/FAQ/RestoreFAQ/' + faqId,
+                data: $httpParamSerializerJQLike({ __RequestVerificationToken: tokenValue }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }).then(function (response) {
+                if (response.data.success) {
+                    alert('FAQ restored successfully!');
+                    $scope.loadDeletedFaqs();
+                    $scope.loadFAQs();
+                } else {
+                    alert('Error: ' + response.data.message);
+                }
+            }).catch(function (error) {
+                console.error('Error restoring FAQ:', error);
+                alert('Error restoring FAQ');
+            });
+        };
+
+        $scope.permanentDeleteFaq = function (faqId) {
+            if (!confirm('Permanently delete this FAQ? This CANNOT be undone.')) return;
+            var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            var tokenValue = tokenElement ? tokenElement.value : '';
+
+            $http({
+                method: 'POST',
+                url: '/FAQ/PermanentDeleteFAQ/' + faqId,
+                data: $httpParamSerializerJQLike({ __RequestVerificationToken: tokenValue }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }).then(function (response) {
+                if (response.data.success) {
+                    alert('FAQ permanently deleted.');
+                    $scope.loadDeletedFaqs();
+                } else {
+                    alert('Error: ' + response.data.message);
+                }
+            }).catch(function (error) {
+                console.error('Error permanently deleting FAQ:', error);
+                alert('Error permanently deleting FAQ');
+            });
+        };
         // ===== SERVICES =====
         $scope.services = [
             { name: "Gel Manicure", image: "~/Content/Pictures/service1.jpg", category: "manicure" },
@@ -753,6 +821,75 @@ app.controller("DestLoungeSalesandBookingController",
                         alert('Error deleting contact info');
                     });
             }
+        };
+        // ===== DELETED CONTACTS (TRASH) =====
+        $scope.deletedContacts = [];
+        $scope.showContactTrash = false;
+
+        $scope.toggleContactTrash = function () {
+            $scope.showContactTrash = !$scope.showContactTrash;
+            if ($scope.showContactTrash) {
+                $scope.loadDeletedContacts();
+            }
+        };
+
+        $scope.loadDeletedContacts = function () {
+            $http.get('/Contact/GetDeletedContacts')
+                .then(function (response) {
+                    if (response.data.success) {
+                        $scope.deletedContacts = response.data.data;
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error loading deleted contacts:', error);
+                });
+        };
+
+        $scope.restoreContact = function (contactID) {
+            if (!confirm('Restore this contact info?')) return;
+            var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            var tokenValue = tokenElement ? tokenElement.value : '';
+
+            $http({
+                method: 'POST',
+                url: '/Contact/RestoreContact/' + contactID,
+                data: $httpParamSerializerJQLike({ __RequestVerificationToken: tokenValue }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }).then(function (response) {
+                if (response.data.success) {
+                    alert('Contact info restored successfully!');
+                    $scope.loadDeletedContacts();
+                    $scope.loadContactInfo();
+                } else {
+                    alert('Error: ' + response.data.message);
+                }
+            }).catch(function (error) {
+                console.error('Error restoring contact:', error);
+                alert('Error restoring contact');
+            });
+        };
+
+        $scope.permanentDeleteContact = function (contactID) {
+            if (!confirm('Permanently delete this contact? This CANNOT be undone.')) return;
+            var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            var tokenValue = tokenElement ? tokenElement.value : '';
+
+            $http({
+                method: 'POST',
+                url: '/Contact/PermanentDeleteContact/' + contactID,
+                data: $httpParamSerializerJQLike({ __RequestVerificationToken: tokenValue }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }).then(function (response) {
+                if (response.data.success) {
+                    alert('Contact permanently deleted.');
+                    $scope.loadDeletedContacts();
+                } else {
+                    alert('Error: ' + response.data.message);
+                }
+            }).catch(function (error) {
+                console.error('Error permanently deleting contact:', error);
+                alert('Error permanently deleting contact');
+            });
         };
 
         // ===== ON PAGE LOAD =====
