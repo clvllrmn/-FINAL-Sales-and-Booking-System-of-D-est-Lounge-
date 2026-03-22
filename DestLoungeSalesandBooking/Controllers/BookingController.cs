@@ -4,6 +4,9 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Web.Mvc;
+using System.Net;
+using System.Net.Mail;
+using System.Configuration;
 
 namespace DestLoungeSalesandBooking.Controllers
 {
@@ -18,16 +21,27 @@ namespace DestLoungeSalesandBooking.Controllers
 
         [HttpPost]
         public ActionResult Create(
-            int customerId,
-            int serviceId,
-            string bookingDate,
-            string startTime,
-            string endTime,
-            string nailTech = null,
-            string downpayment = null,
-            string notes = null
-        )
+      int customerId,
+      int serviceId,
+      string bookingDate,
+      string startTime,
+      string endTime,
+      string nailTech = null,
+      string downpayment = null,
+      string notes = null
+  )
         {
+            if (customerId <= 0)
+            {
+                return Json(new { success = false, message = "User not logged in." });
+            }
+
+            var userExists = db.tbl_users.Any(u => u.userID == customerId);
+            if (!userExists)
+            {
+                return Json(new { success = false, message = "User does not exist." });
+            }
+
             DateTime date;
             var dateFormats = new[] { "yyyy-MM-dd", "MM/dd/yyyy", "dd/MM/yyyy" };
 
@@ -86,82 +100,6 @@ namespace DestLoungeSalesandBooking.Controllers
             });
         }
 
-        public ActionResult List()
-        {
-            var items = db.tbl_bookings
-                .OrderByDescending(b => b.CreatedAt)
-                .Take(50)
-                .Select(b => new
-                {
-                    b.BookingId,
-                    b.CustomerId,
-                    b.ServiceId,
-                    BookingDate = b.BookingDate,
-                    StartTime = b.StartTime.ToString(),
-                    EndTime = b.EndTime.ToString(),
-                    b.Status,
-                    b.Notes,
-                    b.CreatedAt
-                })
-                .ToList();
-
-            return Json(items, JsonRequestBehavior.AllowGet);
-        }
-
-
-        // POST: /Booking/UpdateStatus
-        // body: bookingId=1&status=Approved
-        [HttpPost]
-        public ActionResult UpdateStatus(int bookingId, string status)
-        {
-            if (string.IsNullOrWhiteSpace(status))
-                return Json(new { success = false, message = "Status is required." });
-
-            var allowed = new[] { "Pending", "Approved", "Completed", "Cancelled" };
-            if (!allowed.Contains(status))
-                return Json(new { success = false, message = "Invalid status." });
-
-            var booking = db.tbl_bookings.FirstOrDefault(b => b.BookingId == bookingId);
-            if (booking == null)
-                return Json(new { success = false, message = "Booking not found." });
-
-            // ✅ 1. TIME VALIDATION (Fix QA Issue #3)
-            if (status == "Completed")
-            {
-                DateTime bookingDateTime = booking.BookingDate.Date + booking.StartTime;
-
-                if (bookingDateTime > DateTime.Now)
-                {
-                    return Json(new
-                    {
-                        success = false,
-                        message = "Cannot complete a future appointment."
-                    });
-                }
-            }
-
-            // ✅ Update status
-            booking.Status = status;
-            db.SaveChanges();
-
-            // 🔥 TRIGGER ONLY WHEN COMPLETED
-            if (status == "Completed")
-            {
-                // 1. Create Notification
-                CreateNotification(booking.CustomerId,
-                    $"Your booking #{booking.BookingId} is completed! Please leave a review.");
-
-                // 2. Create Review Request
-                CreateReviewRequest(booking.CustomerId, booking.BookingId);
-            }
-
-            return Json(new
-            {
-                success = true,
-                message = $"Booking #{bookingId} updated to {status}."
-            });
-        }
-
         private void CreateNotification(int customerId, string message)
         {
             // ⚠️ Make sure you have tbl_notifications table
@@ -179,6 +117,7 @@ namespace DestLoungeSalesandBooking.Controllers
 
 
         private void CreateReviewRequest(int customerId, int bookingId)
+
         {
             var review = new tbl_review_requests
             {
@@ -192,8 +131,89 @@ namespace DestLoungeSalesandBooking.Controllers
             db.SaveChanges();
         }
 
+        public ActionResult List()
+        {
+            var items = db.tbl_bookings
+                .OrderByDescending(b => b.CreatedAt)
+                .Take(50)
+                .ToList()
+                .Select(b => new
+                {
+                    b.BookingId,
+                    b.CustomerId,
+                    b.ServiceId,
+                    BookingDate = b.BookingDate,
+                    StartTime = b.StartTime.ToString(),
+                    EndTime = b.EndTime.ToString(),
+                    b.Status,
+                    b.Notes,
+                    b.CreatedAt,
+                    FirstName = db.tbl_users
+                        .Where(u => u.userID == b.CustomerId)
+                        .Select(u => u.firstname)
+                        .FirstOrDefault(),
+                    LastName = db.tbl_users
+                        .Where(u => u.userID == b.CustomerId)
+                        .Select(u => u.lastname)
+                        .FirstOrDefault()
+                })
+                .ToList();
 
+            return Json(items, JsonRequestBehavior.AllowGet);
+        }
 
+        [HttpPost]
+        public ActionResult UpdateStatus(int bookingId, string status)
+        {
+            if (string.IsNullOrWhiteSpace(status))
+                return Json(new { success = false, message = "Status is required." });
+
+            var allowed = new[] { "Pending", "Approved", "Completed", "Cancelled" };
+            if (!allowed.Contains(status))
+                return Json(new { success = false, message = "Invalid status." });
+
+            var booking = db.tbl_bookings.FirstOrDefault(b => b.BookingId == bookingId);
+            if (booking == null)
+                return Json(new { success = false, message = "Booking not found." });
+
+            if (status == "Completed")
+            {
+                DateTime bookingDateTime = booking.BookingDate.Date + booking.StartTime;
+
+                if (bookingDateTime > DateTime.Now)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Cannot complete a future appointment."
+                    });
+                }
+            }
+
+            booking.Status = status;
+            db.SaveChanges();
+            // SEND EMAIL WHEN APPROVED
+            if (status == "Approved")
+            {
+                SendBookingEmail(booking);
+            }
+
+            if (status == "Completed")
+            {
+                CreateNotification(
+                    booking.CustomerId,
+                    $"Your booking #{booking.BookingId} is completed! Please leave a review."
+                );
+
+                CreateReviewRequest(booking.CustomerId, booking.BookingId);
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = $"Booking #{bookingId} updated to {status}."
+            });
+        }
 
         // POST: /Booking/Cancel
         // body: bookingId=1&reason=customer%20not%20available
@@ -276,7 +296,60 @@ namespace DestLoungeSalesandBooking.Controllers
         }
 
 
+        private void SendBookingEmail(tbl_bookings booking)
+        {
+            try
+            {
+                var user = db.tbl_users.FirstOrDefault(u => u.userID == booking.CustomerId);
+                if (user == null || string.IsNullOrEmpty(user.email)) return;
 
+                string toEmail = user.email;
+
+                string subject = "D'est Lounge Booking Confirmation";
+
+                string body = $@"
+Hello {user.firstname},
+
+Your booking has been APPROVED!
+
+Booking Details:
+--------------------------
+Date: {booking.BookingDate:MMMM dd, yyyy}
+Time: {booking.StartTime} - {booking.EndTime}
+Notes: {booking.Notes}
+
+Thank you for choosing D'est Lounge 💅
+";
+
+                var smtpHost = ConfigurationManager.AppSettings["SmtpHost"];
+                var smtpPort = int.Parse(ConfigurationManager.AppSettings["SmtpPort"]);
+                var smtpEmail = ConfigurationManager.AppSettings["SmtpEmail"];
+                var smtpPass = ConfigurationManager.AppSettings["SmtpPass"];
+                var fromName = ConfigurationManager.AppSettings["SmtpFromName"];
+
+                var client = new SmtpClient(smtpHost, smtpPort)
+                {
+                    Credentials = new NetworkCredential(smtpEmail, smtpPass),
+                    EnableSsl = true
+                };
+
+                var mail = new MailMessage
+                {
+                    From = new MailAddress(smtpEmail, fromName),
+                    Subject = subject,
+                    Body = body,
+                    IsBodyHtml = false
+                };
+
+                mail.To.Add(toEmail);
+
+                client.Send(mail);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("EMAIL ERROR: " + ex.Message);
+            }
+        }
 
     }
 }

@@ -790,8 +790,10 @@
 </style>
 
 @section scripts {
-    <script src="~/Scripts/angular.min.js"></script>
-    <script src="~/Scripts/app/booking-page.js"></script>
+    <script>
+        window.loggedInUserId = @(Session["UserID"] != null ? Session["UserID"].ToString() : "null");
+        console.log("Logged in user id:", window.loggedInUserId);
+    </script>
 }
 
 

@@ -51,6 +51,7 @@ app.controller("DestLoungeSalesandBookingController",
                     console.error('Error loading homepage content:', error);
                 });
         };
+
         // ===== EDIT HOMEPAGE TEXT =====
         $scope.editHomepageText = function (contentType, currentValue) {
             var newValue = prompt('Edit ' + contentType + ':', currentValue);
@@ -211,6 +212,7 @@ app.controller("DestLoungeSalesandBookingController",
                     });
             }
         };
+
         // ===== DELETED FAQs (TRASH) =====
         $scope.deletedFaqs = [];
         $scope.showTrash = false;
@@ -280,6 +282,7 @@ app.controller("DestLoungeSalesandBookingController",
                 alert('Error permanently deleting FAQ');
             });
         };
+
         // ===== SERVICES =====
         $scope.services = [
             { name: "Gel Manicure", image: "~/Content/Pictures/service1.jpg", category: "manicure" },
@@ -355,6 +358,7 @@ app.controller("DestLoungeSalesandBookingController",
                     var parts = $scope.booking.date.split('-');
                     selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
                 }
+
                 var selectedDateStr = $scope.booking.date;
                 if ($scope.booking.date instanceof Date) {
                     var year = selectedDate.getFullYear();
@@ -362,7 +366,9 @@ app.controller("DestLoungeSalesandBookingController",
                     var day = String(selectedDate.getDate()).padStart(2, '0');
                     selectedDateStr = year + '-' + month + '-' + day;
                 }
+
                 $scope.dateFullyBooked = $scope.fullyBookedDates.indexOf(selectedDateStr) !== -1;
+
                 if ($scope.dateFullyBooked) {
                     $scope.booking.time = '';
                     $scope.availableTimes = [];
@@ -373,6 +379,7 @@ app.controller("DestLoungeSalesandBookingController",
                     } else {
                         $scope.availableTimes = $scope.weekdayTimes;
                     }
+
                     if ($scope.booking.time && $scope.availableTimes.indexOf($scope.booking.time) === -1) {
                         $scope.booking.time = '';
                     }
@@ -411,49 +418,73 @@ app.controller("DestLoungeSalesandBookingController",
         };
 
         $scope.submitBooking = function () {
+            console.log("window.loggedInUserId =", window.loggedInUserId);
+
+            if (!window.loggedInUserId || window.loggedInUserId === "null" || parseInt(window.loggedInUserId) <= 0) {
+                alert("Please login first before booking.");
+                window.location.href = "/Main/LoginPage";
+                return;
+            }
+
             if (!$scope.isBookingValid()) {
                 alert("Please complete all booking fields.");
                 return;
             }
+
             var d = $scope.booking.date;
             var dateObj = (d instanceof Date) ? d : new Date(d);
+
             if (isNaN(dateObj.getTime())) {
                 alert("Invalid date.");
                 return;
             }
-            var yyyy = dateObj.getFullYear();
-            var mm = String(dateObj.getMonth() + 1).padStart(2, "0");
-            var dd = String(dateObj.getDate()).padStart(2, "0");
-            var bookingDate = yyyy + "-" + mm + "-" + dd;
+
+            var yyyy2 = dateObj.getFullYear();
+            var mm2 = String(dateObj.getMonth() + 1).padStart(2, "0");
+            var dd2 = String(dateObj.getDate()).padStart(2, "0");
+            var bookingDate = yyyy2 + "-" + mm2 + "-" + dd2;
+
             function to24h(t) {
                 var parts = t.trim().split(" ");
                 var hm = parts[0].split(":");
                 var hour = parseInt(hm[0], 10);
                 var min = parseInt(hm[1], 10);
                 var ampm = (parts[1] || "").toUpperCase();
+
                 if (ampm === "PM" && hour < 12) hour += 12;
                 if (ampm === "AM" && hour === 12) hour = 0;
+
                 return { hour: hour, min: min };
             }
+
             var start = to24h($scope.booking.time);
             var startHour = start.hour;
             var startMin = start.min;
+
             var endHour = startHour + 2;
             var endMin = startMin;
             if (endHour >= 24) endHour -= 24;
+
             var startTime = String(startHour).padStart(2, "0") + ":" + String(startMin).padStart(2, "0");
             var endTime = String(endHour).padStart(2, "0") + ":" + String(endMin).padStart(2, "0");
+
             var serviceId = 1;
+
             var payload = {
-                customerId: 1,
+                customerId: parseInt(window.loggedInUserId),
                 serviceId: serviceId,
                 bookingDate: bookingDate,
                 startTime: startTime,
                 endTime: endTime,
                 nailTech: String($scope.booking.nailTech || ""),
                 downpayment: String($scope.calculateTotal() || ""),
-                notes: "Services: " + ($scope.booking.selectedServices || []).map(s => s.name).join(", ")
+                notes: "Services: " + ($scope.booking.selectedServices || []).map(function (s) {
+                    return s.name;
+                }).join(", ")
             };
+
+            console.log("Booking payload:", payload);
+
             $http({
                 method: "POST",
                 url: "/Booking/Create",
@@ -461,6 +492,8 @@ app.controller("DestLoungeSalesandBookingController",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" }
             }).then(function (resp) {
                 var res = resp.data;
+                console.log("Booking response:", res);
+
                 if (res && res.success) {
                     alert("✅ Booking created. (ID=" + res.bookingId + ")");
                     $scope.booking.time = "";
@@ -475,94 +508,133 @@ app.controller("DestLoungeSalesandBookingController",
             });
         };
 
-        // ===== ADMIN BOOKING LIST =====
+        // ===================== ADMIN BOOKING LIST ======================
+
         $scope.bookings = [];
         $scope.filteredBookings = [];
         $scope.selectedFilter = 'all';
 
         function parseNetDate(netDateStr) {
             if (!netDateStr) return null;
-            var match = /\/Date\((\d+)\)\//.exec(netDateStr);
-            if (match && match[1]) return new Date(parseInt(match[1], 10));
-            return new Date(netDateStr);
+
+            if (typeof netDateStr === "string") {
+                var match = /\/Date\((\d+)\)\//.exec(netDateStr);
+                if (match && match[1]) {
+                    return new Date(parseInt(match[1], 10));
+                }
+
+                var d = new Date(netDateStr);
+                if (!isNaN(d.getTime())) return d;
+            }
+
+            if (netDateStr instanceof Date) return netDateStr;
+
+            return null;
         }
 
-        function pad2(n) { return String(n).padStart(2, "0"); }
+        function pad2(n) {
+            return String(n).padStart(2, "0");
+        }
 
         function formatDateTime(d, startTime, endTime) {
             if (!d) return "N/A";
+
             var day = pad2(d.getDate());
             var mon = pad2(d.getMonth() + 1);
             var yr = d.getFullYear();
+
             var st = (startTime || "").substring(0, 5);
             var et = (endTime || "").substring(0, 5);
-            return `${day}/${mon}/${yr} ${st}-${et}`;
+
+            return day + "/" + mon + "/" + yr + " " + st + "-" + et;
         }
 
         function extractCancelReason(notes) {
             if (!notes) return "";
+
             var key = "Cancel reason:";
             var idx = notes.indexOf(key);
+
             if (idx === -1) return "";
+
             return notes.substring(idx + key.length).trim();
         }
 
         $scope.loadBookings = function () {
-            return $http.get("/booking/List").then(function (resp) {
-                var rows = resp.data || [];
-                $scope.bookings = rows.map(function (b) {
-                    var dateObj = parseNetDate(b.BookingDate);
-                    var status = (b.Status || "Pending").trim();
-                    var serviceLabel = "ServiceId #" + b.ServiceId;
-                    if (b.Notes && b.Notes.indexOf("Services:") !== -1) {
-                        var s = b.Notes.split("|")[0];
-                        serviceLabel = s.replace("Services:", "").trim();
-                    }
-                    return {
-                        bookingId: b.BookingId,
-                        clientName: "Customer #" + b.CustomerId,
-                        service: serviceLabel,
-                        dateTime: formatDateTime(dateObj, b.StartTime, b.EndTime),
-                        contact: b.Notes ? b.Notes : "N/A",
-                        status: status,
-                        cancelReason: extractCancelReason(b.Notes),
-                        _raw: b
-                    };
+            console.log("Calling /Booking/List ...");
+
+            return $http.get("/Booking/List")
+                .then(function (resp) {
+                    console.log("RAW /Booking/List response:", resp.data);
+
+                    var rows = resp.data || [];
+
+                    $scope.bookings = rows.map(function (b) {
+                        var dateObj = parseNetDate(b.BookingDate);
+                        var status = (b.Status || "Pending").trim();
+
+                        var serviceLabel = "ServiceId #" + b.ServiceId;
+                        if (b.Notes && b.Notes.indexOf("Services:") !== -1) {
+                            var s = b.Notes.split("|")[0];
+                            serviceLabel = s.replace("Services:", "").trim();
+                        }
+
+                        return {
+                            bookingId: b.BookingId,
+                            clientName: ((b.FirstName || "") + " " + (b.LastName || "")).trim() || ("Customer #" + b.CustomerId),
+                            service: serviceLabel,
+                            dateTime: formatDateTime(dateObj, b.StartTime, b.EndTime),
+                            contact: b.Notes ? b.Notes : "N/A",
+                            status: status,
+                            cancelReason: extractCancelReason(b.Notes),
+                            _raw: b
+                        };
+                    });
+
+                    console.log("MAPPED bookings:", $scope.bookings);
+
+                    $scope.filterBookings('all');
+                })
+                .catch(function (err) {
+                    console.error("loadBookings error:", err);
+                    alert("❌ Failed to load bookings. Check console.");
                 });
-                $scope.filterBookings($scope.selectedFilter);
-            }).catch(function (err) {
-                console.error("loadBookings error:", err);
-                alert("❌ Failed to load bookings. Check console.");
-            });
         };
 
         $scope.filterBookings = function (filter) {
             $scope.selectedFilter = filter;
-            var today = new Date();
-            today.setHours(0, 0, 0, 0);
+
+            var todayDate = new Date();
+            todayDate.setHours(0, 0, 0, 0);
+
             function parseCardDateTime(card) {
                 if (!card || !card.dateTime || card.dateTime === "N/A") return null;
+
                 var datePart = card.dateTime.split(" ")[0];
                 var parts = datePart.split("/");
+
                 if (parts.length !== 3) return null;
-                var dd = parseInt(parts[0], 10);
-                var mm = parseInt(parts[1], 10);
-                var yy = parseInt(parts[2], 10);
-                var d = new Date(yy, mm - 1, dd);
+
+                var dd3 = parseInt(parts[0], 10);
+                var mm3 = parseInt(parts[1], 10);
+                var yy3 = parseInt(parts[2], 10);
+
+                var d = new Date(yy3, mm3 - 1, dd3);
                 d.setHours(0, 0, 0, 0);
                 return d;
             }
+
             if (filter === 'all') {
-                $scope.filteredBookings = $scope.bookings;
+                $scope.filteredBookings = angular.copy($scope.bookings);
             } else if (filter === 'today') {
                 $scope.filteredBookings = $scope.bookings.filter(function (b) {
                     var d = parseCardDateTime(b);
-                    return d && d.getTime() === today.getTime();
+                    return d && d.getTime() === todayDate.getTime();
                 });
             } else if (filter === 'upcoming') {
                 $scope.filteredBookings = $scope.bookings.filter(function (b) {
                     var d = parseCardDateTime(b);
-                    return d && d.getTime() > today.getTime() && b.status !== 'Cancelled';
+                    return d && d.getTime() > todayDate.getTime() && b.status !== 'Cancelled';
                 });
             } else if (filter === 'completed') {
                 $scope.filteredBookings = $scope.bookings.filter(function (b) {
@@ -573,9 +645,13 @@ app.controller("DestLoungeSalesandBookingController",
                     return b.status === 'Cancelled';
                 });
             }
+
+            console.log("FILTERED bookings:", $scope.filteredBookings);
         };
 
         if (window.location.pathname.toLowerCase().indexOf("adminbookingpage") !== -1) {
+            console.log("Admin booking page detected");
+            $scope.selectedFilter = 'all';
             $scope.loadBookings();
         }
 
@@ -587,7 +663,7 @@ app.controller("DestLoungeSalesandBookingController",
                 data: $httpParamSerializerJQLike(payload),
                 headers: { "Content-Type": "application/x-www-form-urlencoded" }
             }).then(function (resp) {
-                var card = $scope.bookings.find(b => b.bookingId === bookingId);
+                var card = $scope.bookings.find(function (b) { return b.bookingId === bookingId; });
                 if (card) card.status = newStatus;
                 $scope.filterBookings($scope.selectedFilter);
                 alert(resp.data.message || "Updated.");
@@ -607,7 +683,7 @@ app.controller("DestLoungeSalesandBookingController",
                 data: $httpParamSerializerJQLike(payload),
                 headers: { "Content-Type": "application/x-www-form-urlencoded" }
             }).then(function (resp) {
-                var card = $scope.bookings.find(b => b.bookingId === bookingId);
+                var card = $scope.bookings.find(function (b) { return b.bookingId === bookingId; });
                 if (card) {
                     card.status = "Cancelled";
                     card.cancelReason = reason;
@@ -650,8 +726,8 @@ app.controller("DestLoungeSalesandBookingController",
                 console.warn("Chart.js not found.");
                 return;
             }
-            var labels = (points || []).map(p => p.label);
-            var data = (points || []).map(p => Number(p.value || 0));
+            var labels = (points || []).map(function (p) { return p.label; });
+            var data = (points || []).map(function (p) { return Number(p.value || 0); });
             var canvas = document.getElementById("salesChart");
             if (!canvas) return;
             var ctx = canvas.getContext("2d");
@@ -822,6 +898,7 @@ app.controller("DestLoungeSalesandBookingController",
                     });
             }
         };
+
         // ===== DELETED CONTACTS (TRASH) =====
         $scope.deletedContacts = [];
         $scope.showContactTrash = false;
@@ -904,7 +981,6 @@ app.controller("DestLoungeSalesandBookingController",
             $scope.loadFAQs();
         }
 
-        // Load homepage content on homepage
         if (currentPath === "/" || currentPath.indexOf("homepage") !== -1) {
             console.log("Homepage detected, loading content...");
             $scope.loadHomepageContent();
@@ -944,6 +1020,7 @@ app.controller("DestLoungeSalesandBookingController",
                 }
             }
         };
+
         $scope.openEditModal = function (contentType, currentValue, label) {
             _currentContentType = contentType;
             document.getElementById('modalTitle').textContent = 'Edit: ' + label;
@@ -952,31 +1029,36 @@ app.controller("DestLoungeSalesandBookingController",
             setTimeout(function () { document.getElementById('modalInput').focus(); }, 100);
         };
 
+        // ===== USER BOOKINGS =====
         $scope.userBookings = [];
 
         $scope.loadUserBookings = function () {
-            var customerId = 1; // ⚠️ replace later with session
+            if (!window.loggedInUserId || window.loggedInUserId === "null" || parseInt(window.loggedInUserId) <= 0) {
+                return;
+            }
 
-            $http.get("/Booking/GetUserBookings?customerId=" + customerId)
+            var customerId = parseInt(window.loggedInUserId);
+
+            $http.get("/Booking/GetUserBookings?userId=" + customerId)
                 .then(function (res) {
-                    $scope.userBookings = res.data;
+                    $scope.userBookings = res.data || [];
+                })
+                .catch(function (err) {
+                    console.error("Error loading user bookings:", err);
                 });
         };
 
-        $scope.loadUserBookings();
+        if (window.loggedInUserId && window.loggedInUserId !== "null") {
+            $scope.loadUserBookings();
+        }
 
         $scope.numbersOnly = function (event) {
             var charCode = event.which || event.keyCode;
-            // Allow only digits (0-9)
             if (charCode < 48 || charCode > 57) {
                 event.preventDefault();
             }
-        };        
-
-       
-
-       
-    }); // ← CONTROLLER CLOSES HERE
+        };
+    });
 
 // ===== COMPARE DIRECTIVE =====
 app.directive('compareTo', function () {
@@ -993,9 +1075,3 @@ app.directive('compareTo', function () {
         }
     };
 });
-
-
-
-
-
-    

@@ -1,0 +1,19 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+
+using System;
+
+namespace DestLoungeSalesandBooking.Models
+{
+    public class tbl_services
+    {
+        public int service_id { get; set; }
+        public string name { get; set; }
+        public string description { get; set; }
+        public decimal price { get; set; }
+        public sbyte is_active { get; set; }
+    }
+}
