@@ -31,9 +31,41 @@
                     <i class="fa-regular fa-user"></i> LOGIN
                 </a>
             }
-            <a href="#" class="bell-icon" title="Notifications">
+            <div class="bell-icon" ng-click="showNotif = !showNotif" style="position: relative;">
                 <i class="fa-solid fa-bell"></i>
-            </a>
+
+                <div ng-show="showNotif" style="
+                position:absolute;
+                right:0;
+                top:30px;
+                background:white;
+                width:300px;
+                max-height:300px;
+                overflow:auto;
+                border-radius:10px;
+                box-shadow:0 4px 10px rgba(0,0,0,0.2);
+                padding:10px;
+                z-index:1000;
+    ">
+
+                    
+
+
+                    <div ng-if="notifications && notifications.length > 0">
+                        <h3>Notifications</h3>
+
+                        <div ng-repeat="n in notifications" style="background:#eee; padding:10px; margin-bottom:5px;">
+                            <p>{{n.Message}}</p>
+                            <small>{{n.CreatedAt}}</small>
+                        </div>
+                    </div>
+
+                    <div ng-controller="DestLoungeSalesandBookingController"></div>
+
+
+                </div>
+            </div>
+
         </div>
     </div>
 </header>
@@ -55,55 +87,56 @@
     </aside>
 
     <main class="profile-content">
-        @if (Model != null && Model.HasBooking)
-        {
-            <div class="booking-card">
-                <h2 class="booking-heading">Service Summary</h2>
+        <div class="booking-card" ng-if="userBookings.length > 0">
+            <h2 class="booking-heading">My Bookings</h2>
 
-                <div class="booking-details">
-                    <div class="booking-row">
-                        <span class="booking-label">Type of Service</span>
-                        <span class="booking-value service-type">@Model.ServiceType</span>
-                    </div>
+            <div ng-repeat="b in userBookings" class="booking-details">
 
-                    <div class="booking-row">
-                        <span class="booking-label">Total Cost</span>
-                        <span class="booking-value">₱ @Model.TotalCost.ToString("N2")</span>
-                    </div>
-
-                    <div class="booking-row">
-                        <span class="booking-label">Date</span>
-                        <span class="booking-value">@Model.BookingDate.ToString("MMM dd, yyyy")</span>
-                    </div>
-
-                    <div class="booking-row">
-                        <span class="booking-label">Time</span>
-                        <span class="booking-value">@Model.StartTime - @Model.EndTime</span>
-                    </div>
+                <div class="booking-row">
+                    <span class="booking-label">Date</span>
+                    <span class="booking-value">{{b.BookingDate}}</span>
                 </div>
 
-                <div class="booking-actions">
-                    <button type="button" class="btn-cancel" onclick="cancelBooking(@Model.BookingId)">
-                        Cancel Booking
-                    </button>
-                    <button type="button" class="btn-reschedule" onclick="location.href='@Url.Action("RescheduleBooking", "Main", new { id = Model.BookingId })'">
-                        Reschedule Booking
-                    </button>
+                <div class="booking-row">
+                    <span class="booking-label">Time</span>
+                    <span class="booking-value">{{b.StartTime}} - {{b.EndTime}}</span>
                 </div>
+
+                <div class="booking-row">
+                    <span class="booking-label">Status</span>
+                    <span class="booking-value">{{b.Status}}</span>
+                </div>
+
+                <div class="booking-row">
+                    <span class="booking-label">Notes</span>
+                    <span class="booking-value">{{b.Notes}}</span>
+                </div>
+
+                <!-- 🔥 FIXED BUTTON -->
+                <button class="btn-cancel"
+                        ng-if="b.Status == 'Pending'"
+                        ng-click="cancelUserBooking(b.BookingId)">
+                    Cancel Booking
+                </button>
+
+                <hr />
             </div>
-        }
-        else
-        {
-            <div class="booking-card">
-                <h2 class="booking-heading">Service Summary</h2>
-                <div class="no-booking">
-                    <p>You don't have any current bookings.</p>
-                    <a href="@Url.Action("ServicePage","Main")" class="btn-book-now">Book a Service</a>
-                </div>
+        </div>
+
+
+        <div class="booking-card" ng-if="userBookings.length === 0">
+            <h2 class="booking-heading">Service Summary</h2>
+            <div class="no-booking">
+                <p>You don't have any current bookings.</p>
+                <a href="@Url.Action("ServicePage","Main")" class="btn-book-now">Book a Service</a>
             </div>
-        }
+        </div>
+
     </main>
 </div>
+<script>
+    window.loggedInUserId = '@Session["UserID"]';
+</script>
 
 <footer>
     <div class="footer-container">
