@@ -1,17 +1,19 @@
 ﻿using DestLoungeSalesandBooking.Models;
 using DestLoungeSalesandBooking.Models.Context;
+using Google.Apis.Auth;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Web.Mvc;
-using System.Web.Security;
-using Google.Apis.Auth;
 using System.Configuration;
 using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Mail;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
+using System.Web.Mvc;
 using System.Web.Script.Serialization;
+using System.Web.Security;
 
 namespace DestLoungeSalesandBooking.Controllers
 {
@@ -350,8 +352,8 @@ namespace DestLoungeSalesandBooking.Controllers
             if (disposing) db.Dispose();
             base.Dispose(disposing);
         }
-    //Google Sign In
-    [HttpPost]
+        //Google Sign In
+        [HttpPost]
         public async Task<ActionResult> GoogleSignIn()
         {
             try
@@ -454,6 +456,172 @@ namespace DestLoungeSalesandBooking.Controllers
                 System.Diagnostics.Debug.WriteLine("GoogleSignIn Error: " + ex.ToString());
                 return Json(new { success = false, message = "Google sign-in failed." });
             }
+        
+    }
+    [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult SendForgotPasswordOtp(string email)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(email))
+                {
+                    TempData["ErrorMessage"] = "Please enter your email.";
+                    return RedirectToAction("ForgotPasswordPage", "Main");
+                }
+
+                var user = db.tbl_users.FirstOrDefault(u => u.email.ToLower() == email.ToLower().Trim());
+
+                if (user == null)
+                {
+                    TempData["ErrorMessage"] = "Email not found.";
+                    return RedirectToAction("ForgotPasswordPage", "Main");
+                }
+
+                var otp = new Random().Next(100000, 999999).ToString();
+
+                Session["ForgotPasswordOTP"] = otp;
+                Session["ForgotPasswordEmail"] = user.email;
+                Session["ForgotPasswordOTPExpiry"] = DateTime.Now.AddMinutes(5);
+
+                SendOtpEmail(user.email, user.firstname, otp);
+
+                TempData["SuccessMessage"] = "OTP has been sent to your email.";
+                return RedirectToAction("ForgotPasswordPage", "Main");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("SendForgotPasswordOtp Error: " + ex.ToString());
+                TempData["ErrorMessage"] = "Failed to send OTP.";
+                return RedirectToAction("ForgotPasswordPage", "Main");
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult VerifyOtpAndResetPassword(string email, string otp, string newPassword, string confirmPassword)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(email) ||
+                    string.IsNullOrWhiteSpace(otp) ||
+                    string.IsNullOrWhiteSpace(newPassword) ||
+                    string.IsNullOrWhiteSpace(confirmPassword))
+                {
+                    TempData["ErrorMessage"] = "All fields are required.";
+                    return RedirectToAction("ForgotPasswordPage", "Main");
+                }
+
+                if (newPassword != confirmPassword)
+                {
+                    TempData["ErrorMessage"] = "Passwords do not match.";
+                    return RedirectToAction("ForgotPasswordPage", "Main");
+                }
+
+                if (Session["ForgotPasswordOTP"] == null ||
+                    Session["ForgotPasswordEmail"] == null ||
+                    Session["ForgotPasswordOTPExpiry"] == null)
+                {
+                    TempData["ErrorMessage"] = "OTP session expired. Please request a new OTP.";
+                    return RedirectToAction("ForgotPasswordPage", "Main");
+                }
+
+                var savedOtp = Session["ForgotPasswordOTP"].ToString();
+                var savedEmail = Session["ForgotPasswordEmail"].ToString();
+                var expiry = (DateTime)Session["ForgotPasswordOTPExpiry"];
+
+                if (DateTime.Now > expiry)
+                {
+                    Session.Remove("ForgotPasswordOTP");
+                    Session.Remove("ForgotPasswordEmail");
+                    Session.Remove("ForgotPasswordOTPExpiry");
+
+                    TempData["ErrorMessage"] = "OTP expired. Please request a new one.";
+                    return RedirectToAction("ForgotPasswordPage", "Main");
+                }
+
+                if (savedEmail.ToLower() != email.ToLower().Trim() || savedOtp != otp.Trim())
+                {
+                    TempData["ErrorMessage"] = "Invalid OTP.";
+                    return RedirectToAction("ForgotPasswordPage", "Main");
+                }
+
+                bool hasLower = newPassword.Any(char.IsLower);
+                bool hasUpper = newPassword.Any(char.IsUpper);
+                bool hasDigit = newPassword.Any(char.IsDigit);
+                bool hasSpecial = newPassword.Any(c => "@$!%*?&#".Contains(c));
+                bool isLong = newPassword.Length >= 8;
+
+                if (!hasLower || !hasUpper || !hasDigit || !hasSpecial || !isLong)
+                {
+                    TempData["ErrorMessage"] = "Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.";
+                    return RedirectToAction("ForgotPasswordPage", "Main");
+                }
+
+                var user = db.tbl_users.FirstOrDefault(u => u.email.ToLower() == email.ToLower().Trim());
+
+                if (user == null)
+                {
+                    TempData["ErrorMessage"] = "User not found.";
+                    return RedirectToAction("ForgotPasswordPage", "Main");
+                }
+
+                user.password = HashPassword(newPassword);
+                user.updatedAt = DateTime.Now;
+                db.SaveChanges();
+
+                Session.Remove("ForgotPasswordOTP");
+                Session.Remove("ForgotPasswordEmail");
+                Session.Remove("ForgotPasswordOTPExpiry");
+
+                TempData["SuccessMessage"] = "Password reset successful. You may now log in.";
+                return RedirectToAction("LoginPage", "Main");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("VerifyOtpAndResetPassword Error: " + ex.ToString());
+                TempData["ErrorMessage"] = "A technical error occurred.";
+                return RedirectToAction("ForgotPasswordPage", "Main");
+            }
+        }
+
+        private void SendOtpEmail(string toEmail, string firstName, string otp)
+        {
+            var smtpHost = ConfigurationManager.AppSettings["SmtpHost"];
+            var smtpPort = int.Parse(ConfigurationManager.AppSettings["SmtpPort"]);
+            var smtpEmail = ConfigurationManager.AppSettings["SmtpEmail"];
+            var smtpPass = ConfigurationManager.AppSettings["SmtpPass"];
+            var fromName = ConfigurationManager.AppSettings["SmtpFromName"];
+
+            var subject = "D'est Lounge Password Reset OTP";
+            var body = $@"Hello {firstName},
+
+Your OTP for password reset is: {otp}
+
+This OTP is valid for 5 minutes.
+
+If you did not request this, please ignore this email.
+
+- D'est Lounge";
+
+            using (var message = new MailMessage())
+            {
+                message.From = new MailAddress(smtpEmail, fromName);
+                message.To.Add(toEmail);
+                message.Subject = subject;
+                message.Body = body;
+                message.IsBodyHtml = false;
+
+                using (var client = new SmtpClient(smtpHost, smtpPort))
+                {
+                    client.Credentials = new NetworkCredential(smtpEmail, smtpPass);
+                    client.EnableSsl = true;
+                    client.Send(message);
+                }
+
+            }
+
         }
     }
+   
 }

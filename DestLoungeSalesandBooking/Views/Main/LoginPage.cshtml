@@ -29,7 +29,6 @@
     <div class="login-box">
         <h1 class="login-title">Login</h1>
 
-        <!-- Display success/error messages -->
         @if (TempData["SuccessMessage"] != null)
         {
             <div class="alert alert-success">
@@ -127,7 +126,7 @@
     }
 
         .password-group .form-input {
-            padding-right: 45px; /* make room for the button */
+            padding-right: 45px;
         }
 
     .toggle-password {
@@ -138,8 +137,8 @@
         background: none;
         border: none;
         cursor: pointer;
-        color: #5d4037; /* changed from #888 */
-        font-size: 1.1rem; /* matched to reset page */
+        color: #5d4037; 
+        font-size: 1.1rem; 
         padding: 0;
         display: flex;
         align-items: center;
@@ -148,7 +147,7 @@
     }
 
         .toggle-password:hover {
-            color: #3e2723; /* changed from #333 */
+            color: #3e2723; 
         }
 </style>
 
