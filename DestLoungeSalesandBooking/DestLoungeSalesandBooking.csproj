@@ -61,6 +61,15 @@
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.5.1\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
+    <Reference Include="Google.Apis, Version=1.73.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.1.73.0\lib\net462\Google.Apis.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.Apis.Auth, Version=1.73.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Auth.1.73.0\lib\net462\Google.Apis.Auth.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.Apis.Core, Version=1.73.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Core.1.73.0\lib\net462\Google.Apis.Core.dll</HintPath>
+    </Reference>
     <Reference Include="Google.Protobuf, Version=3.33.5.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
       <HintPath>..\packages\Google.Protobuf.3.33.5\lib\net45\Google.Protobuf.dll</HintPath>
     </Reference>
@@ -186,6 +195,7 @@
     </Compile>
     <Compile Include="Models\Booking\Booking.cs" />
     <Compile Include="Models\Context\DestLoungeSalesandBookingContext.cs" />
+    <Compile Include="Models\GoogleSignInRequest.cs" />
     <Compile Include="Models\Maps\tblUsersMap.cs" />
     <Compile Include="Models\Maps\tbl_contact_Map.cs" />
     <Compile Include="Models\Maps\tbl_homepage_content_Map.cs" />
@@ -1060,6 +1070,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Views\GoogleSignInRequest\" />
     <Folder Include="Views\tbl_services\" />
     <Folder Include="Views\tbl_services_Map\" />
   </ItemGroup>

@@ -7,6 +7,11 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Web.Mvc;
 using System.Web.Security;
+using Google.Apis.Auth;
+using System.Configuration;
+using System.IO;
+using System.Threading.Tasks;
+using System.Web.Script.Serialization;
 
 namespace DestLoungeSalesandBooking.Controllers
 {
@@ -344,6 +349,111 @@ namespace DestLoungeSalesandBooking.Controllers
         {
             if (disposing) db.Dispose();
             base.Dispose(disposing);
+        }
+    //Google Sign In
+    [HttpPost]
+        public async Task<ActionResult> GoogleSignIn()
+        {
+            try
+            {
+                Request.InputStream.Position = 0;
+                string body;
+
+                using (var reader = new StreamReader(Request.InputStream))
+                {
+                    body = reader.ReadToEnd();
+                }
+
+                var serializer = new JavaScriptSerializer();
+                var request = serializer.Deserialize<DestLoungeSalesandBooking.Models.GoogleSignInRequest>(body);
+
+                if (request == null || string.IsNullOrWhiteSpace(request.IdToken))
+                {
+                    return Json(new { success = false, message = "Missing Google token." });
+                }
+
+                var clientId = ConfigurationManager.AppSettings["GoogleClientId"];
+
+                var settings = new GoogleJsonWebSignature.ValidationSettings
+                {
+                    Audience = new[] { clientId }
+                };
+
+                var payload = await GoogleJsonWebSignature.ValidateAsync(request.IdToken, settings);
+
+                if (payload == null)
+                {
+                    return Json(new { success = false, message = "Invalid Google token." });
+                }
+
+                var user = db.tbl_users.FirstOrDefault(u => u.googleSub == payload.Subject);
+
+                if (user == null && !string.IsNullOrWhiteSpace(payload.Email))
+                {
+                    user = db.tbl_users.FirstOrDefault(u => u.email.ToLower() == payload.Email.ToLower());
+                }
+
+                if (user == null)
+                {
+                    user = new tbl_users
+                    {
+                        roleID = 2,
+                        firstname = payload.GivenName ?? "Google",
+                        lastname = payload.FamilyName ?? "User",
+                        email = payload.Email ?? "",
+                        password = "GOOGLE_LOGIN_ONLY",
+                        coNum = "",
+                        address = "",
+                        googleSub = payload.Subject,
+                        createdAt = DateTime.Now,
+                        updatedAt = DateTime.Now
+                    };
+
+                    db.tbl_users.Add(user);
+                }
+                else
+                {
+                    if (string.IsNullOrWhiteSpace(user.googleSub))
+                        user.googleSub = payload.Subject;
+
+                    if (string.IsNullOrWhiteSpace(user.firstname) && !string.IsNullOrWhiteSpace(payload.GivenName))
+                        user.firstname = payload.GivenName;
+
+                    if (string.IsNullOrWhiteSpace(user.lastname) && !string.IsNullOrWhiteSpace(payload.FamilyName))
+                        user.lastname = payload.FamilyName;
+
+                    if (string.IsNullOrWhiteSpace(user.email) && !string.IsNullOrWhiteSpace(payload.Email))
+                        user.email = payload.Email;
+
+                    user.updatedAt = DateTime.Now;
+                }
+
+                db.SaveChanges();
+
+                FormsAuthentication.SetAuthCookie(user.email, false);
+
+                Session["UserID"] = user.userID;
+                Session["UserEmail"] = user.email;
+                Session["UserFirstName"] = user.firstname;
+                Session["UserLastName"] = user.lastname;
+                Session["RoleID"] = user.roleID;
+                Session["FullName"] = user.firstname + " " + user.lastname;
+
+                string redirectUrl = user.roleID == 1
+                    ? Url.Action("AdminHomepage", "Main")
+                    : Url.Action("Homepage", "Main");
+
+                return Json(new
+                {
+                    success = true,
+                    redirectUrl = redirectUrl
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("GoogleSignIn Error: " + ex.ToString());
+                return Json(new { success = false, message = "Google sign-in failed." });
+            }
         }
     }
 }
