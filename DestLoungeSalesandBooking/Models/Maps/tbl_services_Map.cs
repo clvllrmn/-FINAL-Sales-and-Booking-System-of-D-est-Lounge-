@@ -36,6 +36,11 @@ namespace DestLoungeSalesandBooking.Models.Maps
             Property(t => t.is_active)
                 .HasColumnName("is_active")
                 .IsRequired();
+
+            Property(t => t.category)
+                .HasColumnName("category")
+                .HasMaxLength(50)
+                .IsRequired();
         }
     }
 }

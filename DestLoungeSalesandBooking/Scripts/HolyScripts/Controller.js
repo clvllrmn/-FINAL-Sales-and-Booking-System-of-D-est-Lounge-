@@ -285,14 +285,39 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
     };
 
     // ==== SERVICES ====
-    $scope.services = [
-        { name: "Gel Manicure", image: "~/Content/Pictures/service1.jpg", category: "manicure" },
-        { name: "French Manicure", image: "~/Content/Pictures/service2.jpg", category: "manicure" },
-        { name: "Nail Art", image: "~/Content/Pictures/service3.jpg", category: "manicure" },
-        { name: "Classic Pedicure", image: "~/Content/Pictures/service4.jpg", category: "pedicure" },
-        { name: "Spa Pedicure", image: "~/Content/Pictures/service5.jpg", category: "pedicure" },
-        { name: "Gel Pedicure", image: "~/Content/Pictures/service6.jpg", category: "pedicure" }
-    ];
+    // =====================================================================
+    // PASTE THIS BLOCK inside DestLoungeSalesandBookingController,
+    // after the existing $scope.services / $scope.selectedCategory block.
+    // Replace (or remove) the hard-coded $scope.services = [...] array.
+    // =====================================================================
+
+    // ===== SERVICES (DB-BACKED) =====
+    $scope.services = [];
+    $scope.showServiceModal = false;
+    $scope.isEditMode = false;
+    $scope.currentService = {};
+
+    // Load services from the database
+    $scope.loadServices = function () {
+        $http.get('/Service/GetAllServices')
+            .then(function (response) {
+                if (response.data.success) {
+                    $scope.services = response.data.data.map(function (s) {
+                        return {
+                            serviceId: s.serviceId,
+                            name: s.name,
+                            description: s.description,
+                            price: s.price,
+                            category: s.category || 'manicure', // default; extend DB if needed
+                            image: s.image + '?t=' + Date.now() // cache-bust
+                        };
+                    });
+                }
+            })
+            .catch(function (error) {
+                console.error('Error loading services:', error);
+            });
+    };
 
     $scope.selectedCategory = 'all';
 
@@ -304,6 +329,174 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
         if ($scope.selectedCategory === 'all') return true;
         return service.category === $scope.selectedCategory;
     };
+    // Open modal to ADD a new service
+    $scope.openAddServiceModal = function () {
+        $scope.isEditMode = false;
+        $scope.currentService = { name: '', description: '', price: null, category: '', image: '' };
+        $scope.showServiceModal = true;
+    };
+
+    // Open modal to EDIT an existing service
+    $scope.editService = function (service) {
+        $scope.isEditMode = true;
+        $scope.currentService = angular.copy(service); // don't mutate the list item
+        $scope.showServiceModal = true;
+    };
+
+    // Close the modal
+    $scope.closeServiceModal = function () {
+        $scope.showServiceModal = false;
+        $scope.currentService = {};
+    };
+
+    // Handle image file selection → preview in the modal
+    $scope.handleImageUpload = function (file) {
+        if (!file) return;
+
+        // 2MB limit
+        var maxSize = 2 * 1024 * 1024;
+        if (file.size > maxSize) {
+            alert('Image is too large. Maximum size is 2MB.');
+            document.getElementById('serviceImage').value = '';
+            return;
+        }
+
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            $scope.$apply(function () {
+                $scope.currentService.image = e.target.result;
+                $scope.currentService._imageFile = file;
+            });
+        };
+        reader.readAsDataURL(file);
+    };
+
+    // Save (create or update)
+    $scope.saveService = function () {
+        var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+        var tokenValue = tokenElement ? tokenElement.value : '';
+
+        // Build a FormData so we can attach the image file
+        var formData = new FormData();
+        formData.append('name', $scope.currentService.name || '');
+        formData.append('description', $scope.currentService.description || '');
+        formData.append('price', $scope.currentService.price || 0);
+        formData.append('category', $scope.currentService.category || '');
+        formData.append('__RequestVerificationToken', tokenValue);
+
+        if ($scope.currentService._imageFile) {
+            formData.append('imageFile', $scope.currentService._imageFile);
+        }
+
+        var url = $scope.isEditMode
+            ? '/Service/UpdateService/' + $scope.currentService.serviceId
+            : '/Service/CreateService';
+
+        $http({
+            method: 'POST',
+            url: url,
+            data: formData,
+            headers: { 'Content-Type': undefined } // let browser set multipart boundary
+        })
+            .then(function (response) {
+                if (response.data.success) {
+                    alert($scope.isEditMode ? 'Service updated!' : 'Service created!');
+                    $scope.closeServiceModal();
+                    $scope.loadServices();
+                } else {
+                    alert('Error: ' + response.data.message);
+                }
+            })
+            .catch(function (error) {
+                console.error('Error saving service:', error);
+                alert('Failed to save service.');
+            });
+    };
+
+    // Soft-delete a service
+    $scope.deleteService = function (service) {
+        if (!confirm('Delete "' + service.name + '"? It can be restored later.')) return;
+
+        var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+        var tokenValue = tokenElement ? tokenElement.value : '';
+
+        $http({
+            method: 'POST',
+            url: '/Service/DeleteService/' + service.serviceId,
+            data: $httpParamSerializerJQLike({ __RequestVerificationToken: tokenValue }),
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        })
+            .then(function (response) {
+                if (response.data.success) {
+                    alert('Service deleted.');
+                    $scope.loadServices();
+                } else {
+                    alert('Error: ' + response.data.message);
+                }
+            })
+            .catch(function (error) {
+                console.error('Error deleting service:', error);
+                alert('Failed to delete service.');
+            });
+    };
+
+    // ===== DELETED SERVICES (TRASH) =====
+    $scope.deletedServices = [];
+    $scope.showServiceTrash = false;
+
+    $scope.toggleServiceTrash = function () {
+        $scope.showServiceTrash = !$scope.showServiceTrash;
+        if ($scope.showServiceTrash) $scope.loadDeletedServices();
+    };
+
+    $scope.loadDeletedServices = function () {
+        $http.get('/Service/GetDeletedServices')
+            .then(function (response) {
+                if (response.data.success) {
+                    $scope.deletedServices = response.data.data;
+                }
+            })
+            .catch(function (error) {
+                console.error('Error loading deleted services:', error);
+            });
+    };
+
+    $scope.restoreService = function (serviceId) {
+        if (!confirm('Restore this service?')) return;
+
+        var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+        var tokenValue = tokenElement ? tokenElement.value : '';
+
+        $http({
+            method: 'POST',
+            url: '/Service/RestoreService/' + serviceId,
+            data: $httpParamSerializerJQLike({ __RequestVerificationToken: tokenValue }),
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        })
+            .then(function (response) {
+                if (response.data.success) {
+                    alert('Service restored!');
+                    $scope.loadDeletedServices();
+                    $scope.loadServices();
+                } else {
+                    alert('Error: ' + response.data.message);
+                }
+            })
+            .catch(function (error) {
+                console.error('Error restoring service:', error);
+                alert('Error restoring service.');
+            });
+    };
+
+    // ===== AUTO-LOAD on admin service page =====
+    if (window.location.pathname.toLowerCase().indexOf('adminservicepage') !== -1) {
+        $scope.loadServices();
+    }
+
+    // Also load on the public service page
+    if (window.location.pathname.toLowerCase().indexOf('servicepage') !== -1) {
+        $scope.loadServices();
+    }
 
     // === BOOKING PAGE DATA ====
     $scope.nailTechs = [{ id: 1, name: "Name 1" }, { id: 2, name: "Name 2" }, { id: 3, name: "Name 3" }];

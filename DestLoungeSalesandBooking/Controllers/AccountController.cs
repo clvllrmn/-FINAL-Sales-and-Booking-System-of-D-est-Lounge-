@@ -79,9 +79,11 @@ namespace DestLoungeSalesandBooking.Controllers
                 // ─────────────────────────────────────────────────────────────
 
                 // ── Step 2: Validate credentials ──────────────────────────────
+                // ── Step 2: Validate credentials ──────────────────────────────
                 var user = db.tbl_users.FirstOrDefault(u => u.email.ToLower() == emailKey);
                 string hashedPassword = HashPassword(password);
                 bool credentialsValid = user != null && user.password == hashedPassword;
+                // ─────────────────────────────────────────────────────────────
                 // ─────────────────────────────────────────────────────────────
 
                 if (!credentialsValid)

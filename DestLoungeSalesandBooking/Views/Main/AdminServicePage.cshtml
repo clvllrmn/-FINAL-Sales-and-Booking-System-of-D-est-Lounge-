@@ -77,7 +77,38 @@
             <i class="fa-solid fa-plus"></i> Add Service
         </button>
     </div>
+    <!-- Trash Toggle Button -->
+    <div style="text-align:center; padding: 0 0 1.5rem 0; background-color:#f5f0eb;">
+        <button class="add-service-button"
+                style="background-color:#8b4513;"
+                ng-click="toggleServiceTrash()">
+            <i class="fa-solid fa-trash-can"></i>
+            {{showServiceTrash ? 'Hide Deleted Services' : 'View Deleted Services'}}
+        </button>
+    </div>
 
+    <!-- Deleted Services Panel -->
+    <div ng-show="showServiceTrash"
+         style="background:#fff8f4; border:2px solid #d4c4b0; margin:0 2rem 2rem; padding:1.5rem; border-radius:8px;">
+        <h3 style="color:#5d4037; margin:0 0 1rem;">Deleted Services</h3>
+
+        <p ng-if="deletedServices.length === 0" style="color:#888;">No deleted services.</p>
+
+        <div ng-repeat="s in deletedServices"
+             style="display:flex; justify-content:space-between; align-items:center;
+                padding:0.8rem 1rem; border-bottom:1px solid #e0d5cb;">
+            <div>
+                <strong style="color:#3d2817;">{{s.name}}</strong>
+                <span style="color:#888; margin-left:1rem;">₱{{s.price}}</span>
+                <p style="margin:0.2rem 0 0; font-size:0.85rem; color:#777;">{{s.description}}</p>
+            </div>
+            <button class="edit-btn"
+                    style="border-radius:6px; width:auto; padding:0.4rem 1rem;"
+                    ng-click="restoreService(s.serviceId)">
+                <i class="fa-solid fa-rotate-left"></i> Restore
+            </button>
+        </div>
+    </div>
     <!-- Add/Edit Service Modal -->
     <div class="modal-overlay" ng-show="showServiceModal" ng-click="closeServiceModal()">
         <div class="service-modal" ng-click="$event.stopPropagation()">
