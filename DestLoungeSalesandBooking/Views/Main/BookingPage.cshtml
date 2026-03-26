@@ -17,6 +17,7 @@
             <a href="@Url.Action("GalleryPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "GalleryPage" ? "nav-active" : "")">GALLERY</a>
             <a href="@Url.Action("ContactPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ContactPage" ? "nav-active" : "")">CONTACT</a>
             <a href="@Url.Action("FAQsPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "FAQsPage" ? "nav-active" : "")">FAQs</a>
+
         </nav>
         <div class="header-actions">
             @if (isLoggedIn)
@@ -54,12 +55,17 @@
                     <span class="total-label">Total:</span>
                     <span class="total-price">₱{{calculateTotal()}}</span>
                 </div>
+                <div class="summary-downpayment">
+                    <span class="downpayment-label">Downpayment (40%):</span>
+                    <span class="downpayment-price">₱{{calculateTotal() * 0.4 | number:2}}</span>
+                </div>
             </div>
             <div class="summary-empty" ng-show="booking.selectedServices.length === 0">
                 <p>No services selected yet</p>
             </div>
         </div>
     </div>
+
     <!-- Payment Confirmation Panel -->
     <div class="payment-panel" ng-show="showPaymentPanel">
         <button class="panel-back-btn" ng-click="showPaymentPanel = false">
@@ -71,7 +77,7 @@
             <div class="payment-summary">
                 <h2>Your Booking Summary:</h2>
                 <div class="payment-summary-item">
-                    <span class="ps-label">Service:</span>
+                    <span class="ps-label">Services:</span>
                     <span class="ps-value">{{getSelectedServicesText()}}</span>
                 </div>
                 <div class="payment-summary-item">
@@ -85,6 +91,18 @@
                     <span class="ps-label">Nail Tech:</span>
                     <span class="ps-value">{{getSelectedTechName()}}</span>
                 </div>
+                <div class="payment-summary-item">
+                    <span class="ps-label">Total Amount:</span>
+                    <span class="ps-value">₱{{calculateTotal() | number:2}}</span>
+                </div>
+                <div class="payment-summary-item">
+                    <span class="ps-label">Downpayment (40%):</span>
+                    <span class="ps-value">₱{{calculateTotal() * 0.4 | number:2}}</span>
+                </div>
+                <div class="payment-summary-item">
+                    <span class="ps-label">Remaining Balance:</span>
+                    <span class="ps-value">₱{{calculateTotal() * 0.6 | number:2}}</span>
+                </div>
             </div>
 
             <!-- Divider -->
@@ -95,8 +113,8 @@
                 <h2>Deposit Required!</h2>
                 <p class="deposit-text">
                     To secure your appointment, a deposit of
-                    <strong>₱{{depositAmount | number:2}}</strong> is required.
-                    The remaining <strong>₱{{remainingAmount | number:2}}</strong>
+                    <strong>₱{{calculateTotal() * 0.4 | number:2}}</strong> is required.
+                    The remaining <strong>₱{{calculateTotal() * 0.6 | number:2}}</strong>
                     is due during the time of service.
                 </p>
                 <div class="payment-method">
@@ -198,9 +216,6 @@
     </div>
 </footer>
 
-
-
-
 <style>
     .booking-container {
         display: flex;
@@ -279,12 +294,24 @@
         padding-top: 0.5rem;
     }
 
-    .total-label {
-        font-size: 1.3rem;
+    .summary-downpayment {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #6b4423;
+        padding-top: 0.5rem;
+        margin-top: 0.5rem;
+        border-top: 1px dashed #d4c4b0;
     }
 
-    .total-price {
-        font-size: 1.4rem;
+    .total-label, .downpayment-label {
+        font-size: 1rem;
+    }
+
+    .total-price, .downpayment-price {
+        font-size: 1.2rem;
         color: #6b4423;
     }
 
@@ -324,7 +351,7 @@
     /* Form Select - FIXED VERSION with proper padding */
     .form-select {
         width: 100%;
-        padding: 1rem 3rem 1rem 1.2rem; /* More right padding for dropdown arrow */
+        padding: 1rem 3rem 1rem 1.2rem;
         font-size: 1rem;
         border: 2px solid #d4c4b0;
         border-radius: 25px;
@@ -350,7 +377,6 @@
             border-color: #6b4423;
         }
 
-        /* Select dropdown arrow */
         .form-select:not([type="date"]) {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%235d4037' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
@@ -358,11 +384,10 @@
             background-size: 12px;
         }
 
-        /* Date input specific styling */
         .form-select[type="date"] {
             color: #5d4037;
             font-weight: 400;
-            padding: 1rem 1.2rem; /* Reset padding for date input */
+            padding: 1rem 1.2rem;
             position: relative;
         }
 
@@ -395,7 +420,6 @@
                 padding: 0 0.2em;
             }
 
-        /* Placeholder styling for empty selects */
         .form-select option:first-child {
             color: #999;
         }
@@ -409,18 +433,15 @@
             padding: 0.5rem;
         }
 
-    /* Fix for select dropdown options */
     select.form-select {
-        padding-right: 3rem; /* Ensure space for arrow */
+        padding-right: 3rem;
     }
 
-        /* Ensure the selected text is visible */
         select.form-select option:checked {
             background-color: #6b4423;
             color: white;
         }
 
-    /* Error message */
     .error-message {
         display: block;
         color: #dc3545;
@@ -439,7 +460,6 @@
         overflow-y: auto;
     }
 
-        /* Custom scrollbar for services list */
         .services-checklist::-webkit-scrollbar {
             width: 8px;
         }
@@ -553,55 +573,6 @@
             box-shadow: none;
         }
 
-    /* Responsive Design */
-    @@media (max-width: 968px) {
-        .booking-container {
-            flex-direction: column;
-        }
-
-        .service-summary {
-            flex: 1;
-            position: static;
-            width: 100%;
-        }
-
-        .booking-form {
-            padding: 2rem;
-        }
-    }
-
-    @@media (max-width: 576px) {
-        .booking-container {
-            padding: 2rem 1rem;
-        }
-
-        .service-summary {
-            padding: 1.5rem;
-        }
-
-            .service-summary h2 {
-                font-size: 1.5rem;
-            }
-
-        .booking-form {
-            padding: 1.5rem;
-        }
-
-        .form-group label {
-            font-size: 1rem;
-        }
-
-        .form-select {
-            font-size: 0.95rem;
-            height: 48px;
-            padding: 0.9rem 2.5rem 0.9rem 1rem;
-        }
-
-        .book-now-btn {
-            font-size: 1.1rem;
-            padding: 1rem;
-        }
-    }
     /* Payment Panel */
     .payment-panel {
         position: fixed;
@@ -655,7 +626,6 @@
         position: relative;
     }
 
-    /* Left: Booking Summary */
     .payment-summary {
         flex: 1;
         padding-right: 3rem;
@@ -680,15 +650,16 @@
         color: #3d2817;
         font-size: 1rem;
         white-space: nowrap;
+        min-width: 120px;
     }
 
     .ps-value {
         color: #5d4037;
         font-size: 1rem;
         line-height: 1.5;
+        flex: 1;
     }
 
-    /* Divider */
     .payment-divider {
         width: 2px;
         background-color: #c1b2a5;
@@ -696,7 +667,6 @@
         border-radius: 2px;
     }
 
-    /* Right: Deposit */
     .payment-deposit {
         flex: 1;
         display: flex;
@@ -765,6 +735,23 @@
         font-style: italic;
     }
 
+    /* Responsive Design */
+    @@media (max-width: 968px) {
+        .booking-container {
+            flex-direction: column;
+        }
+
+        .service-summary {
+            flex: 1;
+            position: static;
+            width: 100%;
+        }
+
+        .booking-form {
+            padding: 2rem;
+        }
+    }
+
     @@media (max-width: 768px) {
         .payment-content {
             flex-direction: column;
@@ -787,6 +774,39 @@
             text-align: center;
         }
     }
+
+    @@media (max-width: 576px) {
+        .booking-container {
+            padding: 2rem 1rem;
+        }
+
+        .service-summary {
+            padding: 1.5rem;
+        }
+
+            .service-summary h2 {
+                font-size: 1.5rem;
+            }
+
+        .booking-form {
+            padding: 1.5rem;
+        }
+
+        .form-group label {
+            font-size: 1rem;
+        }
+
+        .form-select {
+            font-size: 0.95rem;
+            height: 48px;
+            padding: 0.9rem 2.5rem 0.9rem 1rem;
+        }
+
+        .book-now-btn {
+            font-size: 1.1rem;
+            padding: 1rem;
+        }
+    }
 </style>
 
 @section scripts {
@@ -795,5 +815,3 @@
         console.log("Logged in user id:", window.loggedInUserId);
     </script>
 }
-
-

@@ -31,39 +31,34 @@
                     <i class="fa-regular fa-user"></i> LOGIN
                 </a>
             }
-            <div class="bell-icon" ng-click="showNotif = !showNotif" style="position: relative;">
+            <div class="bell-icon" ng-click="toggleNotif()" style="position: relative;">
+
                 <i class="fa-solid fa-bell"></i>
 
-                <div ng-show="showNotif" style="
-                position:absolute;
-                right:0;
-                top:30px;
-                background:white;
-                width:300px;
-                max-height:300px;
-                overflow:auto;
-                border-radius:10px;
-                box-shadow:0 4px 10px rgba(0,0,0,0.2);
-                padding:10px;
-                z-index:1000;
-    ">
+                <!-- 🔥 NOTIFICATION COUNT -->
+                <span ng-if="notifications.length > 0"
+                      style="position:absolute; top:-5px; right:-5px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:12px;">
+                    {{notifications.length}}
+                </span>
 
-                    
+                <div ng-show="showNotif" class="notif-dropdown">
+                    <h3>Notifications</h3>
 
-
-                    <div ng-if="notifications && notifications.length > 0">
-                        <h3>Notifications</h3>
-
-                        <div ng-repeat="n in notifications" style="background:#eee; padding:10px; margin-bottom:5px;">
-                            <p>{{n.Message}}</p>
-                            <small>{{n.CreatedAt}}</small>
-                        </div>
+                    <div ng-if="notifications.length === 0">
+                        <p>No notifications</p>
                     </div>
 
-                    <div ng-controller="DestLoungeSalesandBookingController"></div>
+                    <div ng-repeat="n in notifications"
+                         ng-click="goToBooking()"
+                         style="cursor:pointer; padding:5px; border-bottom:1px solid #ccc;">
 
+                        <p>{{n.Message}}</p>
+                        <small>{{n.CreatedAt}}</small>
+
+                    </div>
 
                 </div>
+
             </div>
 
         </div>
@@ -75,7 +70,7 @@
         <nav class="profile-nav">
             <div class="nav-top">
                 <a href="@Url.Action("ProfilePage","Main")" class="nav-item">Profile</a>
-                <a href="@Url.Action("CurrentBookingPage","Main")" class="nav-item">Current booking</a>
+                <a href="@Url.Action("CurrentBookingPage","Main")" class="nav-item active">Current booking</a>
                 <a href="@Url.Action("ReviewPage","Main")" class="nav-item">To Review</a>
             </div>
             <div class="nav-bottom">
@@ -87,55 +82,90 @@
     </aside>
 
     <main class="profile-content">
-        <div class="booking-card" ng-if="userBookings.length > 0">
+
+        <!-- 🔥 HEADER -->
+        <div class="booking-wrapper">
+
             <h2 class="booking-heading">My Bookings</h2>
 
-            <div ng-repeat="b in userBookings" class="booking-details">
+            <!-- 🔥 IF MAY BOOKINGS -->
+            <div class="booking-grid" ng-if="userBookings.length > 0">
 
-                <div class="booking-row">
-                    <span class="booking-label">Date</span>
-                    <span class="booking-value">{{b.BookingDate}}</span>
+                <div class="booking-item" ng-repeat="b in userBookings">
+
+                    <div class="booking-top">
+                        <span class="booking-date">{{b.BookingDate}}</span>
+                        <span class="booking-status" ng-class="b.Status.toLowerCase()">
+                            {{b.Status}}
+                        </span>
+                    </div>
+
+                    <div class="booking-body">
+                        <p><strong>Time:</strong> {{b.StartTime}} - {{b.EndTime}}</p>
+                        <p><strong>Service:</strong> {{b.Notes.split('|')[0].replace('Services:', '').trim()}}</p>
+                        <p ng-if="b.Notes.split('|')[1]"><strong>Nail Tech:</strong> {{b.Notes.split('|')[1].replace('NailTech:', '').trim()}}</p>
+                        <p ng-if="b.Notes.split('|')[2]"><strong>Downpayment:</strong> ₱{{b.Notes.split('|')[2].replace('Downpayment:', '').trim()}}</p>
+                    </div>
+
+                    <div class="booking-actions">
+
+                        <!-- CANCEL -->
+                        <button class="btn-cancel"
+                                ng-if="b.Status == 'Pending' || b.Status == 'Approved'"
+                                ng-click="cancelUserBooking(b.BookingId)">
+                            Cancel
+                        </button>
+
+                        <!-- REVIEW -->
+                        <button class="btn-review"
+                                ng-if="b.Status == 'Completed'"
+                                ng-click="goToReview(b.BookingId)">
+                            Review
+                        </button>
+
+                    </div>
+
                 </div>
 
-                <div class="booking-row">
-                    <span class="booking-label">Time</span>
-                    <span class="booking-value">{{b.StartTime}} - {{b.EndTime}}</span>
-                </div>
-
-                <div class="booking-row">
-                    <span class="booking-label">Status</span>
-                    <span class="booking-value">{{b.Status}}</span>
-                </div>
-
-                <div class="booking-row">
-                    <span class="booking-label">Notes</span>
-                    <span class="booking-value">{{b.Notes}}</span>
-                </div>
-
-                <!-- 🔥 FIXED BUTTON -->
-                <button class="btn-cancel"
-                        ng-if="b.Status == 'Pending'"
-                        ng-click="cancelUserBooking(b.BookingId)">
-                    Cancel Booking
-                </button>
-
-                <hr />
             </div>
-        </div>
 
+            <!-- 🔥 EMPTY STATE -->
+            <div class="empty-state" ng-if="userBookings.length === 0">
 
-        <div class="booking-card" ng-if="userBookings.length === 0">
-            <h2 class="booking-heading">Service Summary</h2>
-            <div class="no-booking">
-                <p>You don't have any current bookings.</p>
-                <a href="@Url.Action("ServicePage","Main")" class="btn-book-now">Book a Service</a>
+                <img src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
+                     alt="No bookings"
+                     class="empty-img" />
+
+                <h3>No bookings yet</h3>
+                <p>Looks like you haven't booked any service.</p>
+
+                <a href="@Url.Action("ServicePage","Main")" class="btn-book-now">
+                    Book Now
+                </a>
+
             </div>
+
         </div>
 
     </main>
 </div>
+
 <script>
     window.loggedInUserId = '@Session["UserID"]';
+
+    if (window.angular) {
+        var el = document.querySelector('[ng-controller]');
+        if (el) {
+            var scope = angular.element(el).scope();
+            if (scope) {
+                scope.$applyAsync(function () {
+                    scope.loadNotifications();
+                    scope.loadUserBookings();
+                });
+            }
+        }
+    }
+
 </script>
 
 <footer>
@@ -213,14 +243,10 @@
         padding: 80px 40px;
     }
 
-    /* ===== BOOKING PAGE SPECIFIC ===== */
-    .booking-card {
-        background-color: #e8ddd1;
-        border-radius: 30px;
-        padding: 50px 60px;
-        max-width: 600px;
+    /* ===== BOOKING WRAPPER ===== */
+    .booking-wrapper {
         width: 100%;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-width: 900px;
     }
 
     .booking-heading {
@@ -231,84 +257,152 @@
         text-align: left;
     }
 
-    .booking-details {
+    /* ===== BOOKING GRID ===== */
+    .booking-grid {
         display: flex;
         flex-direction: column;
-        gap: 30px;
-        margin-bottom: 50px;
+        gap: 20px;
     }
 
-    .booking-row {
+    .booking-item {
+        background: #e8ddd1;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .booking-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+    .booking-top {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 5px 0;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #c9b5a3;
     }
 
-    .booking-label {
-        color: #6b5544;
-        font-size: 18px;
-        font-weight: 500;
-    }
-
-    .booking-value {
-        color: #5a4a3a;
-        font-size: 18px;
+    .booking-date {
         font-weight: 600;
-        text-align: right;
+        color: #6b5544;
+        font-size: 16px;
     }
 
-    .service-type {
-        background-color: #c9b5a3;
-        padding: 10px 25px;
-        border-radius: 8px;
-        min-width: 200px;
-        text-align: center;
+    .booking-status {
+        padding: 5px 12px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
     }
+
+        .booking-status.pending {
+            background: #c9b5a3;
+            color: #5a4a3a;
+        }
+
+        .booking-status.approved {
+            background: #8b6f47;
+            color: white;
+        }
+
+        .booking-status.completed {
+            background: #4a7c59;
+            color: white;
+        }
+
+        .booking-status.cancelled {
+            background: #b8423e;
+            color: white;
+        }
+
+    .booking-body {
+        margin: 15px 0;
+    }
+
+        .booking-body p {
+            margin: 8px 0;
+            color: #5a4a3a;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .booking-body strong {
+            color: #6b5544;
+            font-weight: 600;
+        }
 
     .booking-actions {
+        margin-top: 15px;
         display: flex;
-        gap: 20px;
-        justify-content: center;
-        margin-top: 50px;
+        gap: 10px;
     }
 
-    .btn-cancel,
-    .btn-reschedule {
-        padding: 15px 45px;
-        border: none;
-        border-radius: 25px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        display: inline-block;
-        background-color: #6b5544;
+    .btn-cancel {
+        padding: 10px 25px;
+        background: #b8423e;
         color: white;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
     }
 
-        .btn-cancel:hover,
-        .btn-reschedule:hover {
-            background-color: #5a4635;
+        .btn-cancel:hover {
+            background: #9a3531;
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-    .no-booking {
-        text-align: center;
-        padding: 60px 20px;
+    .btn-review {
+        padding: 10px 25px;
+        background: #6b5544;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
     }
 
-        .no-booking p {
-            color: #6b5544;
-            font-size: 18px;
-            margin-bottom: 30px;
+        .btn-review:hover {
+            background: #5a4635;
+            transform: translateY(-2px);
         }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        background: #e8ddd1;
+        border-radius: 20px;
+    }
+
+    .empty-img {
+        width: 120px;
+        margin-bottom: 20px;
+        opacity: 0.7;
+    }
+
+    .empty-state h3 {
+        color: #6b5544;
+        margin-bottom: 10px;
+        font-size: 24px;
+    }
+
+    .empty-state p {
+        color: #8b7b6b;
+        margin-bottom: 20px;
+        font-size: 16px;
+    }
 
     .btn-book-now {
         display: inline-block;
-        padding: 15px 45px;
+        padding: 12px 30px;
         background-color: #6b5544;
         color: white;
         text-decoration: none;
@@ -363,8 +457,8 @@
             padding: 40px 20px;
         }
 
-        .booking-card {
-            padding: 30px 25px;
+        .booking-wrapper {
+            max-width: 100%;
         }
 
         .booking-heading {
@@ -374,37 +468,28 @@
 
         .booking-actions {
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
         }
 
         .btn-cancel,
-        .btn-reschedule,
+        .btn-review,
         .btn-book-now {
             width: 100%;
             text-align: center;
         }
 
-        .booking-row {
+        .booking-top {
             flex-direction: column;
             align-items: flex-start;
-            gap: 8px;
+            gap: 10px;
         }
 
-        .booking-value {
-            text-align: left;
-        }
-
-        .service-type {
-            width: 100%;
+        .booking-status {
+            align-self: flex-start;
         }
     }
 
     @@media (max-width: 480px) {
-        .booking-card {
-            padding: 25px 20px;
-            border-radius: 20px;
-        }
-
         .profile-content {
             padding: 30px 15px;
         }
@@ -413,14 +498,20 @@
             font-size: 24px;
         }
 
-        .booking-details {
-            gap: 20px;
+        .booking-item {
+            padding: 15px;
         }
 
-        .btn-cancel,
-        .btn-reschedule {
-            padding: 12px 30px;
-            font-size: 15px;
+        .empty-state {
+            padding: 60px 15px;
+        }
+
+            .empty-state h3 {
+                font-size: 20px;
+            }
+
+        .empty-img {
+            width: 100px;
         }
     }
 </style>

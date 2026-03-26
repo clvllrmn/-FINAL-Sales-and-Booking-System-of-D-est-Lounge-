@@ -1,0 +1,223 @@
+@{
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+}
+
+<body ng-controller="DestLoungeSalesandBookingController" ng-init="loadPaymentInfo()">
+
+    <div class="payment-container">
+
+        <h1 class="payment-title">Complete Your Booking</h1>
+
+        <div class="payment-card">
+
+            <h2 class="payment-subtitle">Send Downpayment (40%)</h2>
+
+            <div class="payment-methods">
+                <div class="method-box">
+                    <h3>GCash</h3>
+                    <p>{{paymentInfo.gcash || 'Not Set'}}</p>
+                </div>
+
+                <div class="method-box">
+                    <h3>Bank</h3>
+                    <p>{{paymentInfo.bank || 'Not Set'}}</p>
+                </div>
+            </div>
+
+            <div class="qr-section" ng-if="paymentInfo.qr">
+                <h3>Scan QR Code:</h3>
+                <img ng-src="{{paymentInfo.qr}}" alt="QR Code" class="qr-image" />
+            </div>
+
+            <div class="upload-section">
+                <label>Upload Receipt</label>
+                <input type="file" id="receiptUpload" />
+            </div>
+
+            <button class="btn-submit" ng-click="submitPayment()">
+                Submit Booking
+            </button>
+
+        </div>
+
+    </div>
+
+</body>
+
+<style>
+    .payment-container {
+        padding: 80px 40px;
+        background: #f5f0eb;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .payment-title {
+        font-size: 36px;
+        color: #6b5544;
+        margin-bottom: 30px;
+        font-family: 'Georgia', serif;
+        font-weight: 600;
+    }
+
+    .payment-card {
+        background: #e8ddd1;
+        padding: 40px;
+        border-radius: 25px;
+        width: 100%;
+        max-width: 500px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .payment-subtitle {
+        margin-bottom: 20px;
+        color: #5a4a3a;
+        font-size: 24px;
+        font-family: 'Georgia', serif;
+        font-weight: 600;
+    }
+
+    .payment-methods {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .method-box {
+        background: #c9b5a3;
+        padding: 15px;
+        border-radius: 10px;
+    }
+
+        .method-box h3 {
+            margin: 0 0 8px 0;
+            color: #5a4a3a;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .method-box p {
+            margin: 0;
+            color: #3d2a1c;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+    .qr-section {
+        margin-bottom: 25px;
+        text-align: center;
+    }
+
+        .qr-section h3 {
+            margin: 0 0 10px 0;
+            color: #5a4a3a;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+    .qr-image {
+        width: 200px;
+        height: auto;
+        border: 2px solid #c9b5a3;
+        border-radius: 10px;
+        padding: 10px;
+        background: white;
+    }
+
+    .upload-section {
+        margin-bottom: 25px;
+    }
+
+        .upload-section label {
+            display: block;
+            margin-bottom: 8px;
+            color: #5a4a3a;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .upload-section input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #c9b5a3;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+            .upload-section input:hover {
+                border-color: #6b5544;
+            }
+
+    .btn-submit {
+        width: 100%;
+        padding: 15px;
+        background: #6b5544;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-submit:hover {
+            background: #5a4635;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .payment-container {
+            padding: 40px 20px;
+        }
+
+        .payment-title {
+            font-size: 28px;
+        }
+
+        .payment-card {
+            padding: 25px;
+        }
+
+        .payment-subtitle {
+            font-size: 20px;
+        }
+
+        .qr-image {
+            width: 150px;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .payment-container {
+            padding: 30px 15px;
+        }
+
+        .payment-title {
+            font-size: 24px;
+        }
+
+        .payment-card {
+            padding: 20px;
+        }
+
+        .payment-subtitle {
+            font-size: 18px;
+        }
+
+        .method-box {
+            padding: 12px;
+        }
+    }
+</style>

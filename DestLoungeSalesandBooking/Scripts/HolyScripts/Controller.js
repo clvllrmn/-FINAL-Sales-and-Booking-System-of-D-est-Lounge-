@@ -2,7 +2,7 @@
 
 var _currentContentType = null;
 
-app.controller("DestLoungeSalesandBookingController", function ($scope, $window, DestLoungeSalesandBookingService, $http, $httpParamSerializerJQLike) {
+app.controller("DestLoungeSalesandBookingController", function ($scope, $window, DestLoungeSalesandBookingService, $http, $httpParamSerializerJQLike, $q) {
 
     // ===== INITIALIZE DEFAULT VALUES =====
     $scope.bannerText = {
@@ -284,13 +284,6 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
         });
     };
 
-    // ==== SERVICES ====
-    // =====================================================================
-    // PASTE THIS BLOCK inside DestLoungeSalesandBookingController,
-    // after the existing $scope.services / $scope.selectedCategory block.
-    // Replace (or remove) the hard-coded $scope.services = [...] array.
-    // =====================================================================
-
     // ===== SERVICES (DB-BACKED) =====
     $scope.services = [];
     $scope.showServiceModal = false;
@@ -308,8 +301,8 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
                             name: s.name,
                             description: s.description,
                             price: s.price,
-                            category: s.category || 'manicure', // default; extend DB if needed
-                            image: s.image + '?t=' + Date.now() // cache-bust
+                            category: s.category || 'manicure',
+                            image: s.image + '?t=' + Date.now()
                         };
                     });
                 }
@@ -329,6 +322,7 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
         if ($scope.selectedCategory === 'all') return true;
         return service.category === $scope.selectedCategory;
     };
+
     // Open modal to ADD a new service
     $scope.openAddServiceModal = function () {
         $scope.isEditMode = false;
@@ -339,7 +333,7 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
     // Open modal to EDIT an existing service
     $scope.editService = function (service) {
         $scope.isEditMode = true;
-        $scope.currentService = angular.copy(service); // don't mutate the list item
+        $scope.currentService = angular.copy(service);
         $scope.showServiceModal = true;
     };
 
@@ -349,11 +343,10 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
         $scope.currentService = {};
     };
 
-    // Handle image file selection → preview in the modal
+    // Handle image file selection
     $scope.handleImageUpload = function (file) {
         if (!file) return;
 
-        // 2MB limit
         var maxSize = 2 * 1024 * 1024;
         if (file.size > maxSize) {
             alert('Image is too large. Maximum size is 2MB.');
@@ -371,12 +364,11 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
         reader.readAsDataURL(file);
     };
 
-    // Save (create or update)
+    // Save service
     $scope.saveService = function () {
         var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
         var tokenValue = tokenElement ? tokenElement.value : '';
 
-        // Build a FormData so we can attach the image file
         var formData = new FormData();
         formData.append('name', $scope.currentService.name || '');
         formData.append('description', $scope.currentService.description || '');
@@ -396,7 +388,7 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
             method: 'POST',
             url: url,
             data: formData,
-            headers: { 'Content-Type': undefined } // let browser set multipart boundary
+            headers: { 'Content-Type': undefined }
         })
             .then(function (response) {
                 if (response.data.success) {
@@ -596,6 +588,10 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
         return total;
     };
 
+    $scope.calculateDownpayment = function () {
+        return ($scope.calculateTotal() * 0.4).toFixed(2);
+    };
+
     $scope.isBookingValid = function () {
         return $scope.booking.nailTech &&
             $scope.booking.date &&
@@ -620,7 +616,6 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
             alert("Downpayment required");
             return;
         }
-
 
         var d = $scope.booking.date;
         var dateObj = (d instanceof Date) ? d : new Date(d);
@@ -653,6 +648,22 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
         var startTime = String(startHour).padStart(2, "0") + ":" + String(startMin).padStart(2, "0");
         var endTime = String(endHour).padStart(2, "0") + ":" + String(endMin).padStart(2, "0");
         var serviceId = 1;
+        var selectedServiceNames = ($scope.booking.selectedServices || []).map(function (s) {
+            return s.name;
+        });
+
+        var payload = {
+            customerId: parseInt(window.loggedInUserId),
+            serviceId: serviceId,
+            bookingDate: bookingDate,
+            startTime: startTime,
+            endTime: endTime,
+            nailTech: String($scope.booking.nailTech || ""),
+            downpayment: String($scope.calculateTotal() || ""),
+            services: selectedServiceNames,  // ← ADD THIS LINE
+            selectedServices: $scope.booking.selectedServices,  // ← OPTIONAL: keep original for backup
+            notes: "Services: " + selectedServiceNames.join(", ")
+        };
         var payload = {
             customerId: parseInt(window.loggedInUserId),
             serviceId: serviceId,
@@ -666,29 +677,122 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
             }).join(", ")
         };
         console.log("Booking payload:", payload);
-        $http({
-            method: "POST",
-            url: "/Booking/Create",
-            data: $httpParamSerializerJQLike(payload),
-            headers: { "Content-Type": "application/x-www-form-urlencoded" }
-        }).then(function (resp) {
-            var res = resp.data;
-            console.log("Booking response:", res);
-            if (res && res.success) {
-                alert("Booking created. (ID=" + res.bookingId + ")");
-                $scope.booking.time = "";
-                $scope.bookingServices.forEach(function (s) { s.selected = false; });
-                $scope.updateSelectedServices();
-            } else {
-                alert("X" + (res && res.message ? res.message : "Booking failed"));
+
+        // 👉 CHECK SLOT AVAILABILITY BEFORE REDIRECT
+        $http.get("/Booking/CheckSlot", {
+            params: {
+                date: bookingDate,
+                startTime: startTime,
+                nailTech: $scope.booking.nailTech
             }
-        }).catch(function (err) {
-            console.error("Booking Create error:", err);
-            alert("X Server error");
+        }).then(function (res) {
+            if (res.data.taken) {
+                alert("Slot already taken. Please choose another.");
+                return;
+            }
+
+            // proceed to payment page
+            sessionStorage.setItem("pendingBooking", JSON.stringify(payload));
+            window.location.href = "/Main/PaymentPage";
+        }).catch(function (error) {
+            console.error("Error checking slot:", error);
+            alert("Unable to check slot availability. Please try again.");
         });
     };
 
-    // ========== ADMIN BOOKING LIST ==========
+    // ===== SUBMIT PAYMENT (UPDATED WITH SERVICES) =====
+    $scope.submitPayment = function () {
+        console.log("CLICKED SUBMIT"); // 🔥 DEBUG
+
+        var fileInput = document.getElementById("receiptUpload");
+
+        if (!fileInput || fileInput.files.length === 0) {
+            alert("Upload receipt first");
+            return;
+        }
+
+        var file = fileInput.files[0];
+
+        var booking = JSON.parse(sessionStorage.getItem("pendingBooking"));
+
+        console.log("BOOKING DATA:", booking);
+
+        // 🔥 ENSURE booking.services EXISTS (IMPORTANT)
+        // This prevents the "join undefined" error
+        if (!booking.services) {
+            // If booking.selectedServices exists, map it to services
+            if (booking.selectedServices && booking.selectedServices.length > 0) {
+                booking.services = booking.selectedServices.map(function (s) {
+                    return s.name;
+                });
+            }
+            // If booking.notes contains services, extract them
+            else if (booking.notes && booking.notes.includes("Services:")) {
+                var servicesMatch = booking.notes.match(/Services:\s*(.+?)(?:\s*\||$)/);
+                if (servicesMatch && servicesMatch[1]) {
+                    booking.services = servicesMatch[1].split(',').map(function (s) {
+                        return s.trim();
+                    });
+                } else {
+                    booking.services = [];
+                }
+            }
+            else {
+                booking.services = [];
+            }
+        }
+
+        var formData = new FormData();
+
+        // 🔥 SAFE APPEND (avoid undefined)
+        formData.append("customerId", booking.customerId || 0);
+        formData.append("serviceId", booking.serviceId || 1);
+        formData.append("bookingDate", booking.bookingDate);
+        formData.append("startTime", booking.startTime);
+        formData.append("endTime", booking.endTime);
+
+        // 🔥 IMPORTANT: Append services as comma-separated string
+        // This ensures we have booking.services available
+        formData.append("services", booking.services.join(", "));
+        formData.append("nailTech", booking.nailTech || "");
+        formData.append("downpayment", booking.downpayment || "");
+
+        // Also include the original selectedServices for backup (if exists)
+        if (booking.selectedServices && booking.selectedServices.length > 0) {
+            var servicesString = booking.selectedServices.map(function (s) {
+                return s.name;
+            }).join(", ");
+            formData.append("selectedServices", servicesString);
+        }
+
+        formData.append("receipt", file);
+
+        console.log("FORM DATA BEING SENT:");
+        console.log("- services:", booking.services.join(", "));
+        console.log("- nailTech:", booking.nailTech);
+        console.log("- downpayment:", booking.downpayment);
+        console.log("- receipt:", file.name);
+
+        $http.post("/Booking/CreateWithReceipt", formData, {
+            transformRequest: angular.identity,
+            headers: { "Content-Type": undefined }
+        }).then(function (res) {
+            console.log("SERVER RESPONSE:", res);
+
+            if (res.data && res.data.success) {
+                alert("Booking successful!");
+                sessionStorage.removeItem("pendingBooking");
+                window.location.href = "/Main/CurrentBookingPage";
+            } else {
+                alert(res.data.message || "Booking failed");
+            }
+        }).catch(function (err) {
+            console.error("ERROR:", err);
+            alert("Server error");
+        });
+    };
+
+    // ===== ADMIN BOOKING LIST =====
     $scope.bookings = [];
     $scope.filteredBookings = [];
     $scope.selectedFilter = 'all';
@@ -810,6 +914,7 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
         $scope.loadBookings();
     }
 
+
     $scope.updateBookingStatus = function (bookingId, newStatus) {
         var payload = { bookingId: bookingId, status: newStatus };
         return $http({
@@ -843,7 +948,6 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
             headers: { "Content-Type": "application/x-www-form-urlencoded" }
         }).then(function (resp) {
             alert(resp.data.message || "Cancelled!");
-
             $scope.loadUserBookings();
             var card = $scope.bookings.find(function (b) { return b.bookingId === bookingId; });
             if (card) {
@@ -860,7 +964,7 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
         });
     };
 
-    //===== SALES ANALYTICS =====
+    // ===== SALES ANALYTICS =====
     $scope.salesRange = "week";
     $scope.sales = { totalRevenue: 0, totalBookings: 0, points: [], range: "week" };
     var salesChartInstance = null;
@@ -1061,7 +1165,7 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
         }
     };
 
-    // ===== DELETED CONTACTS (TRASH) - FROM YOUR OLD CODE =====
+    // ===== DELETED CONTACTS (TRASH) =====
     $scope.deletedContacts = [];
     $scope.showContactTrash = false;
 
@@ -1191,7 +1295,7 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
         setTimeout(function () { document.getElementById('modalInput').focus(); }, 100);
     };
 
-    // ===== USER BOOKINGS - FROM YOUR OLD CODE =====
+    // ===== USER BOOKINGS =====
     $scope.userBookings = [];
 
     $scope.loadUserBookings = function () {
@@ -1212,23 +1316,43 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
         $scope.loadUserBookings();
     }
 
-    // ===== NOTIFICATIONS - FROM YOUR OLD CODE =====
+    // ===== NOTIFICATIONS =====
     $scope.notifications = [];
-    $scope.showNotif = true;
+    $scope.showNotif = false;
 
     $scope.loadNotifications = function () {
-        
+        var userId = window.loggedInUserId;
+        if (!window.loggedInUserId) return;
 
-        var userId = sessionStorage.getItem("userId") || 1;
-
-        return $http.get("/Booking/GetNotifications?userId=" + userId)
+        return $http.get("/Booking/GetNotifications?userId=" + window.loggedInUserId)
             .then(function (res) {
-                $scope.notifications = res.data;
+                $scope.notifications = res.data || [];
             });
     };
 
-    if (window.location.pathname.toLowerCase().indexOf("profile") !== -1) {
+    $scope.toggleNotif = function () {
+        $scope.showNotif = !$scope.showNotif;
+    };
 
+    $scope.goToBooking = function () {
+        window.location.href = "/Main/CurrentBookingPage";
+    };
+
+    $scope.checkReviewNotification = function () {
+        var reviewNotif = $scope.notifications.find(n =>
+            n.Message.includes("completed")
+        );
+
+        if (reviewNotif) {
+            setTimeout(function () {
+                if (confirm("Your booking is completed! Write a review?")) {
+                    window.location.href = "/Main/ReviewPage";
+                }
+            }, 500);
+        }
+    };
+
+    if (window.location.pathname.toLowerCase().indexOf("profile") !== -1) {
         $scope.loadNotifications();
     }
     if (window.location.pathname.toLowerCase().indexOf("currentbookingpage") !== -1) {
@@ -1243,23 +1367,56 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
         }
     };
 
-    $scope.checkReviewNotification = function () {
+    $scope.goToReview = function (bookingId) {
+        window.location.href = "/Main/ReviewPage?bookingId=" + bookingId;
+    };
 
-        $scope.notifications.forEach(function (n) {
+    $scope.cancelUserBooking = function (bookingId) {
+        var reason = prompt("Reason for cancel:");
+        if (!reason) return;
 
-            if (n.message.includes("Leave a Review")) {
-                alert(n.message); //simple popup
-            }
+        $http.post("/Booking/Cancel",
+            $httpParamSerializerJQLike({
+                bookingId: bookingId,
+                reason: reason
+            }),
+            { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+        ).then(function () {
+            alert("Booking cancelled");
+            $scope.loadUserBookings();
         });
     };
 
-    $scope.loadNotifications().then(function () {
+    // ===== PAYMENT SETTINGS =====
+    $scope.payment = {};
+    $scope.paymentInfo = {};
 
-        $scope.checkReviewNotification();
-    });
+    $scope.savePayment = function () {
+        var file = document.getElementById("qrUpload").files[0];
+
+        var formData = new FormData();
+        formData.append("gcash", $scope.payment.gcash);
+        formData.append("bank", $scope.payment.bank);
+        formData.append("qr", file);
+
+        $http.post("/Admin/SavePayment", formData, {
+            headers: { "Content-Type": undefined }
+        }).then(function () {
+            alert("Saved!");
+        });
+    };
+
+    $scope.loadPaymentInfo = function () {
+        $http.get("/Admin/GetPaymentInfo")
+            .then(function (res) {
+                $scope.paymentInfo = res.data;
+            });
+    };
+
+    // CALL ON PAGE LOAD
+    $scope.loadPaymentInfo();
 
 });
-
 
 // ===== COMPARE DIRECTIVE =====
 app.directive('compareTo', function () {

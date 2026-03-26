@@ -22,8 +22,25 @@
                     <li>@Html.ActionLink("Contact", "Contact", "Home", new { area = "" }, new { @class = "nav-link" })</li>
                 </ul>
             </div>
+
+            <div ng-controller="DestLoungeSalesandBookingController">
+
+                <div ng-click="toggleNotif()" style="cursor:pointer;">
+                    🔔 <span ng-if="notifications.length > 0">({{notifications.length}})</span>
+                </div>
+
+                <div ng-show="showNotif" style="position:absolute; background:white;">
+                    <div ng-repeat="n in notifications" ng-click="goToBooking()">
+                        {{n.Message}}
+                    </div>
+                </div>
+
+            </div>
+
         </div>
     </nav>
+
+
     <div class="container body-content">
         @RenderBody()
         <hr />
@@ -36,6 +53,10 @@
     @Scripts.Render("~/bundles/bootstrap")
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
     <script src="~/Scripts/controller.js"></script>
+
+    <script src="~/Scripts/angular.js"></script>
+    
+
     @RenderSection("scripts", required: false)
 
 

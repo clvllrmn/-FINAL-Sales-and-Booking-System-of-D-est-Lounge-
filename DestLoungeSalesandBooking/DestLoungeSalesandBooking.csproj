@@ -183,6 +183,7 @@
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Controllers\AdminController.cs" />
     <Compile Include="Controllers\HomepagecontentController.cs" />
     <Compile Include="Controllers\ContactController.cs" />
     <Compile Include="Controllers\FAQSController.cs" />
@@ -1068,9 +1069,12 @@
     <Content Include="Views\Main\AdminChangePasswordPage.cshtml" />
     <Content Include="Views\Main\GalleryPage.cshtml" />
     <Content Include="Views\Main\AdminGalleryPage.cshtml" />
+    <Content Include="Views\Main\PaymentPage.cshtml" />
+    <Content Include="Views\Main\AdminPaymentSetting.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Uploads\" />
     <Folder Include="Views\GoogleSignInRequest\" />
     <Folder Include="Views\tbl_services\" />
     <Folder Include="Views\tbl_services_Map\" />

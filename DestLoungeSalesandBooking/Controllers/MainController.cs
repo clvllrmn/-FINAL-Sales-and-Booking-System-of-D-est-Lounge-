@@ -94,6 +94,14 @@ namespace DestLoungeSalesandBooking.Controllers
         {
             return View();
         }
+        public ActionResult PaymentPage()
+        {
+            return View();
+        }
+        public ActionResult AdminPaymentSetting()
+        {
+            return View();
+        }
  
 
         // ═══════════════════════════════════════════════════════════

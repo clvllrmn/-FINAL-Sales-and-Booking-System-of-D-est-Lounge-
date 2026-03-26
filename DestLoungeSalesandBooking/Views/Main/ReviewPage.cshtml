@@ -187,6 +187,16 @@
     });
 </script>
 
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const bookingId = urlParams.get("bookingId");
+
+    if (bookingId) {
+        document.getElementById("bookingId").value = bookingId;
+    }
+</script>
+
+
 <style>
     /* ===== SHARED CONTAINER & SIDEBAR ===== */
     .profile-container {
@@ -544,5 +554,4 @@
             font-size: 15px;
         }
     }
-
 </style>

@@ -18,7 +18,7 @@
         <a href="@Url.Action("AdminInboxPage","Main")" class="nav-item">INBOX</a>
         <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
         <a href="@Url.Action("AdminGalleryPage","Main")" class="nav-item">GALLERY</a>
-
+        <a href="@Url.Action("AdminPaymentSetting","Main")" class="nav-item">PAYMENT</a>
     </nav>
     <div class="sidebar-footer">
         <a href="@Url.Action("Logout","Account")" class="admin-link" title="Logout">
@@ -51,118 +51,130 @@
                 Cancelled
             </button>
         </div>
-        
 
         <!-- Bookings Grid -->
         <div class="bookings-grid">
             <div class="booking-card" ng-repeat="booking in filteredBookings track by booking.bookingId">
-             
-
-                    <div class="booking-info-row">
-                        <div class="info-icon"><i class="fa-solid fa-user"></i></div>
-                        <div class="info-content">
-                            <h3>Client:</h3>
-                            <p>{{booking.clientName}}</p>
-                        </div>
+                <div class="booking-info-row">
+                    <div class="info-icon"><i class="fa-solid fa-user"></i></div>
+                    <div class="info-content">
+                        <h3>Client:</h3>
+                        <p>{{booking.clientName}}</p>
                     </div>
+                </div>
 
-                    <div class="booking-divider"></div>
+                <div class="booking-divider"></div>
 
-                    <div class="booking-info-row">
-                        <div class="info-icon"><i class="fa-solid fa-heart"></i></div>
-                        <div class="info-content">
-                            <h3>Service:</h3>
-                            <p>{{booking.service}}</p>
-                        </div>
+                <div class="booking-info-row">
+                    <div class="info-icon"><i class="fa-solid fa-heart"></i></div>
+                    <div class="info-content">
+                        <h3>Service:</h3>
+                        <p>{{booking.service}}</p>
                     </div>
+                </div>
 
-                    <div class="booking-divider"></div>
+                <div class="booking-divider"></div>
 
-                    <div class="booking-info-row">
-                        <div class="info-icon"><i class="fa-solid fa-calendar"></i></div>
-                        <div class="info-content">
-                            <h3>Date/Time:</h3>
-                            <p>{{booking.dateTime}}</p>
-                        </div>
+                <div class="booking-info-row">
+                    <div class="info-icon"><i class="fa-solid fa-calendar"></i></div>
+                    <div class="info-content">
+                        <h3>Date/Time:</h3>
+                        <p>{{booking.dateTime}}</p>
                     </div>
+                </div>
 
-                    <div class="booking-divider"></div>
+                <div class="booking-divider"></div>
 
-                    <div class="booking-info-row">
-                        <div class="info-icon"><i class="fa-solid fa-note-sticky"></i></div>
-                        <div class="info-content">
-                            <h3>Notes:</h3>
+                <!-- IMPROVED NOTES SECTION WITH RECEIPT HANDLING -->
+                <div class="booking-info-row">
+                    <div class="info-icon"><i class="fa-solid fa-note-sticky"></i></div>
+                    <div class="info-content">
+                        <h3>Notes:</h3>
+
+                        <!-- Check if notes contain receipt information -->
+                        <div ng-if="booking.contact && booking.contact.includes('Receipt:')">
+                            <!-- Clean text before receipt -->
+                            <p>{{booking.contact.split('| Receipt:')[0]}}</p>
+
+                            <!-- Clickable receipt link -->
+                            <a ng-href="{{booking.contact.split('Receipt: ')[1]}}"
+                               target="_blank"
+                               style="color:blue; text-decoration:underline;">
+                                View Receipt
+                            </a>
+                        </div>
+
+                        <!-- Regular notes without receipt -->
+                        <div ng-if="!booking.contact || !booking.contact.includes('Receipt:')">
                             <p>{{booking.contact || 'N/A'}}</p>
                         </div>
                     </div>
-                  
+                </div>
 
-                    <!-- ACTIONS -->
-                    <div class="booking-actions">
+                <!-- ACTIONS -->
+                <div class="booking-actions">
+                    <!-- PENDING -->
+                    <div ng-if="booking.status === 'Pending'">
+                        <button class="approve-btn"
+                                ng-click="updateBookingStatus(booking.bookingId, 'Approved')">
+                            Approve
+                        </button>
 
-                        <!-- PENDING -->
-                        <div ng-if="booking.status === 'Pending'">
-                            <button class="approve-btn"
-                                    ng-click="updateBookingStatus(booking.bookingId, 'Approved')">
-                                Approve
-                            </button>
-
-                            <button class="cancel-btn"
-                                    ng-click="cancelBooking(booking.bookingId)">
-                                Cancel
-                            </button>
-                        </div>
-
-                        <!-- APPROVED -->
-                        <div ng-if="booking.status === 'Approved'">
-                            <button class="booking-complete-btn"
-                                    ng-click="updateBookingStatus(booking.bookingId, 'Completed')">
-                                Booking Complete
-                            </button>
-
-                            <button class="cancel-btn"
-                                    ng-click="cancelBooking(booking.bookingId)">
-                                Cancel
-                            </button>
-
-                            <div class="status-pill approved">👍 Approved</div>
-                        </div>
-
-                        <!-- COMPLETED -->
-                        <div class="status-pill completed" ng-if="booking.status === 'Completed'">
-                            ✅ Completed
-                        </div>
-
-                        <!-- CANCELLED -->
-                        <div class="status-pill cancelled" ng-if="booking.status === 'Cancelled'">
-                            ❌ Cancelled <span ng-if="booking.cancelReason">— {{booking.cancelReason}}</span>
-                        </div>
-
+                        <button class="cancel-btn"
+                                ng-click="cancelBooking(booking.bookingId)">
+                            Cancel
+                        </button>
                     </div>
 
+                    <!-- APPROVED -->
+                    <div ng-if="booking.status === 'Approved'">
+                        <button class="booking-complete-btn"
+                                ng-click="updateBookingStatus(booking.bookingId, 'Completed')">
+                            Booking Complete
+                        </button>
+
+                        <button class="cancel-btn"
+                                ng-click="cancelBooking(booking.bookingId)">
+                            Cancel
+                        </button>
+
+                        <div class="status-pill approved">👍 Approved</div>
+                    </div>
+
+                    <!-- COMPLETED -->
+                    <div class="status-pill completed" ng-if="booking.status === 'Completed'">
+                        ✅ Completed
+                    </div>
+
+                    <!-- CANCELLED -->
+                    <div class="status-pill cancelled" ng-if="booking.status === 'Cancelled'">
+                        ❌ Cancelled <span ng-if="booking.cancelReason">— {{booking.cancelReason}}</span>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- Footer -->
-        <footer>
-            <div class="footer-container">
-                <h2 class="footer-title">Follow our Socials!</h2>
-                <div class="social-links">
-                    <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank">
-                        <i class="fa-brands fa-tiktok"></i><span>destlounge</span>
-                    </a>
-                    <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
-                        <i class="fa-brands fa-facebook"></i><span>D'est Lounge</span>
-                    </a>
-                    <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
-                        <i class="fa-brands fa-instagram"></i><span>destlounge</span>
-                    </a>
-                </div>
-            </div>
-        </footer>
     </div>
-@@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap');
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <h2 class="footer-title">Follow our Socials!</h2>
+            <div class="social-links">
+                <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank">
+                    <i class="fa-brands fa-tiktok"></i><span>destlounge</span>
+                </a>
+                <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
+                    <i class="fa-brands fa-facebook"></i><span>D'est Lounge</span>
+                </a>
+                <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
+                    <i class="fa-brands fa-instagram"></i><span>destlounge</span>
+                </a>
+            </div>
+        </div>
+    </footer>
+</div>
+
+
 <style>
     * {
         margin: 0;
@@ -357,6 +369,13 @@
         font-family: 'Montserrat', sans-serif;
     }
 
+    .info-content a {
+        display: inline-block;
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
     .booking-divider {
         height: 0.0625rem;
         background-color: rgba(90, 74, 58, 0.2);
@@ -366,9 +385,9 @@
     /* Actions */
     .booking-actions {
         margin-top: 1.25rem;
-        display: grid;
+        display: flex;
         flex-direction: column;
-        gap: 2rem;
+        gap: 0.75rem;
     }
 
     .approve-btn {
@@ -381,7 +400,6 @@
         font-size: 1rem;
         font-weight: 600;
         cursor: pointer;
-        margin-top: 2rem;
         font-family: 'Georgia', serif;
     }
 
@@ -409,7 +427,6 @@
         font-weight: 600;
         cursor: pointer;
         font-family: 'Georgia', serif;
-        margin-top: .5rem;
     }
 
     .status-pill {
@@ -419,7 +436,6 @@
         font-size: 1rem;
         font-weight: 700;
         text-align: center;
-        margin-top: .5rem;
         font-family: 'Montserrat', sans-serif;
     }
 

@@ -1,0 +1,300 @@
+@{
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+}
+
+<!-- Sidebar Navigation (COPY SAME AS OTHER PAGES) -->
+<aside class="sidebar">
+    <div class="logo-container">
+        <a href="@Url.Action("AdminHomepage","Main")">
+            <img src="~/Content/Pictures/DestLogo.png" class="sidebar-logo">
+        </a>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="@Url.Action("AdminHomepage","Main")" class="nav-item">HOME</a>
+        <a href="@Url.Action("AdminBookingPage","Main")" class="nav-item">BOOKINGS</a>
+        <a href="@Url.Action("AdminServicePage","Main")" class="nav-item">SERVICES</a>
+        <a href="@Url.Action("AdminContactPage","Main")" class="nav-item">CONTACT</a>
+        <a href="@Url.Action("AdminFAQsPage","Main")" class="nav-item">FAQs</a>
+        <a href="@Url.Action("AdminInboxPage","Main")" class="nav-item">INBOX</a>
+        <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
+        <a href="@Url.Action("AdminGalleryPage","Main")" class="nav-item">GALLERY</a>
+
+        <!-- 🔥 NEW -->
+        <a href="@Url.Action("AdminPaymentSetting","Main")" class="nav-item active">PAYMENT</a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <a href="@Url.Action("Logout","Account")" class="admin-link">
+            Logout
+        </a>
+    </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<div class="main-content" ng-controller="DestLoungeSalesandBookingController" ng-init="loadPaymentInfo()">
+
+    <div class="payment-settings-container">
+        <h1 class="settings-title">Payment Settings</h1>
+
+        <div class="settings-card">
+
+            <div class="form-group">
+                <label>GCash Number</label>
+                <input type="text" ng-model="payment.gcash" placeholder="09XXXXXXXXX" />
+            </div>
+
+            <div class="form-group">
+                <label>Bank Details</label>
+                <input type="text" ng-model="payment.bank" placeholder="Bank Name / Account Number" />
+            </div>
+
+            <div class="form-group">
+                <label>Upload QR Code</label>
+                <input type="file" id="qrUpload" />
+                <small class="help-text">Upload QR code for GCash payments (PNG, JPG, JPEG)</small>
+            </div>
+
+            <!-- Preview Current QR Code -->
+            <div class="qr-preview" ng-if="paymentInfo.qr">
+                <label>Current QR Code:</label>
+                <img ng-src="{{paymentInfo.qr}}" alt="QR Code" class="qr-image" />
+            </div>
+
+            <button class="btn-save" ng-click="savePayment()">
+                Save Settings
+            </button>
+
+        </div>
+    </div>
+
+</div>
+
+<style>
+    /* Sidebar Styles - Matching other admin pages */
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 10%;
+        min-width: 9rem;
+        height: 100vh;
+        background-color: #e7dfd6;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 1.25rem 0;
+        z-index: 1000;
+    }
+
+    .logo-container {
+        margin-bottom: 2rem;
+    }
+
+    .sidebar-logo {
+        width: 3.5rem;
+        height: auto;
+    }
+
+    .sidebar-nav {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        width: 100%;
+    }
+
+    .nav-item {
+        color: #5a4a3a;
+        text-decoration: none;
+        padding: 1rem 0.625rem;
+        font-size: 1rem;
+        font-weight: 500;
+        text-align: center;
+        transition: background-color 0.3s;
+        letter-spacing: 0.0625rem;
+        display: block;
+    }
+
+        .nav-item:hover {
+            background-color: rgba(90, 74, 58, 0.1);
+        }
+
+        .nav-item.active {
+            background-color: rgba(139, 111, 71, 0.3);
+            border-left: 0.25rem solid #8b6f47;
+        }
+
+    .sidebar-footer {
+        margin-top: auto;
+        padding: 1.25rem 0;
+    }
+
+    .admin-link {
+        color: #5a4a3a;
+        text-decoration: none;
+        font-size: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.3125rem;
+    }
+
+    /* Main Content */
+    .main-content {
+        margin-left: 10%;
+        min-height: 100vh;
+        background-color: #f5f0eb;
+    }
+
+    /* Payment Settings Container */
+    .payment-settings-container {
+        padding: 80px 40px;
+        background: #f5f0eb;
+        min-height: 100vh;
+    }
+
+    .settings-title {
+        font-size: 32px;
+        font-weight: 700;
+        color: #6b5544;
+        margin-bottom: 30px;
+        font-family: 'Georgia', serif;
+    }
+
+    .settings-card {
+        background: #e8ddd1;
+        padding: 40px;
+        border-radius: 25px;
+        max-width: 500px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+        display: flex;
+        flex-direction: column;
+    }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #5a4a3a;
+            font-size: 14px;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #cbb9a6;
+            font-size: 14px;
+            outline: none;
+            background: white;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            border-color: #6b5544;
+        }
+
+    .help-text {
+        display: block;
+        margin-top: 5px;
+        font-size: 12px;
+        color: #8b6f47;
+        font-style: italic;
+    }
+
+    .qr-preview {
+        margin-bottom: 20px;
+        text-align: center;
+        padding: 15px;
+        background: #c9b5a3;
+        border-radius: 10px;
+    }
+
+        .qr-preview label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #5a4a3a;
+            font-size: 14px;
+        }
+
+    .qr-image {
+        width: 150px;
+        height: auto;
+        border: 2px solid white;
+        border-radius: 10px;
+        padding: 5px;
+        background: white;
+    }
+
+    .btn-save {
+        width: 100%;
+        padding: 14px;
+        background: #6b5544;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .btn-save:hover {
+            background: #5a4635;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .btn-save:active {
+            transform: translateY(0);
+        }
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .sidebar {
+            width: 6%;
+            min-width: 5rem;
+        }
+
+        .main-content {
+            margin-left: 6%;
+        }
+
+        .payment-settings-container {
+            padding: 40px 20px;
+        }
+
+        .settings-title {
+            font-size: 28px;
+        }
+
+        .settings-card {
+            padding: 25px;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .payment-settings-container {
+            padding: 30px 15px;
+        }
+
+        .settings-title {
+            font-size: 24px;
+        }
+
+        .settings-card {
+            padding: 20px;
+        }
+
+        .qr-image {
+            width: 120px;
+        }
+    }
+</style>
