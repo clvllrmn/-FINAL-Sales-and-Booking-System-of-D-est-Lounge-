@@ -32,6 +32,7 @@
 
 <!-- Main Content Area -->
 <div class="main-content" ng-controller="DestLoungeSalesandBookingController">
+    @Html.AntiForgeryToken()
     <!-- Services Section -->
     <div class="services-page-container">
         <div class="services-sidebar">
@@ -318,9 +319,9 @@
         gap: 0.3125rem;
     }
 
-    .admin-link i {
-        font-size: 1.25rem;
-    }
+        .admin-link i {
+            font-size: 1.25rem;
+        }
 
     /* Main Content */
     .main-content {
@@ -363,25 +364,25 @@
         transition: all 0.3s ease;
     }
 
-    .service-category:hover {
-        background-color: #d4c4b0;
-    }
+        .service-category:hover {
+            background-color: #d4c4b0;
+        }
 
-    .service-category.active {
-        background-color: #6b4423;
-    }
+        .service-category.active {
+            background-color: #6b4423;
+        }
 
-    .service-category.active h3 {
-        color: white;
-    }
+            .service-category.active h3 {
+                color: white;
+            }
 
-    .service-category h3 {
-        font-size: 1rem;
-        color: #5d4037;
-        margin: 0;
-        text-align: center;
-        transition: color 0.3s ease;
-    }
+        .service-category h3 {
+            font-size: 1rem;
+            color: #5d4037;
+            margin: 0;
+            text-align: center;
+            transition: color 0.3s ease;
+        }
 
     /* Services Content Grid */
     .services-content {
@@ -402,9 +403,9 @@
         position: relative;
     }
 
-    .service-card:hover {
-        transform: scale(1.05);
-    }
+        .service-card:hover {
+            transform: scale(1.05);
+        }
 
     .service-image {
         width: 100%;
@@ -414,11 +415,11 @@
         margin-bottom: 1rem;
     }
 
-    .service-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
+        .service-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
     .service-name {
         text-align: center;
@@ -466,21 +467,21 @@
         color: #4a7c59;
     }
 
-    .edit-btn:hover {
-        background: #4a7c59;
-        color: white;
-        transform: scale(1.1);
-    }
+        .edit-btn:hover {
+            background: #4a7c59;
+            color: white;
+            transform: scale(1.1);
+        }
 
     .delete-btn {
         color: #c84b4b;
     }
 
-    .delete-btn:hover {
-        background: #c84b4b;
-        color: white;
-        transform: scale(1.1);
-    }
+        .delete-btn:hover {
+            background: #c84b4b;
+            color: white;
+            transform: scale(1.1);
+        }
 
     /* Add Service Button */
     .add-service-container {
@@ -505,14 +506,14 @@
         gap: 0.5rem;
     }
 
-    .add-service-button:hover {
-        background-color: #5d3a1f;
-        transform: scale(1.05);
-    }
+        .add-service-button:hover {
+            background-color: #5d3a1f;
+            transform: scale(1.05);
+        }
 
-    .add-service-button i {
-        font-size: 1rem;
-    }
+        .add-service-button i {
+            font-size: 1rem;
+        }
 
     /* Modal Styles */
     .modal-overlay {
@@ -552,13 +553,13 @@
         text-align: left;
     }
 
-    .form-group label {
-        display: block;
-        color: #5d4037;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        font-size: 1rem;
-    }
+        .form-group label {
+            display: block;
+            color: #5d4037;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
 
     .form-input,
     .form-textarea {
@@ -573,15 +574,15 @@
         font-family: 'Georgia', serif;
     }
 
-    .form-input:focus,
-    .form-textarea:focus {
-        border-color: #8b6f47;
-    }
+        .form-input:focus,
+        .form-textarea:focus {
+            border-color: #8b6f47;
+        }
 
-    .form-input.ng-invalid.ng-dirty,
-    .form-textarea.ng-invalid.ng-dirty {
-        border-color: #dc3545;
-    }
+        .form-input.ng-invalid.ng-dirty,
+        .form-textarea.ng-invalid.ng-dirty {
+            border-color: #dc3545;
+        }
 
     select.form-input {
         cursor: pointer;
@@ -606,12 +607,12 @@
         text-align: center;
     }
 
-    .image-preview img {
-        max-width: 100%;
-        max-height: 200px;
-        border: 2px solid #d4c4b0;
-        border-radius: 8px;
-    }
+        .image-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border: 2px solid #d4c4b0;
+            border-radius: 8px;
+        }
 
     .error-message {
         color: #dc3545;
@@ -643,24 +644,24 @@
         background-color: #e7dfd6;
     }
 
-    .cancel-btn:hover {
-        background-color: #d4c4b0;
-    }
+        .cancel-btn:hover {
+            background-color: #d4c4b0;
+        }
 
     .save-btn {
         color: white;
         background-color: #6b4423;
     }
 
-    .save-btn:hover:not(:disabled) {
-        background-color: #5d3a1f;
-        transform: scale(1.02);
-    }
+        .save-btn:hover:not(:disabled) {
+            background-color: #5d3a1f;
+            transform: scale(1.02);
+        }
 
-    .save-btn:disabled {
-        background-color: #9a9a9a;
-        cursor: not-allowed;
-    }
+        .save-btn:disabled {
+            background-color: #9a9a9a;
+            cursor: not-allowed;
+        }
 
     /* Footer */
     footer {
@@ -704,19 +705,19 @@
         transition: transform 0.3s ease, color 0.3s ease;
     }
 
-    .social-item:hover {
-        transform: scale(1.1);
-        color: #6b4423;
-    }
+        .social-item:hover {
+            transform: scale(1.1);
+            color: #6b4423;
+        }
 
-    .social-item i {
-        font-size: 3rem;
-    }
+        .social-item i {
+            font-size: 3rem;
+        }
 
-    .social-item span {
-        font-size: 1.2rem;
-        font-weight: 500;
-    }
+        .social-item span {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
 
     /* Responsive */
     @@media (max-width: 1024px) {

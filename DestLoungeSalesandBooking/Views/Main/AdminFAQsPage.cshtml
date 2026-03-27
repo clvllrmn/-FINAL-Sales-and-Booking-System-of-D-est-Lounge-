@@ -67,13 +67,13 @@
         </div>
         <!-- Trash / Deleted FAQs Toggle -->
         <div class="trash-container">
-            <button class="trash-toggle-btn" ng-click="toggleTrash()">
+            <button class="trash-toggle-btn" ng-click="toggleFaqTrash()">
                 <i class="fa-solid fa-trash-can-arrow-up"></i>
                 {{ showTrash ? 'Hide Deleted FAQs' : 'View Deleted FAQs' }}
                 <span class="trash-count" ng-if="deletedFaqs.length > 0">({{deletedFaqs.length}})</span>
             </button>
 
-            <div class="trash-panel" ng-show="showTrash">
+            <div class="trash-panel" ng-show="showFaqTrash">
                 <h2 class="trash-title">Deleted FAQs</h2>
 
                 <p class="trash-empty" ng-if="deletedFaqs.length === 0">No deleted FAQs found.</p>

@@ -433,6 +433,9 @@ app.controller("DestLoungeSalesandBookingController",
         var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
         var tokenValue = tokenElement ? tokenElement.value : '';
 
+        console.log("Token found:", tokenElement);  // ADD THIS
+        console.log("Token value:", tokenValue);     // ADD THIS
+
         var formData = new FormData();
         formData.append('name', $scope.currentService.name || '');
         formData.append('description', $scope.currentService.description || '');

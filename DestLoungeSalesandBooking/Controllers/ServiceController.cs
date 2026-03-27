@@ -84,11 +84,15 @@ namespace DestLoungeSalesandBooking.Controllers
 
                     SaveServiceImage(imageFile, service.service_id);
                 }
+
             }
 
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message });
+                var innerMsg = ex.InnerException?.InnerException?.Message
+                            ?? ex.InnerException?.Message
+                            ?? ex.Message;
+                return Json(new { success = false, message = innerMsg });
             }
         }
 
