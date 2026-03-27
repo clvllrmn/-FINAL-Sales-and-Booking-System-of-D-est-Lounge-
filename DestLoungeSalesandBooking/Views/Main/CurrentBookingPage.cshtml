@@ -81,7 +81,10 @@
         </nav>
     </aside>
 
-    <main class="profile-content">
+    <main class="profile-content" 
+          ng-controller="DestLoungeSalesandBookingController"
+          ng-app="DestLoungeSalesandBookingController">
+        {{test}}
 
         <!-- 🔥 HEADER -->
         <div class="booking-wrapper">
@@ -167,6 +170,8 @@
     }
 
 </script>
+
+<script src="@Url.Content("~/Scripts/HolyScripts/Module.js")"></script>
 
 <footer>
     <div class="footer-container">

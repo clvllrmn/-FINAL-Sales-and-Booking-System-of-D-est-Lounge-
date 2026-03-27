@@ -1,6 +1,16 @@
 ﻿var _currentContentType = null;
 
-app.controller("DestLoungeSalesandBookingController", function ($scope, $window, DestLoungeSalesandBookingService, $http, $httpParamSerializerJQLike) {
+
+app.controller("DestLoungeSalesandBookingController",
+    function ($scope, $window, DestLoungeSalesandBookingService, $http, $httpParamSerializerJQLike) {
+
+        console.log("CONTROLLER REGISTERED");
+
+        $scope.test = "Working";
+
+
+
+    
 
     // ===== INITIALIZE DEFAULT VALUES =====
     $scope.bannerText = {
@@ -1353,18 +1363,29 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
     $scope.userBookings = [];
 
     $scope.loadUserBookings = function () {
+
         if (!window.loggedInUserId || window.loggedInUserId === "null" || parseInt(window.loggedInUserId) <= 0) {
+            console.log("No user logged in");
             return;
         }
-        var customerId = parseInt(window.loggedInUserId);
-        $http.get("/Booking/GetUserBookings?userId=" + customerId)
+
+        var userId = parseInt(window.loggedInUserId);
+
+        console.log("Loading bookings for user:", userId);
+
+        $http.get("/Booking/GetUserBookings?userId=" + userId)
             .then(function (res) {
+
+                console.log("Bookings response:", res.data);
+
                 $scope.userBookings = res.data || [];
+
             })
             .catch(function (err) {
-                console.error("Error loading user bookings:", err);
+                console.error("Error loading bookings:", err);
             });
     };
+
 
     if (window.loggedInUserId && window.loggedInUserId !== "null") {
         $scope.loadUserBookings();
@@ -1468,7 +1489,11 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
     };
 
     // CALL ON PAGE LOAD
-    $scope.loadPaymentInfo();
+        $scope.loadPaymentInfo();
+
+       
+
+
 
 });
 

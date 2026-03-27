@@ -178,6 +178,22 @@ namespace DestLoungeSalesandBooking.Controllers
             if (booking == null)
                 return Json(new { success = false, message = "Booking not found." });
 
+            // ✅ 24-HOUR CHECK FOR APPROVALS
+            if (status == "Approved")
+            {
+                DateTime selectedDateTime = booking.BookingDate.Date + booking.StartTime;
+                DateTime now = DateTime.Now;
+
+                if (selectedDateTime < now.AddHours(24))
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Cannot approve bookings that are less than 24 hours away."
+                    });
+                }
+            }
+
             // ✅ TIME LOCK FIX (BEST VERSION)
             if (status == "Completed")
             {
@@ -311,6 +327,19 @@ namespace DestLoungeSalesandBooking.Controllers
             if (!TimeSpan.TryParse(Request["endTime"], out endTime))
             {
                 return Json(new { success = false, message = "Invalid endTime" });
+            }
+
+            // ✅ ADD 24-HOUR ADVANCE VALIDATION HERE
+            DateTime selectedDateTime = bookingDate.Date + startTime;
+            DateTime now = DateTime.Now;
+
+            if (selectedDateTime < now.AddHours(24))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Bookings must be at least 24 hours in advance."
+                });
             }
 
             var services = Request["services"] ?? "";
@@ -551,6 +580,17 @@ namespace DestLoungeSalesandBooking.Controllers
             {
                 System.Diagnostics.Debug.WriteLine("EMAIL ERROR: " + ex.Message);
             }
+
+        }
+
+        public JsonResult GetTakenSlots(DateTime date)
+        {
+            var slots = db.tbl_bookings
+                .Where(b => b.BookingDate == date && b.Status != "Cancelled")
+                .Select(b => b.StartTime)
+                .ToList();
+
+            return Json(slots, JsonRequestBehavior.AllowGet);
         }
 
     }
