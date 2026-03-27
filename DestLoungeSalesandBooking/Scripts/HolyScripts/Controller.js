@@ -1,8 +1,6 @@
-﻿// FIXED 
+﻿var _currentContentType = null;
 
-var _currentContentType = null;
-
-app.controller("DestLoungeSalesandBookingController", function ($scope, $window, DestLoungeSalesandBookingService, $http, $httpParamSerializerJQLike, $q) {
+app.controller("DestLoungeSalesandBookingController", function ($scope, $window, DestLoungeSalesandBookingService, $http, $httpParamSerializerJQLike) {
 
     // ===== INITIALIZE DEFAULT VALUES =====
     $scope.bannerText = {
@@ -20,6 +18,12 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
     $scope.destInfo = {
         title: 'D\'est',
         text: 'is a modern beauty and relaxation space where self-care meets sophistication. A good place to stay where every visit is designed to be a luxurious and calming pause from everyday.'
+    };
+
+    $scope.polaroidImages = {
+        1: '/Content/Pictures/nail1.jpg',
+        2: '/Content/Pictures/nail2.jpg',
+        3: '/Content/Pictures/nail3.jpg'
     };
 
     $scope.user = {};
@@ -46,6 +50,10 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
                     if (contentMap['service_tagline']) $scope.serviceInfo.tagline = contentMap['service_tagline'];
                     if (contentMap['dest_title']) $scope.destInfo.title = contentMap['dest_title'];
                     if (contentMap['dest_text']) $scope.destInfo.text = contentMap['dest_text'];
+
+                    if (contentMap['polaroid_1']) $scope.polaroidImages[1] = contentMap['polaroid_1'] + '?t=' + Date.now();
+                    if (contentMap['polaroid_2']) $scope.polaroidImages[2] = contentMap['polaroid_2'] + '?t=' + Date.now();
+                    if (contentMap['polaroid_3']) $scope.polaroidImages[3] = contentMap['polaroid_3'] + '?t=' + Date.now();
                 }
             })
             .catch(function (error) {
@@ -53,7 +61,7 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
             });
     };
 
-    // ==== EDIT HOMEPAGE TEXT ====
+    // ===== EDIT HOMEPAGE TEXT =====
     $scope.editHomepageText = function (contentType, currentValue) {
         var newValue = prompt('Edit ' + contentType + ':', currentValue);
         if (newValue === null || newValue === "") return;
@@ -91,6 +99,52 @@ app.controller("DestLoungeSalesandBookingController", function ($scope, $window,
                 console.error('Request error:', error);
                 alert('Failed to update');
             });
+    };
+
+    // ===== UPDATE POLAROID IMAGE =====
+    $scope.updatePolaroidImage = function (slot) {
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+
+        input.onchange = function () {
+            var file = input.files[0];
+            if (!file) return;
+
+            if (file.size > 2 * 1024 * 1024) {
+                alert('Image is too large. Maximum size is 2MB.');
+                return;
+            }
+
+            var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            var tokenValue = tokenElement ? tokenElement.value : '';
+
+            var formData = new FormData();
+            formData.append('slot', slot);
+            formData.append('imageFile', file);
+            formData.append('__RequestVerificationToken', tokenValue);
+
+            $http({
+                method: 'POST',
+                url: '/HomePageContent/UpdatePolaroidImage',
+                data: formData,
+                headers: { 'Content-Type': undefined }
+            })
+                .then(function (response) {
+                    if (response.data.success) {
+                        $scope.polaroidImages[slot] = response.data.imageUrl;
+                        alert('Photo updated!');
+                    } else {
+                        alert('Error: ' + response.data.message);
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error updating polaroid image:', error);
+                    alert('Failed to update photo.');
+                });
+        };
+
+        input.click();
     };
 
     // ===== FAQ FUNCTIONS =====

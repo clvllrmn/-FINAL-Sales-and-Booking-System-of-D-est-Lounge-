@@ -62,25 +62,13 @@
 
     <!-- Polaroid Gallery -->
     <div class="polaroid-section">
-        <div class="polaroid-card">
+        <div class="polaroid-card" ng-repeat="slot in [1,2,3]">
             <div class="polaroid-image">
-                <img src="~/Content/Pictures/nail1.jpg" alt="Nail Design 1">
+                <img ng-src="{{polaroidImages[slot]}}" alt="Nail Design {{slot}}">
             </div>
             <div class="polaroid-caption"><i class="fa-regular fa-heart"></i></div>
         </div>
-        <div class="polaroid-card">
-            <div class="polaroid-image">
-                <img src="~/Content/Pictures/nail2.jpg" alt="Nail Design 2">
-            </div>
-            <div class="polaroid-caption"><i class="fa-regular fa-heart"></i></div>
-        </div>
-        <div class="polaroid-card">
-            <div class="polaroid-image">
-                <img src="~/Content/Pictures/nail3.jpg" alt="Nail Design 3">
-            </div>
-            <div class="polaroid-caption"><i class="fa-regular fa-heart"></i></div>
-        </div>
-    </div>
+    </div>  
 
     <!-- D'est Description -->
     <div class="dest-description" ng-cloak>

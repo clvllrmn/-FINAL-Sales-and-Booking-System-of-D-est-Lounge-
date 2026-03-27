@@ -103,28 +103,15 @@
 
         <!-- Polaroid Images Section -->
         <div class="polaroid-section">
-            <div class="polaroid-card">
+            <div class="polaroid-card" ng-repeat="slot in [1,2,3]">
                 <div class="admin-controls">
-                    <button class="edit-btn" onclick="editImage(1)" title="Edit"><i class="fa-solid fa-pen"></i></button>
-                    <button class="delete-btn" onclick="deleteImage(1)" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    <button class="edit-btn" ng-click="updatePolaroidImage(slot)" title="Change Photo">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
                 </div>
-                <div class="polaroid-image"><img src="~/Content/Pictures/nail1.jpg" alt="Nail Design 1"></div>
-                <div class="polaroid-caption"><i class="fa-regular fa-heart"></i></div>
-            </div>
-            <div class="polaroid-card">
-                <div class="admin-controls">
-                    <button class="edit-btn" onclick="editImage(2)" title="Edit"><i class="fa-solid fa-pen"></i></button>
-                    <button class="delete-btn" onclick="deleteImage(2)" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                <div class="polaroid-image">
+                    <img ng-src="{{polaroidImages[slot]}}" alt="Nail Design {{slot}}">
                 </div>
-                <div class="polaroid-image"><img src="~/Content/Pictures/nail2.jpg" alt="Nail Design 2"></div>
-                <div class="polaroid-caption"><i class="fa-regular fa-heart"></i></div>
-            </div>
-            <div class="polaroid-card">
-                <div class="admin-controls">
-                    <button class="edit-btn" onclick="editImage(3)" title="Edit"><i class="fa-solid fa-pen"></i></button>
-                    <button class="delete-btn" onclick="deleteImage(3)" title="Delete"><i class="fa-solid fa-trash"></i></button>
-                </div>
-                <div class="polaroid-image"><img src="~/Content/Pictures/nail3.jpg" alt="Nail Design 3"></div>
                 <div class="polaroid-caption"><i class="fa-regular fa-heart"></i></div>
             </div>
         </div>
