@@ -2,14 +2,13 @@
     Layout = "~/Views/Shared/_MainLayout.cshtml";
 }
 
-<!-- Sidebar Navigation (COPY SAME AS OTHER PAGES) -->
+<!-- Sidebar Navigation -->
 <aside class="sidebar">
     <div class="logo-container">
         <a href="@Url.Action("AdminHomepage","Main")">
-            <img src="~/Content/Pictures/DestLogo.png" class="sidebar-logo">
+            <img src="~/Content/Pictures/DestLogo.png" class="sidebar-logo" alt="D'est Lounge">
         </a>
     </div>
-
     <nav class="sidebar-nav">
         <a href="@Url.Action("AdminHomepage","Main")" class="nav-item">HOME</a>
         <a href="@Url.Action("AdminBookingPage","Main")" class="nav-item">BOOKINGS</a>
@@ -19,19 +18,51 @@
         <a href="@Url.Action("AdminInboxPage","Main")" class="nav-item">INBOX</a>
         <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
         <a href="@Url.Action("AdminGalleryPage","Main")" class="nav-item">GALLERY</a>
-
-        <!-- 🔥 NEW -->
         <a href="@Url.Action("AdminPaymentSetting","Main")" class="nav-item active">PAYMENT</a>
     </nav>
-
     <div class="sidebar-footer">
-        <a href="@Url.Action("Logout","Account")" class="admin-link">
-            Logout
+        <a href="@Url.Action("Logout","Account")" class="admin-link" title="Logout">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Logout</span>
         </a>
     </div>
 </aside>
 
-<!-- MAIN CONTENT -->
+<!-- Mobile Top Bar -->
+<div class="mobile-topbar">
+    <a href="@Url.Action("AdminHomepage","Main")">
+        <img src="~/Content/Pictures/DestLogo.png" alt="D'est Lounge">
+    </a>
+    <button class="mobile-menu-btn" onclick="toggleMobileNav()">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+</div>
+
+<!-- Mobile Nav Overlay -->
+<div class="mobile-nav-overlay" id="mobileOverlay" onclick="toggleMobileNav()"></div>
+
+<!-- Mobile Nav Drawer -->
+<div class="mobile-nav-drawer" id="mobileDrawer">
+    <nav class="sidebar-nav">
+        <a href="@Url.Action("AdminHomepage","Main")" class="nav-item">HOME</a>
+        <a href="@Url.Action("AdminBookingPage","Main")" class="nav-item">BOOKINGS</a>
+        <a href="@Url.Action("AdminServicePage","Main")" class="nav-item">SERVICES</a>
+        <a href="@Url.Action("AdminContactPage","Main")" class="nav-item">CONTACT</a>
+        <a href="@Url.Action("AdminFAQsPage","Main")" class="nav-item">FAQs</a>
+        <a href="@Url.Action("AdminInboxPage","Main")" class="nav-item">INBOX</a>
+        <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
+        <a href="@Url.Action("AdminGalleryPage","Main")" class="nav-item">GALLERY</a>
+        <a href="@Url.Action("AdminPaymentSetting","Main")" class="nav-item active">PAYMENT</a>
+    </nav>
+    <div class="sidebar-footer">
+        <a href="@Url.Action("Logout","Account")" class="admin-link" title="Logout">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Logout</span>
+        </a>
+    </div>
+</div>
+
+<!-- Main Content -->
 <div class="main-content" ng-controller="DestLoungeSalesandBookingController" ng-init="loadPaymentInfo()">
 
     <div class="payment-settings-container">
@@ -68,10 +99,44 @@
         </div>
     </div>
 
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <h2 class="footer-title">Follow our Socials!</h2>
+            <div class="social-links">
+                <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank">
+                    <i class="fa-brands fa-tiktok"></i>
+                    <span>destlounge</span>
+                </a>
+                <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
+                    <i class="fa-brands fa-facebook"></i>
+                    <span>D'est Lounge</span>
+                </a>
+                <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
+                    <i class="fa-brands fa-instagram"></i>
+                    <span>destlounge</span>
+                </a>
+            </div>
+        </div>
+    </footer>
+
 </div>
 
 <style>
-    /* Sidebar Styles - Matching other admin pages */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Georgia', serif;
+        background-color: #f5f0eb;
+    }
+
+    /* Sidebar */
     .sidebar {
         position: fixed;
         left: 0;
@@ -117,11 +182,11 @@
     }
 
         .nav-item:hover {
-            background-color: rgba(90, 74, 58, 0.1);
+            background-color: rgba(90,74,58,0.1);
         }
 
         .nav-item.active {
-            background-color: rgba(139, 111, 71, 0.3);
+            background-color: rgba(139,111,71,0.3);
             border-left: 0.25rem solid #8b6f47;
         }
 
@@ -140,60 +205,68 @@
         gap: 0.3125rem;
     }
 
+        .admin-link i {
+            font-size: 1.25rem;
+        }
+
     /* Main Content */
     .main-content {
         margin-left: 10%;
         min-height: 100vh;
         background-color: #f5f0eb;
+        display: flex;
+        flex-direction: column;
     }
 
-    /* Payment Settings Container */
+    /* Payment Settings */
     .payment-settings-container {
-        padding: 80px 40px;
+        padding: 3rem 2.5rem;
         background: #f5f0eb;
-        min-height: 100vh;
+        flex: 1;
     }
 
     .settings-title {
-        font-size: 32px;
+        font-size: 2rem;
         font-weight: 700;
         color: #6b5544;
-        margin-bottom: 30px;
+        margin-bottom: 1.875rem;
         font-family: 'Georgia', serif;
     }
 
     .settings-card {
         background: #e8ddd1;
-        padding: 40px;
+        padding: 2.5rem;
         border-radius: 25px;
         max-width: 500px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
 
+    /* Form */
     .form-group {
-        margin-bottom: 20px;
+        margin-bottom: 1.25rem;
         display: flex;
         flex-direction: column;
     }
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 0.5rem;
             font-weight: 600;
             color: #5a4a3a;
-            font-size: 14px;
+            font-size: 0.875rem;
         }
 
         .form-group input[type="text"],
         .form-group input[type="file"] {
             width: 100%;
-            padding: 12px;
+            padding: 0.75rem;
             border-radius: 10px;
             border: 1px solid #cbb9a6;
-            font-size: 14px;
+            font-size: 0.875rem;
             outline: none;
             background: white;
             box-sizing: border-box;
+            font-family: 'Georgia', serif;
         }
 
         .form-group input:focus {
@@ -202,26 +275,27 @@
 
     .help-text {
         display: block;
-        margin-top: 5px;
-        font-size: 12px;
+        margin-top: 0.3125rem;
+        font-size: 0.75rem;
         color: #8b6f47;
         font-style: italic;
     }
 
+    /* QR Preview */
     .qr-preview {
-        margin-bottom: 20px;
+        margin-bottom: 1.25rem;
         text-align: center;
-        padding: 15px;
+        padding: 0.9375rem;
         background: #c9b5a3;
         border-radius: 10px;
     }
 
         .qr-preview label {
             display: block;
-            margin-bottom: 10px;
+            margin-bottom: 0.625rem;
             font-weight: 600;
             color: #5a4a3a;
-            font-size: 14px;
+            font-size: 0.875rem;
         }
 
     .qr-image {
@@ -233,17 +307,19 @@
         background: white;
     }
 
+    /* Save Button */
     .btn-save {
         width: 100%;
-        padding: 14px;
+        padding: 0.875rem;
         background: #6b5544;
         color: white;
         border: none;
         border-radius: 25px;
         font-weight: 600;
-        font-size: 16px;
+        font-size: 1rem;
         cursor: pointer;
         transition: all 0.3s ease;
+        font-family: 'Georgia', serif;
     }
 
         .btn-save:hover {
@@ -256,45 +332,326 @@
             transform: translateY(0);
         }
 
-    /* Responsive Design */
-    @@media (max-width: 768px) {
+    /* Footer */
+    footer {
+        background-color: #e7d7c8;
+        border: 2px solid #d4c4b0;
+        border-left: none;
+        border-right: none;
+        padding: 2.5rem 3rem;
+        margin: 0;
+        text-align: center;
+    }
+
+    .footer-container {
+        padding: 0;
+        margin: 0 auto;
+    }
+
+    .footer-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #6b4423;
+        margin: 0 0 2rem 0;
+        font-style: italic;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .social-links {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5rem;
+        flex-wrap: wrap;
+    }
+
+    .social-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        text-decoration: none;
+        color: #5a4a3a;
+        transition: transform 0.3s;
+    }
+
+        .social-item:hover {
+            transform: translateY(-0.1875rem);
+        }
+
+        .social-item i {
+            font-size: 2.25rem;
+        }
+
+        .social-item span {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+    /* Mobile Top Bar */
+    .mobile-topbar {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background-color: #e7dfd6;
+        z-index: 1100;
+        padding: 0.75rem 1rem;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 2px solid #c1b2a5;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+        .mobile-topbar img {
+            height: 2.5rem;
+            width: auto;
+        }
+
+    .mobile-menu-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #5a4a3a;
+        cursor: pointer;
+    }
+
+    /* Mobile Nav Drawer */
+    .mobile-nav-drawer {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 75%;
+        max-width: 16rem;
+        height: 100vh;
+        background-color: #e7dfd6;
+        z-index: 1200;
+        flex-direction: column;
+        padding: 1.5rem 0;
+        box-shadow: 4px 0 12px rgba(0,0,0,0.15);
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+        .mobile-nav-drawer.open {
+            transform: translateX(0);
+        }
+
+        .mobile-nav-drawer .nav-item {
+            font-size: 1rem;
+            padding: 1rem 1.5rem;
+            text-align: left;
+            color: #5a4a3a;
+        }
+
+        .mobile-nav-drawer .sidebar-footer {
+            margin-top: auto;
+            padding: 1rem 1.5rem;
+        }
+
+    /* Mobile Nav Overlay */
+    .mobile-nav-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 1150;
+    }
+
+        .mobile-nav-overlay.open {
+            display: block;
+        }
+
+    /* Tablet (≤ 64rem) */
+    @@media (max-width: 64rem) {
         .sidebar {
-            width: 6%;
-            min-width: 5rem;
+            width: 5.5rem;
+            min-width: unset;
         }
 
         .main-content {
-            margin-left: 6%;
+            margin-left: 5.5rem;
+        }
+
+        .nav-item {
+            font-size: 0.6rem;
+            padding: 0.75rem 0.25rem;
+            letter-spacing: 0;
+        }
+
+        .sidebar-logo {
+            width: 2.5rem;
+        }
+
+        .admin-link span {
+            font-size: 0.6rem;
         }
 
         .payment-settings-container {
-            padding: 40px 20px;
+            padding: 2.5rem 2rem;
         }
 
         .settings-title {
-            font-size: 28px;
+            font-size: 1.75rem;
         }
 
         .settings-card {
-            padding: 25px;
+            padding: 2rem;
+        }
+
+        .footer-title {
+            font-size: 2rem;
+        }
+
+        .social-links {
+            gap: 3rem;
+        }
+
+        .social-item i {
+            font-size: 1.75rem;
+        }
+
+        .social-item span {
+            font-size: 0.9rem;
         }
     }
 
-    @@media (max-width: 480px) {
+    /* Large Mobile (≤ 48rem) */
+    @@media (max-width: 48rem) {
+        .sidebar {
+            width: 5rem;
+            min-width: unset;
+        }
+
+        .main-content {
+            margin-left: 5rem;
+        }
+
+        .nav-item {
+            font-size: 0.55rem;
+            padding: 0.65rem 0.2rem;
+        }
+
+        .sidebar-logo {
+            width: 2rem;
+        }
+
+        .admin-link i {
+            font-size: 1rem;
+        }
+
         .payment-settings-container {
-            padding: 30px 15px;
+            padding: 2rem 1rem;
         }
 
         .settings-title {
-            font-size: 24px;
+            font-size: 1.5rem;
+            margin-bottom: 1.25rem;
         }
 
         .settings-card {
-            padding: 20px;
+            padding: 1.5rem;
+            max-width: 100%;
         }
 
         .qr-image {
-            width: 120px;
+            width: 130px;
+        }
+
+        .footer-title {
+            font-size: 1.75rem;
+        }
+
+        .social-links {
+            gap: 1.5rem;
+        }
+
+        .social-item i {
+            font-size: 1.25rem;
+        }
+
+        .social-item span {
+            font-size: 0.8rem;
+        }
+    }
+
+    /* Mobile (≤ 30rem) */
+    @@media (max-width: 30rem) {
+        .sidebar {
+            display: none;
+        }
+
+        .main-content {
+            margin-left: 0;
+            padding-top: 4.5rem;
+        }
+
+        .mobile-topbar {
+            display: flex !important;
+        }
+
+        .mobile-nav-drawer {
+            display: flex;
+        }
+
+        .payment-settings-container {
+            padding: 1.25rem 0.75rem;
+        }
+
+        .settings-title {
+            font-size: 1.35rem;
+            margin-bottom: 1rem;
+        }
+
+        .settings-card {
+            padding: 1.25rem;
+            border-radius: 16px;
+            max-width: 100%;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="file"] {
+            font-size: 0.85rem;
+            padding: 0.65rem;
+        }
+
+        .qr-image {
+            width: 110px;
+        }
+
+        .btn-save {
+            font-size: 0.9rem;
+            padding: 0.75rem;
+        }
+
+        footer {
+            padding: 1.75rem 1rem;
+        }
+
+        .footer-title {
+            font-size: 1.5rem;
+        }
+
+        .social-links {
+            gap: 1.25rem;
+        }
+
+        .social-item i {
+            font-size: 1.1rem;
+        }
+
+        .social-item span {
+            font-size: 0.75rem;
         }
     }
 </style>
+
+<script>
+    function toggleMobileNav() {
+        var drawer = document.getElementById('mobileDrawer');
+        var overlay = document.getElementById('mobileOverlay');
+        drawer.classList.toggle('open');
+        overlay.classList.toggle('open');
+    }
+</script>

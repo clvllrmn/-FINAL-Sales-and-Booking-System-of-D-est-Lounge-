@@ -184,70 +184,77 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.faqs[index].isOpen = !$scope.faqs[index].isOpen;
     };
 
-    $scope.addNewFaq = function () {
-        var question = prompt('Enter FAQ Question:');
-        if (!question || !question.trim()) return;
-        var answer = prompt('Enter FAQ Answer:');
-        if (!answer || !answer.trim()) return;
-        var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
-        var tokenValue = tokenElement ? tokenElement.value : "";
-        var payload = {
-            question: question.trim(),
-            answer: answer.trim(),
-            __RequestVerificationToken: tokenValue
-        };
-        $http({
-            method: 'POST',
-            url: '/FAQ/CreateFAQ',
-            data: $httpParamSerializerJQLike(payload),
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-        })
-            .then(function (response) {
-                if (response.data.success) {
-                    alert('FAQ created successfully!');
-                    $scope.loadFAQs();
-                } else {
-                    alert('Error: ' + response.data.message);
-                }
-            })
-            .catch(function (error) {
-                console.error('Error creating FAQ:', error);
-                alert('Error creating FAQ');
-            });
-    };
+        // FAQ Modal
+        $scope.showFaqModal = false;
+        $scope.faqEditingIndex = null;
+        $scope.faqForm = { question: '', answer: '' };
 
-    $scope.editFaq = function (index) {
-        var faq = $scope.faqs[index];
-        var question = prompt('Edit FAQ Question:', faq.question);
-        if (question === null) return;
-        var answer = prompt('Edit FAQ Answer:', faq.answer);
-        if (answer === null) return;
-        var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
-        var tokenValue = tokenElement ? tokenElement.value : "";
-        var payload = {
-            question: question.trim(),
-            answer: answer.trim(),
-            __RequestVerificationToken: tokenValue
+        $scope.openFaqModal = function () {
+            $scope.faqEditingIndex = null;
+            $scope.faqForm = { question: '', answer: '' };
+            $scope.showFaqModal = true;
         };
-        $http({
-            method: 'POST',
-            url: '/FAQ/UpdateFAQ/' + faq.faqId,
-            data: $httpParamSerializerJQLike(payload),
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-        })
-            .then(function (response) {
-                if (response.data.success) {
-                    alert('FAQ updated successfully!');
-                    $scope.loadFAQs();
-                } else {
-                    alert('Error: ' + response.data.message);
-                }
-            })
-            .catch(function (error) {
-                console.error('Error updating FAQ:', error);
-                alert('Error updating FAQ');
-            });
-    };
+
+        $scope.openEditFaqModal = function (faq, index) {
+            $scope.faqEditingIndex = index;
+            $scope.faqForm = { question: faq.question, answer: faq.answer };
+            $scope.showFaqModal = true;
+        };
+
+        $scope.closeFaqModal = function () {
+            $scope.showFaqModal = false;
+            $scope.faqForm = { question: '', answer: '' };
+            $scope.faqEditingIndex = null;
+        };
+
+        $scope.closeFaqModalBackdrop = function ($event) {
+            if ($event.target === $event.currentTarget) {
+                $scope.closeFaqModal();
+            }
+        };
+
+        $scope.saveFaqModal = function () {
+            if (!$scope.faqForm.question.trim() || !$scope.faqForm.answer.trim()) return;
+
+            var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            var tokenValue = tokenElement ? tokenElement.value : "";
+            var payload = {
+                question: $scope.faqForm.question.trim(),
+                answer: $scope.faqForm.answer.trim(),
+                __RequestVerificationToken: tokenValue
+            };
+
+            if ($scope.faqEditingIndex !== null) {
+                var faq = $scope.faqs[$scope.faqEditingIndex];
+                $http({
+                    method: 'POST',
+                    url: '/FAQ/UpdateFAQ/' + faq.faqId,
+                    data: $httpParamSerializerJQLike(payload),
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                }).then(function (response) {
+                    if (response.data.success) {
+                        $scope.loadFAQs();
+                        $scope.showFaqModal = false;
+                    } else {
+                        alert('Error: ' + response.data.message);
+                    }
+                });
+            } else {
+                $http({
+                    method: 'POST',
+                    url: '/FAQ/CreateFAQ',
+                    data: $httpParamSerializerJQLike(payload),
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                }).then(function (response) {
+                    if (response.data.success) {
+                        $scope.loadFAQs();
+                        $scope.showFaqModal = false;
+                    } else {
+                        alert('Error: ' + response.data.message);
+                    }
+                });
+            }
+        };
 
     $scope.deleteFaq = function (index) {
         var faq = $scope.faqs[index];
@@ -659,13 +666,21 @@ app.controller("DestLoungeSalesandBookingController",
         return ($scope.calculateTotal() * 0.4).toFixed(2);
     };
 
-    $scope.isBookingValid = function () {
-        return $scope.booking.nailTech &&
-            $scope.booking.date &&
-            $scope.booking.time &&
-            $scope.booking.selectedServices.length > 0 &&
-            !$scope.dateFullyBooked;
-    };
+        $scope.isBookingValid = function () {
+            return $scope.booking.nailTech &&
+                $scope.booking.date &&
+                $scope.booking.time &&
+                $scope.booking.selectedServices.length > 0 &&
+                !$scope.dateFullyBooked;
+        };
+
+        $scope.getSelectedTechName = function () {
+            if (!$scope.booking.nailTech) return '';
+            var found = $scope.nailTechs.find(function (t) {
+                return String(t.id) === String($scope.booking.nailTech);
+            });
+            return found ? found.name : '';
+        };
 
     $scope.submitBooking = function () {
         console.log("window.loggedInUserId = ", window.loggedInUserId);
@@ -774,7 +789,7 @@ app.controller("DestLoungeSalesandBookingController",
         var fileInput = document.getElementById("receiptUpload");
 
         if (!fileInput || fileInput.files.length === 0) {
-            alert("Upload receipt first");
+            alert("Please upload proof of payment to proceed");
             return;
         }
 
@@ -971,6 +986,10 @@ app.controller("DestLoungeSalesandBookingController",
             $scope.filteredBookings = $scope.bookings.filter(function (b) {
                 return b.status === 'Cancelled';
             });
+        } else if (filter === 'pending') {
+            $scope.filteredBookings = $scope.bookings.filter(function (b) {
+                return b.status === 'Pending';
+            });
         }
         console.log("FILTERED bookings:", $scope.filteredBookings);
     };
@@ -1122,87 +1141,127 @@ app.controller("DestLoungeSalesandBookingController",
             .catch(function (error) {
                 console.error('Error loading contact info:', error);
             });
-    };
-
-    $scope.addNewContact = function () {
-        var infoType = prompt('Enter Info Type (address, hours, phone, email, social, other):');
-        if (!infoType || !infoType.trim()) return;
-        var label = prompt('Enter Label (e.g., "Find us at", "Call us"):');
-        if (!label || !label.trim()) return;
-        var value = prompt('Enter Value (contact information):');
-        if (!value || !value.trim()) return;
-        var icon = prompt('Enter Font Awesome Icon Class (e.g., "fa-solid fa-location-dot"):');
-        if (!icon || !icon.trim()) return;
-        var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
-        var tokenValue = tokenElement ? tokenElement.value : "";
-        var payload = {
-            infoType: infoType.trim(),
-            label: label.trim(),
-            value: value.trim(),
-            icon: icon.trim(),
-            __RequestVerificationToken: tokenValue
         };
-        $http({
-            method: 'POST',
-            url: '/Contact/CreateContact',
-            data: $httpParamSerializerJQLike(payload),
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-        })
-            .then(function (response) {
-                if (response.data.success) {
-                    alert('Contact info created successfully!');
-                    $scope.loadContactInfo();
-                } else {
-                    alert('Error: ' + response.data.message);
-                }
-            })
-            .catch(function (error) {
-                console.error('Error creating contact info:', error);
-                alert('Error creating contact info');
-            });
-    };
-
-    $scope.editContact = function (index) {
-        var contact = $scope.contactInfo[index];
-        var infoType = prompt('Edit Info Type:', contact.infoType);
-        if (infoType === null) return;
-        var label = prompt('Edit Label:', contact.label);
-        if (label === null) return;
-        var displayValue = contact.value.replace(/<br>/g, '\n');
-        var value = prompt('Edit Value (use line breaks for multiple lines):', displayValue);
-        if (value === null) return;
-        var formattedValue = value.replace(/\n/g, '<br>');
-        var icon = prompt('Edit Icon Class:', contact.icon);
-        if (icon === null) return;
-        var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
-        var tokenValue = tokenElement ? tokenElement.value : "";
-        var payload = {
-            infoType: infoType.trim(),
-            label: label.trim(),
-            value: formattedValue.trim(),
-            icon: icon.trim(),
-            __RequestVerificationToken: tokenValue
+        // Icon map — auto-assigned by type
+        var iconMap = {
+            phone: 'fa-solid fa-phone',
+            email: 'fa-solid fa-envelope',
+            address: 'fa-solid fa-location-dot',
+            hours: 'fa-solid fa-clock'
         };
-        $http({
-            method: 'POST',
-            url: '/Contact/UpdateContact/' + contact.contactID,
-            data: $httpParamSerializerJQLike(payload),
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-        })
-            .then(function (response) {
-                if (response.data.success) {
-                    alert('Contact info updated successfully!');
-                    $scope.loadContactInfo();
-                } else {
-                    alert('Error: ' + response.data.message);
-                }
-            })
-            .catch(function (error) {
-                console.error('Error updating contact info:', error);
-                alert('Error updating contact info');
-            });
-    };
 
+        var placeholderMap = {
+            phone: '+63 912 345 6789',
+            email: 'info@destlounge.com',
+            address: '35 M. Cruz St, Marikina, Metro Manila',
+            hours: 'Mon–Fri: 9AM–10PM'
+        };
+
+        var hintMap = {
+            phone: 'The phone number customers can call',
+            email: 'The email address customers can write to',
+            address: 'Your full business address',
+            hours: 'Your opening and closing times'
+        };
+
+        // Called when a type tile is clicked
+        $scope.setContactType = function (type) {
+            $scope.formData.infoType = type;
+            $scope.formData.icon = iconMap[type] || 'fa-solid fa-circle-info';
+            $scope.contactPlaceholder = placeholderMap[type] || 'Enter details...';
+            $scope.contactHint = hintMap[type] || '';
+        };
+
+        // Update addNewContact to default to 'phone'
+        $scope.addNewContact = function () {
+            $scope.formData = { infoType: 'phone', icon: iconMap['phone'], label: '', value: '' };
+            $scope.contactPlaceholder = placeholderMap['phone'];
+            $scope.contactHint = hintMap['phone'];
+            $scope.editingIndex = null;
+            $scope.showModal = true;
+        };
+
+        // Update editContact to also set placeholder/hint
+        $scope.editContact = function (index) {
+            var c = $scope.contactInfo[index];
+            $scope.formData = { infoType: c.infoType, icon: c.icon, label: c.label, value: c.value };
+            $scope.contactPlaceholder = placeholderMap[c.infoType] || 'Enter details...';
+            $scope.contactHint = hintMap[c.infoType] || '';
+            $scope.editingIndex = index;
+            $scope.showModal = true;
+        };
+        $scope.showModal = false;
+        $scope.editingIndex = null;
+        $scope.formData = {};
+
+        $scope.addNewContact = function () {
+            $scope.editingIndex = null;
+            $scope.formData = {};
+            $scope.showModal = true;
+        };
+
+        $scope.editContact = function (index) {
+            $scope.editingIndex = index;
+            $scope.formData = angular.copy($scope.contactInfo[index]);
+            $scope.showModal = true;
+        };
+
+        $scope.closeModal = function () {
+            $scope.showModal = false;
+            $scope.formData = {};
+            $scope.editingIndex = null;
+        };
+
+        $scope.closeModalBackdrop = function ($event) {
+            if ($event.target === $event.currentTarget) {
+                $scope.closeModal();
+            }
+        };
+
+        $scope.saveContact = function () {
+            if (!$scope.formData.label || !$scope.formData.value) return;
+
+            var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            var tokenValue = tokenElement ? tokenElement.value : "";
+            var payload = {
+                infoType: $scope.formData.infoType,
+                label: $scope.formData.label,
+                value: $scope.formData.value,
+                icon: $scope.formData.icon || "",
+                __RequestVerificationToken: tokenValue
+            };
+
+            if ($scope.editingIndex !== null) {
+                var contactID = $scope.contactInfo[$scope.editingIndex].contactID;
+                $http({
+                    method: 'POST',
+                    url: '/Contact/UpdateContact/' + contactID,
+                    data: $httpParamSerializerJQLike(payload),
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                }).then(function (response) {
+                    if (response.data.success) {
+                        $scope.loadContactInfo();
+                        $scope.closeModal();
+                    } else {
+                        alert('Error: ' + response.data.message);
+                    }
+                });
+            } else {
+                $http({
+                    method: 'POST',
+                    url: '/Contact/CreateContact',
+                    data: $httpParamSerializerJQLike(payload),
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                }).then(function (response) {
+                    if (response.data.success) {
+                        $scope.loadContactInfo();
+                        $scope.closeModal();
+                    } else {
+                        alert('Error: ' + response.data.message);
+                    }
+                });
+            }
+        };
     $scope.deleteContact = function (index) {
         var contact = $scope.contactInfo[index];
         if (confirm('Are you sure you want to delete this contact info?')) {
@@ -1449,9 +1508,9 @@ app.controller("DestLoungeSalesandBookingController",
         window.location.href = "/Main/ReviewPage?bookingId=" + bookingId;
     };
 
-    $scope.cancelUserBooking = function (bookingId) {
-        var reason = prompt("Reason for cancel:");
-        if (!reason) return;
+        $scope.cancelUserBooking = function (bookingId) {
+            if (!confirm("Are you sure you want to cancel this booking?")) return;
+            var reason = prompt("Reason for cancellation (optional):") || "";
 
         $http.post("/Booking/Cancel",
             $httpParamSerializerJQLike({

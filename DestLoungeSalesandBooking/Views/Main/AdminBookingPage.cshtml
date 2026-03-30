@@ -2,7 +2,6 @@
     Layout = "~/Views/Shared/_MainLayout.cshtml";
 }
 
-<!-- Sidebar Navigation -->
 <aside class="sidebar">
     <div class="logo-container">
         <a href="@Url.Action("AdminHomepage","Main")">
@@ -28,31 +27,19 @@
     </div>
 </aside>
 
-<!-- Main Content Area -->
 <div class="main-content" ng-controller="DestLoungeSalesandBookingController">
     <div class="bookings-container">
         <h1 class="bookings-title">Salon's Analytics:</h1>
 
-        <!-- Filter Tabs -->
         <div class="filter-tabs">
-            <button class="tab-btn" ng-class="{'active': selectedFilter === 'all'}" ng-click="filterBookings('all')">
-                All Bookings
-            </button>
-            <button class="tab-btn" ng-class="{'active': selectedFilter === 'today'}" ng-click="filterBookings('today')">
-                Today
-            </button>
-            <button class="tab-btn" ng-class="{'active': selectedFilter === 'upcoming'}" ng-click="filterBookings('upcoming')">
-                Upcoming
-            </button>
-            <button class="tab-btn" ng-class="{'active': selectedFilter === 'completed'}" ng-click="filterBookings('completed')">
-                Completed
-            </button>
-            <button class="tab-btn" ng-class="{'active': selectedFilter === 'cancelled'}" ng-click="filterBookings('cancelled')">
-                Cancelled
-            </button>
+            <button class="tab-btn" ng-class="{'active': selectedFilter === 'all'}" ng-click="filterBookings('all')">All Bookings</button>
+            <button class="tab-btn" ng-class="{'active': selectedFilter === 'today'}" ng-click="filterBookings('today')">Today</button>
+            <button class="tab-btn" ng-class="{'active': selectedFilter === 'upcoming'}" ng-click="filterBookings('upcoming')">Upcoming</button>
+            <button class="tab-btn" ng-class="{'active': selectedFilter === 'pending'}" ng-click="filterBookings('pending')">For Approval</button>
+            <button class="tab-btn" ng-class="{'active': selectedFilter === 'completed'}" ng-click="filterBookings('completed')">Completed</button>
+            <button class="tab-btn" ng-class="{'active': selectedFilter === 'cancelled'}" ng-click="filterBookings('cancelled')">Cancelled</button>
         </div>
 
-        <!-- Bookings Grid -->
         <div class="bookings-grid">
             <div class="booking-card" ng-repeat="booking in filteredBookings track by booking.bookingId">
                 <div class="booking-info-row">
@@ -85,68 +72,35 @@
 
                 <div class="booking-divider"></div>
 
-                <!-- IMPROVED NOTES SECTION WITH RECEIPT HANDLING -->
                 <div class="booking-info-row">
                     <div class="info-icon"><i class="fa-solid fa-note-sticky"></i></div>
                     <div class="info-content">
                         <h3>Notes:</h3>
-
-                        <!-- Check if notes contain receipt information -->
                         <div ng-if="booking.contact && booking.contact.includes('Receipt:')">
-                            <!-- Clean text before receipt -->
                             <p>{{booking.contact.split('| Receipt:')[0]}}</p>
-
-                            <!-- Clickable receipt link -->
                             <a ng-href="{{booking.contact.split('Receipt: ')[1]}}"
                                target="_blank"
-                               style="color:blue; text-decoration:underline;">
+                               style="color: #6b4423; text-decoration: underline;">
                                 View Receipt
                             </a>
                         </div>
-
-                        <!-- Regular notes without receipt -->
                         <div ng-if="!booking.contact || !booking.contact.includes('Receipt:')">
                             <p>{{booking.contact || 'N/A'}}</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- ACTIONS -->
                 <div class="booking-actions">
-                    <!-- PENDING -->
                     <div ng-if="booking.status === 'Pending'">
-                        <button class="approve-btn"
-                                ng-click="updateBookingStatus(booking.bookingId, 'Approved')">
-                            Approve
-                        </button>
-
-                        <button class="cancel-btn"
-                                ng-click="cancelBooking(booking.bookingId)">
-                            Cancel
-                        </button>
+                        <button class="approve-btn" ng-click="updateBookingStatus(booking.bookingId, 'Approved')">Approve</button>
+                        <button class="cancel-btn" ng-click="cancelBooking(booking.bookingId)">Cancel</button>
                     </div>
-
-                    <!-- APPROVED -->
                     <div ng-if="booking.status === 'Approved'">
-                        <button class="booking-complete-btn"
-                                ng-click="updateBookingStatus(booking.bookingId, 'Completed')">
-                            Booking Complete
-                        </button>
-
-                        <button class="cancel-btn"
-                                ng-click="cancelBooking(booking.bookingId)">
-                            Cancel
-                        </button>
-
+                        <button class="booking-complete-btn" ng-click="updateBookingStatus(booking.bookingId, 'Completed')">Booking Complete</button>
+                        <button class="cancel-btn" ng-click="cancelBooking(booking.bookingId)">Cancel</button>
                         <div class="status-pill approved">👍 Approved</div>
                     </div>
-
-                    <!-- COMPLETED -->
-                    <div class="status-pill completed" ng-if="booking.status === 'Completed'">
-                        ✅ Completed
-                    </div>
-
-                    <!-- CANCELLED -->
+                    <div class="status-pill completed" ng-if="booking.status === 'Completed'">✅ Completed</div>
                     <div class="status-pill cancelled" ng-if="booking.status === 'Cancelled'">
                         ❌ Cancelled <span ng-if="booking.cancelReason">— {{booking.cancelReason}}</span>
                     </div>
@@ -155,7 +109,6 @@
         </div>
     </div>
 
-    <!-- Footer -->
     <footer>
         <div class="footer-container">
             <h2 class="footer-title">Follow our Socials!</h2>
@@ -174,7 +127,6 @@
     </footer>
 </div>
 
-
 <style>
     * {
         margin: 0;
@@ -189,7 +141,6 @@
         background-color: #d4c4b0;
     }
 
-    /* Sidebar Styles */
     .sidebar {
         position: fixed;
         left: 0;
@@ -262,7 +213,6 @@
             font-size: 1.25rem;
         }
 
-    /* Main */
     .main-content {
         margin-left: 10%;
         min-height: 100vh;
@@ -382,13 +332,18 @@
         margin: 1rem 0;
     }
 
-    /* Actions */
     .booking-actions {
         margin-top: 1.25rem;
         display: flex;
         flex-direction: column;
         gap: 0.75rem;
     }
+
+        .booking-actions > div {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
 
     .approve-btn {
         width: 100%;
@@ -454,7 +409,6 @@
             color: #fff;
         }
 
-    /* Footer */
     footer {
         background-color: #e7d7c8;
         border: 2px solid #d4c4b0;
@@ -507,6 +461,8 @@
             font-weight: 500;
         }
 
+    /* ── RESPONSIVE ── */
+
     @@media (max-width: 64rem) {
         .bookings-grid {
             grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
@@ -514,26 +470,259 @@
     }
 
     @@media (max-width: 48rem) {
-        .bookings-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .bookings-title {
-            font-size: 2rem;
-        }
-
         .sidebar {
-            width: 6%;
-            min-width: 5rem;
+            width: 5.5rem;
+            min-width: unset;
         }
 
         .main-content {
-            margin-left: 6%;
+            margin-left: 5.5rem;
         }
 
         .nav-item {
-            font-size: 0.65rem;
-            padding: 0.75rem 0.3125rem;
+            font-size: 0.55rem;
+            padding: 0.75rem 0.25rem;
+            letter-spacing: 0;
+        }
+
+        .sidebar-logo {
+            width: 2.5rem;
+        }
+
+        .admin-link span {
+            font-size: 0.6rem;
+        }
+
+        .bookings-container {
+            padding: 1.5rem 1rem;
+        }
+
+        .bookings-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-tabs {
+            gap: 0.25rem;
+            margin-bottom: 1.25rem;
+            overflow-x: auto;
+            flex-wrap: nowrap;
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            font-size: 0.75rem;
+            padding: 0.4rem 0.6rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .bookings-grid {
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+        }
+
+        .booking-card {
+            padding: 1.25rem;
+            border-radius: 1.25rem;
+        }
+
+        .info-icon {
+            width: 2.25rem;
+            height: 2.25rem;
+        }
+
+            .info-icon i {
+                font-size: 1rem;
+            }
+
+        .info-content h3 {
+            font-size: 0.9rem;
+        }
+
+        .info-content p {
+            font-size: 0.85rem;
+        }
+
+        .approve-btn,
+        .booking-complete-btn,
+        .cancel-btn,
+        .status-pill {
+            font-size: 0.9rem;
+            padding: 0.75rem;
+        }
+
+        .social-links {
+            gap: 2rem;
+        }
+
+        .footer-title {
+            font-size: 1.75rem;
+        }
+
+        .social-item i {
+            font-size: 1.5rem;
+        }
+
+        .social-item span {
+            font-size: 0.85rem;
+        }
+    }
+
+    @@media (max-width: 30rem) {
+        .sidebar {
+            display: none;
+        }
+
+        .main-content {
+            margin-left: 0;
+        }
+        /* Mobile top nav bar replaces sidebar */
+        .mobile-topbar {
+            display: flex !important;
+        }
+
+        .bookings-container {
+            padding: 1rem;
+            padding-top: 4.5rem;
+        }
+
+        .bookings-title {
+            font-size: 1.5rem;
+        }
+
+        .tab-btn {
+            font-size: 0.75rem;
+            padding: 0.35rem 0.5rem;
         }
     }
 </style>
+
+<!-- Mobile Top Bar (hidden on desktop) -->
+<style>
+    .mobile-topbar {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background-color: #e7dfd6;
+        z-index: 1100;
+        padding: 0.75rem 1rem;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 2px solid #c1b2a5;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+        .mobile-topbar img {
+            height: 2.5rem;
+            width: auto;
+        }
+
+    .mobile-menu-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #5a4a3a;
+        cursor: pointer;
+    }
+
+    .mobile-nav-drawer {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 75%;
+        max-width: 16rem;
+        height: 100vh;
+        background-color: #e7dfd6;
+        z-index: 1200;
+        flex-direction: column;
+        padding: 1.5rem 0;
+        box-shadow: 4px 0 12px rgba(0,0,0,0.15);
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+        .mobile-nav-drawer.open {
+            transform: translateX(0);
+        }
+
+        .mobile-nav-drawer .nav-item {
+            font-size: 1rem;
+            padding: 1rem 1.5rem;
+            text-align: left;
+            border-left: none;
+        }
+
+        .mobile-nav-drawer .sidebar-footer {
+            margin-top: auto;
+            padding: 1rem 1.5rem;
+        }
+
+    .mobile-nav-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 1150;
+    }
+
+        .mobile-nav-overlay.open {
+            display: block;
+        }
+
+    @@media (max-width: 30rem) {
+        .mobile-topbar {
+            display: flex !important;
+        }
+
+        .mobile-nav-drawer {
+            display: flex;
+        }
+    }
+</style>
+
+<!-- Mobile Top Bar HTML -->
+<div class="mobile-topbar">
+    <a href="@Url.Action("AdminHomepage","Main")">
+        <img src="~/Content/Pictures/DestLogo.png" alt="D'est Lounge">
+    </a>
+    <button class="mobile-menu-btn" onclick="toggleMobileNav()">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+</div>
+
+<!-- Mobile Nav Overlay -->
+<div class="mobile-nav-overlay" id="mobileOverlay" onclick="toggleMobileNav()"></div>
+
+<!-- Mobile Nav Drawer -->
+<div class="mobile-nav-drawer" id="mobileDrawer">
+    <nav class="sidebar-nav">
+        <a href="@Url.Action("AdminHomepage","Main")" class="nav-item">HOME</a>
+        <a href="@Url.Action("AdminBookingPage","Main")" class="nav-item active">BOOKINGS</a>
+        <a href="@Url.Action("AdminServicePage","Main")" class="nav-item">SERVICES</a>
+        <a href="@Url.Action("AdminContactPage","Main")" class="nav-item">CONTACT</a>
+        <a href="@Url.Action("AdminFAQsPage","Main")" class="nav-item">FAQs</a>
+        <a href="@Url.Action("AdminInboxPage","Main")" class="nav-item">INBOX</a>
+        <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
+        <a href="@Url.Action("AdminGalleryPage","Main")" class="nav-item">GALLERY</a>
+        <a href="@Url.Action("AdminPaymentSetting","Main")" class="nav-item">PAYMENT</a>
+    </nav>
+    <div class="sidebar-footer">
+        <a href="@Url.Action("Logout","Account")" class="admin-link" title="Logout">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Logout</span>
+        </a>
+    </div>
+</div>
+
+<script>
+    function toggleMobileNav() {
+        var drawer = document.getElementById('mobileDrawer');
+        var overlay = document.getElementById('mobileOverlay');
+        drawer.classList.toggle('open');
+        overlay.classList.toggle('open');
+    }
+</script>

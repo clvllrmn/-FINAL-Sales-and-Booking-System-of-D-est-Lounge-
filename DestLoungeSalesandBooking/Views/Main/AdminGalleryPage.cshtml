@@ -29,12 +29,46 @@
     </div>
 </aside>
 
+<!-- *** ADDED: Mobile Top Bar *** -->
+<div class="mobile-topbar">
+    <a href="@Url.Action("AdminHomepage","Main")">
+        <img src="~/Content/Pictures/DestLogo.png" alt="D'est Lounge">
+    </a>
+    <button class="mobile-menu-btn" onclick="toggleMobileNav()">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+</div>
+
+<!-- *** ADDED: Mobile Nav Overlay *** -->
+<div class="mobile-nav-overlay" id="mobileOverlay" onclick="toggleMobileNav()"></div>
+
+<!-- *** ADDED: Mobile Nav Drawer *** -->
+<div class="mobile-nav-drawer" id="mobileDrawer">
+    <nav class="sidebar-nav">
+        <a href="@Url.Action("AdminHomepage","Main")" class="nav-item">HOME</a>
+        <a href="@Url.Action("AdminBookingPage","Main")" class="nav-item">BOOKINGS</a>
+        <a href="@Url.Action("AdminServicePage","Main")" class="nav-item">SERVICES</a>
+        <a href="@Url.Action("AdminContactPage","Main")" class="nav-item">CONTACT</a>
+        <a href="@Url.Action("AdminFAQsPage","Main")" class="nav-item">FAQs</a>
+        <a href="@Url.Action("AdminInboxPage","Main")" class="nav-item">INBOX</a>
+        <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
+        <a href="@Url.Action("AdminGalleryPage","Main")" class="nav-item active">GALLERY</a>
+        <a href="@Url.Action("AdminPaymentSetting","Main")" class="nav-item">PAYMENT</a>
+    </nav>
+    <div class="sidebar-footer">
+        <a href="@Url.Action("Logout","Account")" class="admin-link" title="Logout">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Logout</span>
+        </a>
+    </div>
+</div>
+
 <div class="main-content" ng-controller="DestLoungeSalesandBookingController">
 
     <!-- Hero -->
     <div class="gallery-hero">
         <div class="hero-left">
-            <h1 class="gallery-hero-title">Gallery &amp; Reviews Manager</h1>
+            <h1 class="gallery-hero-title">Gallery & Reviews Manager</h1>
             <p class="gallery-hero-sub">Manage photos and moderate client reviews</p>
         </div>
         <a href="@Url.Action("GalleryPage","Main")" class="view-public-btn" target="_blank">
@@ -212,7 +246,7 @@
         <div class="footer-container">
             <h2 class="footer-title">Follow our Socials!</h2>
             <div class="social-links">
-                <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank"><i class="fa-brands fa-tiktok"></i><span>destlounge</span></a>
+                <a href="https://www.tiktok.com/destlounge" class="social-item" target="_blank"><i class="fa-brands fa-tiktok"></i><span>destlounge</span></a>
                 <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank"><i class="fa-brands fa-facebook"></i><span>D'est Lounge</span></a>
                 <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank"><i class="fa-brands fa-instagram"></i><span>destlounge</span></a>
             </div>
@@ -1068,40 +1102,324 @@
             font-weight: 500;
         }
 
-    @@media (max-width: 1024px) {
-        .gallery-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
+    /* *** ADDED: Mobile Top Bar *** */
+    .mobile-topbar {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background-color: #e7dfd6;
+        z-index: 1100;
+        padding: 0.75rem 1rem;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 2px solid #c1b2a5;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
-    @@media (max-width: 768px) {
+        .mobile-topbar img {
+            height: 2.5rem;
+            width: auto;
+        }
+
+    .mobile-menu-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #5a4a3a;
+        cursor: pointer;
+    }
+
+    /* *** ADDED: Mobile Drawer *** */
+    .mobile-nav-drawer {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 75%;
+        max-width: 16rem;
+        height: 100vh;
+        background-color: #e7dfd6;
+        z-index: 1200;
+        flex-direction: column;
+        padding: 1.5rem 0;
+        box-shadow: 4px 0 12px rgba(0,0,0,0.15);
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+        .mobile-nav-drawer.open {
+            transform: translateX(0);
+        }
+
+        .mobile-nav-drawer .nav-item {
+            font-size: 1rem;
+            padding: 1rem 1.5rem;
+            text-align: left;
+            color: #5a4a3a;
+        }
+
+        .mobile-nav-drawer .sidebar-footer {
+            margin-top: auto;
+            padding: 1rem 1.5rem;
+        }
+
+    .mobile-nav-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 1150;
+    }
+
+        .mobile-nav-overlay.open {
+            display: block;
+        }
+
+    /* *** ADDED: Tablet (max 64rem) *** */
+    @@media (max-width: 64rem) {
         .sidebar {
-            width: 6%;
-            min-width: 5rem;
+            width: 5.5rem;
+            min-width: unset;
         }
 
         .main-content {
-            margin-left: 6%;
+            margin-left: 5.5rem;
         }
 
         .nav-item {
-            font-size: 0.65rem;
-            padding: 0.75rem 0.3125rem;
+            font-size: 0.6rem;
+            padding: 0.75rem 0.25rem;
+            letter-spacing: 0;
         }
 
-        .tab-content {
-            padding: 1.5rem;
+        .sidebar-logo {
+            width: 2.5rem;
         }
 
-        .gallery-grid {
-            grid-template-columns: 1fr;
+        .admin-link span {
+            font-size: 0.6rem;
         }
 
         .gallery-hero {
-            flex-direction: column;
-            gap: 1rem;
-            padding: 1.5rem;
+            padding: 1.5rem 2rem;
         }
+
+        .gallery-hero-title {
+            font-size: 1.5rem;
+        }
+
+        .tab-content {
+            padding: 1.5rem 2rem;
+        }
+
+        .gallery-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
+        }
+
+        .stats-bar {
+            gap: 1rem;
+        }
+
+        .stat-card {
+            min-width: 100px;
+            padding: 1rem 1.2rem;
+        }
+
+        .stat-num {
+            font-size: 1.6rem;
+        }
+
+        .footer-title {
+            font-size: 2rem;
+        }
+
+        .social-links {
+            gap: 3rem;
+        }
+    }
+
+    /* *** ADDED: Large Mobile (max 48rem) *** */
+    @@media (max-width: 48rem) {
+        .sidebar {
+            width: 5rem;
+            min-width: unset;
+        }
+
+        .main-content {
+            margin-left: 5rem;
+        }
+
+        .nav-item {
+            font-size: 0.55rem;
+            padding: 0.65rem 0.2rem;
+            letter-spacing: 0;
+        }
+
+        .sidebar-logo {
+            width: 2rem;
+        }
+
+        .admin-link {
+            font-size: 0.6rem;
+        }
+
+            .admin-link i {
+                font-size: 1rem;
+            }
+
+        .gallery-hero {
+            padding: 1.25rem 1.5rem;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .view-public-btn {
+            font-size: 0.82rem;
+            padding: 0.55rem 1.1rem;
+        }
+
+        .tab-bar {
+            padding: 0 1rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1rem;
+            font-size: 0.82rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .tab-content {
+            padding: 1.25rem 1.5rem;
+            gap: 1.5rem;
+        }
+
+        .upload-card {
+            padding: 1.25rem;
+        }
+
+        .upload-dropzone {
+            flex: none;
+            width: 100%;
+            height: 140px;
+        }
+
+        .gallery-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .stats-bar {
+            gap: 0.75rem;
+        }
+
+        .stat-card {
+            min-width: 80px;
+            padding: 0.9rem 1rem;
+        }
+
+        .stat-num {
+            font-size: 1.4rem;
+        }
+
+        .stat-label {
+            font-size: 0.72rem;
+        }
+
+        .filter-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .admin-search {
+            min-width: unset;
+            width: 100%;
+        }
+
+        .footer-title {
+            font-size: 1.75rem;
+        }
+
+        .social-links {
+            gap: 1.5rem;
+        }
+
+        .social-item i {
+            font-size: 1.25rem;
+        }
+
+        .social-item span {
+            font-size: 0.8rem;
+        }
+    }
+
+    /* *** ADDED: Mobile (max 30rem) *** */
+    @@media (max-width: 30rem) {
+        .sidebar {
+            display: none;
+        }
+
+        .main-content {
+            margin-left: 0;
+            padding-top: 4.5rem;
+        }
+
+        .mobile-topbar {
+            display: flex !important;
+        }
+
+        .mobile-nav-drawer {
+            display: flex;
+        }
+
+        .gallery-hero {
+            padding: 1rem;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .gallery-hero-title {
+            font-size: 1.3rem;
+        }
+
+        .view-public-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .tab-bar {
+            padding: 0 0.5rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab-btn {
+            padding: 0.7rem 0.75rem;
+            font-size: 0.78rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .tab-content {
+            padding: 1rem;
+            gap: 1.25rem;
+        }
+
+        .upload-card {
+            padding: 1rem;
+        }
+
+            .upload-card h3 {
+                font-size: 1rem;
+                margin-bottom: 1rem;
+            }
 
         .upload-form {
             flex-direction: column;
@@ -1110,6 +1428,78 @@
         .upload-dropzone {
             flex: none;
             width: 100%;
+            height: 130px;
+        }
+
+        .upload-fields {
+            min-width: unset;
+        }
+
+        .gallery-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .stat-card {
+            min-width: unset;
+        }
+
+        .filter-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.75rem;
+        }
+
+        .admin-search, .admin-select {
+            width: 100%;
+        }
+
+        .modal-actions {
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+            .modal-actions .admin-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+        .footer-title {
+            font-size: 1.5rem;
+        }
+
+        .social-links {
+            gap: 1.25rem;
+        }
+
+        .social-item i {
+            font-size: 1.1rem;
+        }
+
+        .social-item span {
+            font-size: 0.75rem;
+        }
+
+        .toast {
+            bottom: 1rem;
+            right: 1rem;
+            left: 1rem;
         }
     }
 </style>
+
+<!-- *** ADDED: Mobile Nav Script *** -->
+<script>
+    function toggleMobileNav() {
+        var drawer = document.getElementById('mobileDrawer');
+        var overlay = document.getElementById('mobileOverlay');
+        drawer.classList.toggle('open');
+        overlay.classList.toggle('open');
+    }
+</script>

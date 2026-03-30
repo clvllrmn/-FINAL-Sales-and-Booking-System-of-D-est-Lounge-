@@ -8,14 +8,25 @@
                 <img src="~/Content/Pictures/DestLogo.png" class="logo" alt="D'est Lounge">
             </a>
         </div>
-        <nav class="main-nav">
+
+        <nav class="main-nav" id="mainNav">
             <a href="@Url.Action("Homepage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "Homepage" ? "nav-active" : "")">HOME</a>
             <a href="@Url.Action("ServicePage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ServicePage" ? "nav-active" : "")">SERVICES</a>
             <a href="@Url.Action("GalleryPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "GalleryPage" ? "nav-active" : "")">GALLERY</a>
             <a href="@Url.Action("ContactPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ContactPage" ? "nav-active" : "")">CONTACT</a>
             <a href="@Url.Action("FAQsPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "FAQsPage" ? "nav-active" : "")">FAQs</a>
+
+            <div class="mobile-nav-actions">
+                <a href="@Url.Action("LoginPage","Main")">
+                    <i class="fa-regular fa-user"></i> LOGIN
+                </a>
+                <a href="#">
+                    <i class="fa-solid fa-bell"></i> Notifications
+                </a>
+            </div>
         </nav>
-        <div class="header-actions">
+
+        <div class="header-actions desktop-only">
             <a href="@Url.Action("LoginPage","Main")" class="login-link">
                 <i class="fa-regular fa-user"></i> LOGIN
             </a>
@@ -23,14 +34,22 @@
                 <i class="fa-solid fa-bell"></i>
             </a>
         </div>
+
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
     </div>
+
+    <div class="nav-overlay" id="navOverlay"></div>
 </header>
+
 <div class="signup-container" ng-controller="DestLoungeSalesandBookingController">
     <div class="signup-box">
 
         <h1 class="signup-title">Sign Up</h1>
 
-        <!-- Display success/error messages -->
         @if (TempData["SuccessMessage"] != null)
         {
             <div class="alert alert-success">
@@ -51,36 +70,24 @@
 
             @Html.AntiForgeryToken()
 
-            <!-- FIRST & LAST NAME -->
             <div class="form-row">
                 <div class="input-wrapper">
-                    <input type="text"
-                           id="FNAME"
-                           name="FNAME"
-                           class="form-input"
-                           placeholder="First Name"
-                           ng-model="user.firstName"
+                    <input type="text" id="FNAME" name="FNAME" class="form-input"
+                           placeholder="First Name" ng-model="user.firstName"
                            ng-pattern="/^[a-zA-Z\s'-]+$/"
                            ng-keydown="focusNext($event, 'LNAME')"
-                           maxlength="50"
-                           required>
+                           maxlength="50" required>
                     <span class="error-message"
                           ng-show="registerForm.FNAME.$error.pattern && registerForm.FNAME.$dirty">
                         First Name must contain letters only
                     </span>
                 </div>
-
                 <div class="input-wrapper">
-                    <input type="text"
-                           id="LNAME"
-                           name="LNAME"
-                           class="form-input"
-                           placeholder="Last Name"
-                           ng-model="user.lastName"
+                    <input type="text" id="LNAME" name="LNAME" class="form-input"
+                           placeholder="Last Name" ng-model="user.lastName"
                            ng-pattern="/^[a-zA-Z\s'-]+$/"
                            ng-keydown="focusNext($event, 'EMAIL')"
-                           maxlength="50"
-                           required>
+                           maxlength="50" required>
                     <span class="error-message"
                           ng-show="registerForm.LNAME.$error.pattern && registerForm.LNAME.$dirty">
                         Last Name must contain letters only
@@ -88,103 +95,68 @@
                 </div>
             </div>
 
-            <!-- EMAIL -->
             <div class="form-group">
-                <input type="email"
-                       id="EMAIL"
-                       name="EMAIL"
-                       class="form-input"
-                       placeholder="Email"
-                       ng-model="user.email"
+                <input type="email" id="EMAIL" name="EMAIL" class="form-input"
+                       placeholder="Email" ng-model="user.email"
                        ng-keydown="focusNext($event, 'CONTACT')"
-                       maxlength="100"
-                       required>
+                       maxlength="100" required>
             </div>
 
-            <!-- CONTACT NUMBER -->
             <div class="form-group">
-                <input type="tel"
-                       id="CONTACT"
-                       name="CONTACT"
-                       class="form-input"
+                <input type="tel" id="CONTACT" name="CONTACT" class="form-input"
                        placeholder="Contact Number (e.g. 09XXXXXXXXX)"
                        ng-model="user.contactNumber"
                        ng-pattern="/^09\d{9}$/"
-                       ng-minlength="11"
-                       ng-maxlength="11"
-                       maxlength="11"
+                       ng-minlength="11" ng-maxlength="11" maxlength="11"
                        inputmode="numeric"
                        ng-keypress="numbersOnly($event)"
-                       ng-keydown="focusNext($event, 'ADDRESS')"
-                       required>
+                       ng-keydown="focusNext($event, 'ADDRESS')" required>
                 <span class="error-message"
                       ng-show="registerForm.CONTACT.$dirty && registerForm.CONTACT.$invalid">
                     Must be 11 digits and start with 09 (e.g. 09XXXXXXXXX)
                 </span>
             </div>
 
-            <!-- ADDRESS -->
             <div class="form-group">
-                <input type="text"
-                       id="ADDRESS"
-                       name="ADDRESS"
-                       class="form-input"
-                       placeholder="Address"
-                       ng-model="user.address"
+                <input type="text" id="ADDRESS" name="ADDRESS" class="form-input"
+                       placeholder="Address" ng-model="user.address"
                        ng-minlength="5"
                        ng-keydown="focusNext($event, 'PASSWORD')"
-                       maxlength="255"
-                       required>
+                       maxlength="255" required>
             </div>
 
-            <!-- PASSWORD -->
             <div class="form-group password-group">
                 <input type="{{ showPassword ? 'text' : 'password' }}"
-                       id="PASSWORD"
-                       name="PASSWORD"
-                       class="form-input"
-                       placeholder="Password"
-                       ng-model="user.password"
-                       @* Notice the / / wrapping the Razor code below *@
+                       id="PASSWORD" name="PASSWORD" class="form-input"
+                       placeholder="Password" ng-model="user.password"
                        ng-pattern='/@Html.Raw("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{8,}$")/'
                        ng-keydown="focusNext($event, 'CONFIRMPASSWORD')"
-                       maxlength="255"
-                       required>
-
+                       maxlength="255" required>
                 <i class="fa-solid toggle-password"
                    ng-class="showPassword ? 'fa-eye-slash' : 'fa-eye'"
                    ng-click="togglePassword()"></i>
-
                 <span class="error-message"
                       ng-show="registerForm.PASSWORD.$error.pattern && registerForm.PASSWORD.$dirty">
                     Password must be 8+ chars with uppercase, lowercase, number, and symbol (@@$!%*?&#)
                 </span>
             </div>
 
-            <!-- CONFIRM PASSWORD -->
             <div class="form-group password-group">
                 <input type="{{ showPassword ? 'text' : 'password' }}"
-                       id="CONFIRMPASSWORD"
-                       name="CONFIRMPASSWORD"
-                       class="form-input"
-                       placeholder="Confirm Password"
-                       ng-model="user.confirmPassword"
+                       id="CONFIRMPASSWORD" name="CONFIRMPASSWORD" class="form-input"
+                       placeholder="Confirm Password" ng-model="user.confirmPassword"
                        compare-to="user.password"
                        ng-keydown="submitOnEnter($event)"
-                       maxlength="255"
-                       required>
-
+                       maxlength="255" required>
                 <i class="fa-solid toggle-password"
                    ng-class="showPassword ? 'fa-eye-slash' : 'fa-eye'"
                    ng-click="togglePassword()"></i>
-
                 <span class="error-message"
                       ng-show="registerForm.CONFIRMPASSWORD.$error.compareTo && registerForm.CONFIRMPASSWORD.$dirty">
                     Passwords do not match
                 </span>
             </div>
 
-            <!-- TERMS -->
             <div class="terms-container">
                 <label>
                     <input type="checkbox" name="acceptTerms" ng-model="user.acceptedTerms" required>
@@ -193,16 +165,13 @@
                 <span class="terms-link" ng-click="openTerms($event)">Terms and Conditions</span>
             </div>
 
-            <!-- LINKS -->
             <div class="already-account-container">
                 <a href="@Url.Action("LoginPage","Main")" class="already-account">
                     Already have an account?
                 </a>
             </div>
 
-            <!-- BUTTONS -->
-            <button type="submit"
-                    class="signup-button"
+            <button type="submit" class="signup-button"
                     ng-disabled="registerForm.$invalid || !user.acceptedTerms">
                 Sign Up
             </button>
@@ -214,7 +183,7 @@
                  data-callback="handleGoogleCredential">
             </div>
 
-            <div class="google-button-wrapper">
+            <div style="display: flex; justify-content: center; margin-top: 1rem;">
                 <div class="g_id_signin"
                      data-type="standard"
                      data-shape="pill"
@@ -232,65 +201,27 @@
     <div class="modal-overlay" ng-show="showTerms" ng-click="closeTerms()">
         <div class="terms-modal" ng-click="$event.stopPropagation()">
             <h2>Acceptance of Terms</h2>
-
             <div class="terms-content">
-                <p>
-                    By accessing or using the services provided by D'est Lounge,
-                    you agree to be bound by these Terms of Use.
-                </p>
-
-                <h4> 1. Acceptance of Terms </h4>
-                <p>
-                    By accessing or using the services provided by D'est Lounge, you agree to be bound by these Terms of Use ("Terms"), which govern your use of the system's functions, including registration, authentication, content access, booking, and providing feedback/reviews.
-                </p>
-
+                <p>By accessing or using the services provided by D'est Lounge, you agree to be bound by these Terms of Use.</p>
+                <h4>1. Acceptance of Terms</h4>
+                <p>By accessing or using the services provided by D'est Lounge, you agree to be bound by these Terms of Use ("Terms"), which govern your use of the system's functions, including registration, authentication, content access, booking, and providing feedback/reviews.</p>
                 <h4>2. User Accounts and Authentication</h4>
-                <p>
-                    Registration: Users must provide accurate and complete information when registering an account.
-                </p>
-                <p>
-                    Login Methods: Users may log in using traditional account credentials (username/password) or through the "Login via Google" integration.
-                </p>
-                <p>
-                    Security and Responsibility: You are responsible for maintaining the confidentiality of your password and for all activities that occur under your account. You agree to notify us immediately of any unauthorized use of your account.
-                </p>
-                <p>
-                    Password Recovery: If you forget your password, you must use the "Forgot Password" feature, which requires OTP verification sent to your registered email account to ensure protection against misuse.
-                </p>
-
+                <p>Registration: Users must provide accurate and complete information when registering an account.</p>
+                <p>Login Methods: Users may log in using traditional account credentials (username/password) or through the "Login via Google" integration.</p>
+                <p>Security and Responsibility: You are responsible for maintaining the confidentiality of your password and for all activities that occur under your account. You agree to notify us immediately of any unauthorized use of your account.</p>
+                <p>Password Recovery: If you forget your password, you must use the "Forgot Password" feature, which requires OTP verification sent to your registered email account to ensure protection against misuse.</p>
                 <h4>3. Content and Use of Services (Customer/Owner Role)</h4>
-                <p>
-                    Solely for Consumption and Task Completion: The Customer's engagement with the system's content is centered on consumption and task completion, including service booking and information viewing. The Customer is not generally focused on content creation or editing within the core content management function.
-                </p>
-                <p>
-                    Booking Confirmation and Payment: All service bookings require a non-refundable down payment of 40% of the total estimated cost to secure the booking. By finalizing a booking, the Customer agrees to this payment requirement.
-                </p>
-                <p>
-                    Service Booking: Customers may use the system to book services as defined by the system Owner.
-                </p>
-                <p>
-                    Condition for Review: Customers can only add reviews after successfully completing their appointment/service.
-                </p>
-                <p>
-                    Review Ownership and Rights: You grant the system and its Owner a perpetual, irrevocable, worldwide, non-exclusive license to use, reproduce, modify, adapt, publish, and distribute your reviews.
-                </p>
-                <p>
-                    Review Deletion: The system Owner retains the right to delete any review at their sole discretion.
-                </p>
-
+                <p>Solely for Consumption and Task Completion: The Customer's engagement with the system's content is centered on consumption and task completion, including service booking and information viewing.</p>
+                <p>Booking Confirmation and Payment: All service bookings require a non-refundable down payment of 40% of the total estimated cost to secure the booking. By finalizing a booking, the Customer agrees to this payment requirement.</p>
+                <p>Service Booking: Customers may use the system to book services as defined by the system Owner.</p>
+                <p>Condition for Review: Customers can only add reviews after successfully completing their appointment/service.</p>
+                <p>Review Ownership and Rights: You grant the system and its Owner a perpetual, irrevocable, worldwide, non-exclusive license to use, reproduce, modify, adapt, publish, and distribute your reviews.</p>
+                <p>Review Deletion: The system Owner retains the right to delete any review at their sole discretion.</p>
                 <h4>4. Owner's Rights and Responsibilities</h4>
-                <p>
-                    The Owner is responsible for the custodial role over all system content and administration of services. The Owner has the right to delete any user-generated review posted in the system.
-                </p>
-
+                <p>The Owner is responsible for the custodial role over all system content and administration of services. The Owner has the right to delete any user-generated review posted in the system.</p>
                 <h4>5. Service Operation</h4>
                 <h4>5.1 Prohibited Conduct</h4>
-                <p>You agree not to use the services to:</p>
-                <p>Post or transmit any content that is false, misleading, unlawful, harmful, threatening, abusive, defamatory, or objectionable.</p>
-                <p>Impersonate any person or entity.</p>
-                <p>Violate any applicable local, state, national, or international law.</p>
-                <p>Interfere with or disrupt the service or servers, or networks connected to the service.</p>
-
+                <p>You agree not to use the services to post or transmit any content that is false, misleading, unlawful, harmful, threatening, abusive, defamatory, or objectionable; impersonate any person or entity; violate any applicable law; or interfere with or disrupt the service.</p>
                 <h4>5.2 Booking and Scheduling Rules</h4>
                 <p>Customers can book only available time slots as defined by the System Admin.</p>
                 <p>A non-refundable down payment equivalent to 40% of the estimated service cost is required to secure and confirm any booking.</p>
@@ -298,17 +229,11 @@
                 <p>The system must prevent double-booking of time slots.</p>
                 <p>A booking may only be marked as "Done" by the Owner.</p>
                 <p>Only bookings marked "Done" will allow customers to submit reviews.</p>
-
                 <h4>6. Termination</h4>
-                <p>
-                    We may terminate or suspend your access to the service immediately, without prior notice or liability, for any reason, including, without limitation, if you breach these Terms.
-                </p>
+                <p>We may terminate or suspend your access to the service immediately, without prior notice or liability, for any reason, including if you breach these Terms.</p>
             </div>
-
             <div class="modal-actions">
-                <button type="button" class="close-btn" ng-click="closeTerms()">
-                    Close
-                </button>
+                <button type="button" class="close-btn" ng-click="closeTerms()">Close</button>
             </div>
         </div>
     </div>
@@ -318,9 +243,7 @@
     <div class="footer-container">
         <h2 class="footer-title">Follow our Socials!</h2>
         <div class="social-links">
-            <a href="https://www.tiktok.com/&#64;destlounge"
-               class="social-item"
-               target="_blank">
+            <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank">
                 <i class="fa-brands fa-tiktok"></i>
                 <span>destlounge</span>
             </a>
@@ -341,31 +264,183 @@
     function handleGoogleCredential(response) {
         fetch('/Account/GoogleSignIn', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ idToken: response.credential })
         })
             .then(res => res.json())
             .then(data => {
-                if (data.success) {
-                    window.location.href = data.redirectUrl;
-                } else {
-                    alert(data.message || "Google sign-in failed.");
-                }
+                if (data.success) { window.location.href = data.redirectUrl; }
+                else { alert(data.message || "Google sign-in failed."); }
             })
-            .catch(err => {
-                console.error(err);
-                alert("Google sign-in failed.");
-            });
+            .catch(err => { console.error(err); alert("Google sign-in failed."); });
     }
 </script>
 
 <style>
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    body {
+        overflow-x: hidden;
+    }
+
+    /* ── Hamburger ── */
+    .hamburger-btn {
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.5rem;
+        z-index: 1100;
+        position: relative;
+        flex-shrink: 0;
+    }
+
+        .hamburger-btn span {
+            display: block;
+            width: 26px;
+            height: 3px;
+            background-color: #5d4037;
+            border-radius: 3px;
+            transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease;
+            transform-origin: center;
+        }
+
+        .hamburger-btn.open span:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+
+        .hamburger-btn.open span:nth-child(2) {
+            opacity: 0;
+            width: 0;
+        }
+
+        .hamburger-btn.open span:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+    /* ── Nav Overlay ── */
+    .nav-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0,0,0,0.4);
+        z-index: 900;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+
+        .nav-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+    .mobile-nav-actions {
+        display: none;
+    }
+
+    /* ── Signup Layout ── */
+    .signup-container {
+        min-height: calc(100vh - 200px);
+        background-color: #f5f0eb;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 60px 20px;
+    }
+
+    .signup-box {
+        background-color: #e8ddd1;
+        border-radius: 30px;
+        padding: 50px 60px;
+        width: 100%;
+        max-width: 600px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .signup-title {
+        color: #6b5544;
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .alert {
+        padding: 12px 16px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .input-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 14px 16px;
+        border: none;
+        border-radius: 12px;
+        background-color: #f8f4ef;
+        color: #5a4a3a;
+        font-size: 15px;
+        font-family: inherit;
+        outline: none;
+        transition: box-shadow 0.2s ease;
+    }
+
+        .form-input:focus {
+            box-shadow: 0 0 0 2px #c9b5a3;
+        }
+
+        .form-input::placeholder {
+            color: #a89585;
+        }
+
+    .error-message {
+        color: #c0392b;
+        font-size: 12px;
+        margin-top: 5px;
+        padding-left: 4px;
+    }
+
     .password-group {
         position: relative;
         display: flex;
         flex-direction: column;
+        margin-bottom: 16px;
     }
 
         .password-group .form-input {
@@ -375,8 +450,7 @@
     .toggle-password {
         position: absolute;
         right: 15px;
-        top: 20px;
-        transform: none;
+        top: 16px;
         cursor: pointer;
         color: #5d4037;
         font-size: 1.1rem;
@@ -386,4 +460,541 @@
         .toggle-password:hover {
             color: #3e2723;
         }
+
+    .terms-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3rem;
+        margin-bottom: 1.2rem;
+        font-size: 0.95rem;
+        flex-wrap: wrap;
+    }
+
+        .terms-container label {
+            color: #5d4037;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .terms-container input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+    .terms-link {
+        color: #6b4423;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: underline;
+    }
+
+    .already-account-container {
+        text-align: center;
+        margin-bottom: 1.2rem;
+    }
+
+    .already-account {
+        color: #6b4423;
+        font-size: 0.9rem;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+        .already-account:hover {
+            text-decoration: underline;
+        }
+
+    .signup-button {
+        width: 100%;
+        padding: 15px;
+        background-color: #6b5544;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 0.5rem;
+    }
+
+        .signup-button:hover:not([disabled]) {
+            background-color: #5a4635;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .signup-button[disabled] {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+    /* ── Terms Modal ── */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        padding: 16px;
+    }
+
+    .terms-modal {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        width: 100%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+        .terms-modal h2 {
+            color: #5d4037;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+
+        .terms-modal h4 {
+            color: #6b4423;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+    .terms-content {
+        color: #5d4037;
+        line-height: 1.6;
+        text-align: left;
+    }
+
+        .terms-content p {
+            margin-bottom: 1rem;
+        }
+
+    .modal-actions {
+        margin-top: 2rem;
+        text-align: center;
+    }
+
+    .close-btn {
+        padding: 0.8rem 2.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        color: white;
+        background-color: #6b4423;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+        .close-btn:hover {
+            background-color: #5d3a1f;
+        }
+
+    /* ── Footer ── */
+    footer {
+        background-color: #e7d7c8;
+        border: 2px solid #d4c4b0;
+        border-left: none;
+        border-right: none;
+        padding: 2.5rem 3rem;
+        text-align: center;
+    }
+
+    .footer-container {
+        margin: 0 auto;
+    }
+
+    .footer-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #6b4423;
+        margin: 0 0 2rem 0;
+        font-style: italic;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .social-links {
+        display: flex;
+        justify-content: center;
+        gap: 3rem;
+        flex-wrap: wrap;
+    }
+
+    .social-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        color: #5a4a3a;
+        transition: color 0.3s;
+    }
+
+        .social-item:hover {
+            color: #8b6f47;
+        }
+
+        .social-item i {
+            font-size: 1.5rem;
+        }
+
+        .social-item span {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+    /* =============================================
+       DESKTOP (above 1024px)
+    ============================================= */
+    @@media (min-width: 1025px) {
+        .hamburger-btn {
+            display: none !important;
+        }
+
+        .desktop-only {
+            display: flex !important;
+        }
+
+        .mobile-nav-actions {
+            display: none !important;
+        }
+
+        .nav-overlay {
+            display: none !important;
+        }
+
+        .main-nav {
+            position: static !important;
+            top: auto !important;
+            right: auto !important;
+            left: auto !important;
+            width: auto !important;
+            height: auto !important;
+            background: none !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin-left: 3rem !important;
+            margin-right: auto !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            gap: 2.5rem !important;
+            overflow: visible !important;
+            transform: none !important;
+            transition: none !important;
+            z-index: auto !important;
+        }
+
+            .main-nav a {
+                width: auto !important;
+                padding: 0 !important;
+                border-bottom: none !important;
+                font-size: 1.3rem !important;
+                font-weight: 600 !important;
+                color: #5d4037 !important;
+                letter-spacing: 0.5px !important;
+                display: inline !important;
+            }
+
+                .main-nav a.nav-active {
+                    color: #6b4423 !important;
+                    border-bottom: 2.5px solid #6b4423 !important;
+                    padding-bottom: 2px !important;
+                }
+    }
+
+    /* =============================================
+       TABLET + MOBILE (max-width: 1024px)
+    ============================================= */
+    @@media (max-width: 1024px) {
+        .hamburger-btn {
+            display: flex;
+        }
+
+        .desktop-only {
+            display: none !important;
+        }
+
+        .nav-overlay {
+            display: block;
+        }
+
+        .main-nav {
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            left: auto !important;
+            width: 280px !important;
+            height: 100vh !important;
+            background-color: #f5f0eb !important;
+            z-index: 1000 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            justify-content: flex-start !important;
+            padding: 5rem 2rem 2rem 2rem !important;
+            gap: 0 !important;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.15) !important;
+            transform: translateX(100%) !important;
+            transition: transform 0.35s cubic-bezier(0.4,0,0.2,1) !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            margin: 0 !important;
+        }
+
+            .main-nav.open {
+                transform: translateX(0) !important;
+            }
+
+            .main-nav a {
+                width: 100% !important;
+                padding: 0.9rem 0 !important;
+                font-size: 1rem !important;
+                font-weight: 600 !important;
+                color: #5d4037 !important;
+                border-bottom: 1px solid #e0d5c8 !important;
+                letter-spacing: 0.05em !important;
+                display: block !important;
+                text-decoration: none !important;
+                background: none !important;
+            }
+
+                .main-nav a.nav-active {
+                    color: #6b4423 !important;
+                    border-bottom: 1px solid #e0d5c8 !important;
+                }
+
+        .mobile-nav-actions {
+            display: flex !important;
+            flex-direction: column;
+            width: 100%;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #d4c4b0;
+            gap: 0;
+        }
+
+            .mobile-nav-actions a {
+                display: flex !important;
+                align-items: center;
+                gap: 0.6rem;
+                padding: 0.75rem 0 !important;
+                font-size: 0.97rem !important;
+                color: #5d4037 !important;
+                border-bottom: 1px solid #e0d5c8 !important;
+                width: 100% !important;
+                font-weight: 600 !important;
+                text-decoration: none !important;
+                background: none !important;
+            }
+
+                .mobile-nav-actions a:last-child {
+                    border-bottom: none !important;
+                }
+
+        .signup-container {
+            padding: 40px 16px;
+        }
+
+        .signup-box {
+            padding: 36px 32px;
+            border-radius: 24px;
+        }
+
+        .signup-title {
+            font-size: 28px;
+            margin-bottom: 24px;
+        }
+    }
+
+    /* =============================================
+       MOBILE (max-width: 768px)
+    ============================================= */
+    @@media (max-width: 768px) {
+        .signup-container {
+            padding: 28px 12px;
+        }
+
+        .signup-box {
+            padding: 28px 20px;
+            border-radius: 20px;
+        }
+
+        .signup-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            flex-direction: column;
+            gap: 0;
+        }
+
+            .form-row .input-wrapper {
+                margin-bottom: 14px;
+            }
+
+        .form-input {
+            padding: 12px 14px;
+            font-size: 14px;
+        }
+
+        .toggle-password {
+            top: 14px;
+        }
+
+        .terms-container {
+            font-size: 0.88rem;
+        }
+
+        .signup-button {
+            padding: 13px;
+            font-size: 15px;
+        }
+
+        .terms-modal {
+            padding: 1.5rem;
+            max-height: 85vh;
+        }
+
+            .terms-modal h2 {
+                font-size: 1.4rem;
+            }
+
+        footer {
+            padding: 1.5rem 1rem;
+        }
+
+        .footer-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .social-links {
+            gap: 1.5rem;
+        }
+
+        .social-item i {
+            font-size: 1.25rem;
+        }
+
+        .social-item span {
+            font-size: 0.8rem;
+        }
+    }
+
+    /* =============================================
+       SMALL MOBILE (max-width: 480px)
+    ============================================= */
+    @@media (max-width: 480px) {
+        .signup-container {
+            padding: 20px 10px;
+        }
+
+        .signup-box {
+            padding: 22px 16px;
+            border-radius: 16px;
+        }
+
+        .signup-title {
+            font-size: 22px;
+            margin-bottom: 18px;
+        }
+
+        .form-input {
+            padding: 11px 12px;
+            font-size: 13px;
+            border-radius: 10px;
+        }
+
+        .toggle-password {
+            top: 13px;
+            right: 12px;
+            font-size: 1rem;
+        }
+
+        .error-message {
+            font-size: 11px;
+        }
+
+        .terms-container {
+            font-size: 0.82rem;
+            gap: 0.2rem;
+        }
+
+        .already-account {
+            font-size: 0.82rem;
+        }
+
+        .signup-button {
+            padding: 12px;
+            font-size: 14px;
+            border-radius: 20px;
+        }
+
+        .terms-modal {
+            padding: 1.2rem;
+        }
+
+            .terms-modal h2 {
+                font-size: 1.2rem;
+                margin-bottom: 1rem;
+            }
+
+        .terms-content {
+            font-size: 0.88rem;
+        }
+
+        .close-btn {
+            padding: 0.7rem 2rem;
+            font-size: 0.9rem;
+        }
+    }
 </style>
+
+@section scripts {
+    <script>
+        (function () {
+            var btn = document.getElementById('hamburgerBtn');
+            var nav = document.getElementById('mainNav');
+            var overlay = document.getElementById('navOverlay');
+
+            function openMenu() {
+                btn.classList.add('open');
+                nav.classList.add('open');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeMenu() {
+                btn.classList.remove('open');
+                nav.classList.remove('open');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            btn.addEventListener('click', function () {
+                nav.classList.contains('open') ? closeMenu() : openMenu();
+            });
+
+            overlay.addEventListener('click', closeMenu);
+
+            nav.querySelectorAll('a').forEach(function (link) {
+                link.addEventListener('click', closeMenu);
+            });
+        })();
+    </script>
+}

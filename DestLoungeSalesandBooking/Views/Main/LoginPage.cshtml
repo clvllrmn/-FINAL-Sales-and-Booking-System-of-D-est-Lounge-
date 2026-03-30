@@ -1,6 +1,9 @@
 ﻿@{
     Layout = "~/Views/Shared/_MainLayout.cshtml";
+    var userFirstName = Session["UserFirstName"] as string;
+    var isLoggedIn = Session["UserID"] != null;
 }
+
 <header>
     <div class="header-container">
         <div class="logo">
@@ -8,23 +11,61 @@
                 <img src="~/Content/Pictures/DestLogo.png" class="logo" alt="D'est Lounge">
             </a>
         </div>
-        <nav class="main-nav">
+
+        <nav class="main-nav" id="mainNav">
             <a href="@Url.Action("Homepage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "Homepage" ? "nav-active" : "")">HOME</a>
             <a href="@Url.Action("ServicePage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ServicePage" ? "nav-active" : "")">SERVICES</a>
             <a href="@Url.Action("GalleryPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "GalleryPage" ? "nav-active" : "")">GALLERY</a>
             <a href="@Url.Action("ContactPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ContactPage" ? "nav-active" : "")">CONTACT</a>
             <a href="@Url.Action("FAQsPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "FAQsPage" ? "nav-active" : "")">FAQs</a>
+
+            <div class="mobile-nav-actions">
+                @if (isLoggedIn)
+                {
+                    <a href="@Url.Action("ProfilePage","Main")">
+                        <i class="fa-solid fa-circle-user"></i> Welcome, @userFirstName!
+                    </a>
+                }
+                else
+                {
+                    <a href="@Url.Action("LoginPage","Main")">
+                        <i class="fa-regular fa-user"></i> LOGIN
+                    </a>
+                }
+                <a href="#">
+                    <i class="fa-solid fa-bell"></i> Notifications
+                </a>
+            </div>
         </nav>
-        <div class="header-actions">
-            <a href="@Url.Action("LoginPage","Main")" class="login-link">
-                <i class="fa-regular fa-user"></i> LOGIN
-            </a>
+
+        <div class="header-actions desktop-only">
+            @if (isLoggedIn)
+            {
+                <a href="@Url.Action("ProfilePage","Main")" class="welcome-text">
+                    <i class="fa-solid fa-circle-user"></i> Welcome, @userFirstName!
+                </a>
+            }
+            else
+            {
+                <a href="@Url.Action("LoginPage","Main")" class="login-link">
+                    <i class="fa-regular fa-user"></i> LOGIN
+                </a>
+            }
             <a href="#" class="bell-icon" title="Notifications">
                 <i class="fa-solid fa-bell"></i>
             </a>
         </div>
+
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
     </div>
+
+    <div class="nav-overlay" id="navOverlay"></div>
 </header>
+
 <div class="login-container">
     <div class="login-box">
         <h1 class="login-title">Login</h1>
@@ -55,6 +96,7 @@
                 </button>
             </div>
             <button type="submit" class="login-button">Login</button>
+
             <div id="g_id_onload"
                  data-client_id="@System.Configuration.ConfigurationManager.AppSettings["GoogleClientId"]"
                  data-context="signin"
@@ -73,19 +115,19 @@
                 </div>
             </div>
         </form>
+
         <div class="login-links">
             <a href="@Url.Action("SignupPage","Main")" class="link">Don't have an account?</a>
             <a href="@Url.Action("ForgotPassword","Account")" class="link">Forgot Password?</a>
         </div>
     </div>
 </div>
+
 <footer>
     <div class="footer-container">
         <h2 class="footer-title">Follow our Socials!</h2>
         <div class="social-links">
-            <a href="https://www.tiktok.com/&#64;destlounge"
-               class="social-item"
-               target="_blank">
+            <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank">
                 <i class="fa-brands fa-tiktok"></i>
                 <span>destlounge</span>
             </a>
@@ -100,12 +142,179 @@
         </div>
     </div>
 </footer>
-
 <style>
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+
+    /* ── Hamburger ── */
+    .hamburger-btn {
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 6px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.5rem;
+        z-index: 1100;
+        position: relative;
+        flex-shrink: 0;
+        width: 44px;
+        height: 44px;
+    }
+
+        .hamburger-btn span {
+            display: block;
+            width: 26px;
+            height: 3px;
+            background-color: #5d4037;
+            border-radius: 3px;
+            transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease;
+            transform-origin: center;
+        }
+
+        .hamburger-btn.open span:nth-child(1) {
+            transform: translateY(9px) rotate(45deg);
+        }
+
+        .hamburger-btn.open span:nth-child(2) {
+            opacity: 0;
+            width: 0;
+        }
+
+        .hamburger-btn.open span:nth-child(3) {
+            transform: translateY(-9px) rotate(-45deg);
+        }
+
+    /* ── Nav Overlay ── */
+    .nav-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0,0,0,0.4);
+        z-index: 900;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+
+        .nav-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+    .mobile-nav-actions {
+        display: none;
+    }
+
+    /* ── Login Page ── */
+    .login-container {
+        width: 100%;
+        background-color: #f5f0eb;
+        min-height: calc(100vh - 120px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 5rem 2rem 6rem 2rem;
+    }
+
+    .login-box {
+        background-color: white;
+        border: 2px solid #d4c4b0;
+        border-radius: 20px;
+        padding: 4rem 5rem;
+        width: 100%;
+        max-width: 700px;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+    }
+
+    .login-title {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #6b4423;
+        margin: 0 0 1.8rem 0;
+        text-align: center;
+        font-family: Georgia, 'Times New Roman', serif;
+        font-style: italic;
+    }
+
+    .form-group {
+        margin-bottom: 1.2rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.85rem 1rem;
+        border: 2px solid #d4c4b0;
+        border-radius: 10px;
+        font-size: 1rem;
+        color: #3d2817;
+        font-family: inherit;
+        outline: none;
+        box-sizing: border-box;
+        transition: border-color 0.3s ease;
+        background-color: #faf7f4;
+    }
+
+        .form-input:focus {
+            border-color: #6b4423;
+        }
+
+    .login-button {
+        width: 100%;
+        padding: 0.95rem;
+        background-color: #6b4423;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+        letter-spacing: 0.05em;
+        margin-top: 0.5rem;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+        .login-button:hover {
+            background-color: #5a3519;
+            transform: translateY(-1px);
+        }
+
+    .login-links {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin-top: 1.5rem;
+        gap: 0.75rem;
+    }
+
+    .link {
+        font-size: 0.85rem;
+        color: #8b6f47;
+        text-decoration: underline;
+        font-weight: 500;
+        transition: color 0.2s;
+    }
+
+        .link:hover {
+            color: #6b4423;
+        }
+
+    /* ── Alerts ── */
     .alert {
         padding: 15px;
         margin-bottom: 20px;
-        border-radius: 4px;
+        border-radius: 8px;
         font-size: 14px;
     }
 
@@ -121,6 +330,7 @@
         color: #721c24;
     }
 
+    /* ── Password toggle ── */
     .password-group {
         position: relative;
     }
@@ -137,8 +347,8 @@
         background: none;
         border: none;
         cursor: pointer;
-        color: #5d4037; 
-        font-size: 1.1rem; 
+        color: #5d4037;
+        font-size: 1.1rem;
         padding: 0;
         display: flex;
         align-items: center;
@@ -147,64 +357,376 @@
     }
 
         .toggle-password:hover {
-            color: #3e2723; 
+            color: #3e2723;
         }
+
+    /* ── Footer ── */
+    footer {
+        background-color: #e7d7c8;
+        border: 2px solid #d4c4b0;
+        border-left: none;
+        border-right: none;
+        padding: 2.5rem 3rem;
+        text-align: center;
+    }
+
+    .footer-container {
+        margin: 0 auto;
+    }
+
+    .footer-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #6b4423;
+        margin: 0 0 2rem 0;
+        font-style: italic;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .social-links {
+        display: flex;
+        justify-content: center;
+        gap: 3rem;
+        flex-wrap: wrap;
+    }
+
+    .social-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        color: #5a4a3a;
+        transition: color 0.3s;
+    }
+
+        .social-item:hover {
+            color: #8b6f47;
+        }
+
+        .social-item i {
+            font-size: 1.5rem;
+        }
+
+        .social-item span {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+    /* =============================================
+   DESKTOP (above 1024px)
+============================================= */
+    @@media (min-width: 1025px) {
+        .hamburger-btn {
+            display: none !important;
+        }
+
+        .desktop-only {
+            display: flex !important;
+        }
+
+        .mobile-nav-actions {
+            display: none !important;
+        }
+
+        .nav-overlay {
+            display: none !important;
+        }
+
+        .main-nav {
+            position: static !important;
+            top: auto !important;
+            right: auto !important;
+            left: auto !important;
+            width: auto !important;
+            height: auto !important;
+            background: none !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin-left: 3rem !important;
+            margin-right: auto !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            gap: 2.5rem !important;
+            overflow: visible !important;
+            transform: none !important;
+            transition: none !important;
+            z-index: auto !important;
+        }
+
+            .main-nav a {
+                width: auto !important;
+                padding: 0 !important;
+                border-bottom: none !important;
+                font-size: 1.3rem !important;
+                font-weight: 600 !important;
+                color: #5d4037 !important;
+                letter-spacing: 0.5px !important;
+                display: inline !important;
+            }
+
+                .main-nav a.nav-active {
+                    color: #6b4423 !important;
+                    border-bottom: 2.5px solid #6b4423 !important;
+                    padding-bottom: 2px !important;
+                }
+    }
+
+    /* =============================================
+   TABLET (max-width: 1024px)
+============================================= */
+    @@media (max-width: 1024px) {
+        .hamburger-btn {
+            display: flex !important;
+        }
+
+        .desktop-only {
+            display: none !important;
+        }
+
+        .nav-overlay {
+            display: block;
+        }
+
+        .main-nav {
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            left: auto !important;
+            width: 280px !important;
+            height: 100vh !important;
+            background-color: #f5f0eb !important;
+            z-index: 1000 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            justify-content: flex-start !important;
+            padding: 5rem 2rem 2rem 2rem !important;
+            gap: 0 !important;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.15) !important;
+            transform: translateX(100%) !important;
+            transition: transform 0.35s cubic-bezier(0.4,0,0.2,1) !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            margin: 0 !important;
+        }
+
+            .main-nav.open {
+                transform: translateX(0) !important;
+            }
+
+            .main-nav a {
+                width: 100% !important;
+                padding: 0.9rem 0 !important;
+                font-size: 1rem !important;
+                font-weight: 600 !important;
+                color: #5d4037 !important;
+                border-bottom: 1px solid #e0d5c8 !important;
+                letter-spacing: 0.05em !important;
+                display: block !important;
+                text-decoration: none !important;
+                background: none !important;
+            }
+
+                .main-nav a.nav-active {
+                    color: #6b4423 !important;
+                    border-bottom: 1px solid #e0d5c8 !important;
+                }
+
+        .mobile-nav-actions {
+            display: flex !important;
+            flex-direction: column;
+            width: 100%;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #d4c4b0;
+            gap: 0;
+        }
+
+            .mobile-nav-actions a {
+                display: flex !important;
+                align-items: center;
+                gap: 0.6rem;
+                padding: 0.75rem 0 !important;
+                font-size: 0.97rem !important;
+                color: #5d4037 !important;
+                border-bottom: 1px solid #e0d5c8 !important;
+                width: 100% !important;
+                font-weight: 600 !important;
+                text-decoration: none !important;
+                background: none !important;
+            }
+
+                .mobile-nav-actions a:last-child {
+                    border-bottom: none !important;
+                }
+
+        .login-container {
+            padding: 4rem 2rem 5rem 2rem;
+        }
+
+        .login-box {
+            padding: 3rem;
+            max-width: 620px;
+        }
+    }
+
+    /* =============================================
+   MOBILE (max-width: 768px)
+============================================= */
+    @@media (max-width: 768px) {
+        .login-container {
+            padding: 2.5rem 1.25rem;
+            overflow-x: hidden;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 100%;
+            padding: 2.5rem 1.5rem;
+            border-radius: 18px;
+            overflow: hidden;
+        }
+
+        .form-group,
+        .password-group {
+            width: 100%;
+        }
+
+        form {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .form-input {
+            font-size: 1rem;
+            padding: 1rem;
+            width: 100%;
+        }
+
+        .login-button {
+            width: 100%;
+            font-size: 1.05rem;
+            padding: 1.05rem;
+        }
+
+        .login-title {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        footer {
+            padding: 2rem 1.25rem;
+        }
+
+        .footer-title {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .social-links {
+            gap: 2rem;
+        }
+    }
+
+    /* =============================================
+   SMALL MOBILE (max-width: 400px)
+============================================= */
+    @@media (max-width: 400px) {
+        .login-container {
+            padding: 2rem 1rem;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 100%;
+            padding: 2rem 1.25rem;
+        }
+
+        .login-title {
+            font-size: 1.9rem;
+        }
+
+        footer {
+            padding: 1.75rem 1rem;
+        }
+
+        .footer-title {
+            font-size: 1.5rem;
+        }
+    }
 </style>
 
-<script>
-    function togglePassword() {
-        const input = document.getElementById('passwordInput');
-        const icon = document.getElementById('eyeIcon');
+@section scripts {
+    <script>
+        (function () {
+            var btn = document.getElementById('hamburgerBtn');
+            var nav = document.getElementById('mainNav');
+            var overlay = document.getElementById('navOverlay');
 
-        if (input.type === 'password') {
-            input.type = 'text';
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
-        } else {
-            input.type = 'password';
-            icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye');
-        }
-    }
-</script>
+            function openMenu() {
+                btn.classList.add('open');
+                nav.classList.add('open');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
 
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+            function closeMenu() {
+                btn.classList.remove('open');
+                nav.classList.remove('open');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
 
-<script>
-    function handleGoogleCredential(response) {
-        fetch('/Account/GoogleSignIn', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ idToken: response.credential })
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.href = data.redirectUrl;
-                } else {
-                    alert(data.message || "Google sign-in failed.");
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert("Google sign-in failed.");
+            btn.addEventListener('click', function () {
+                nav.classList.contains('open') ? closeMenu() : openMenu();
             });
-    }
 
-    function togglePassword() {
-        const input = document.getElementById('passwordInput');
-        const icon = document.getElementById('eyeIcon');
+            overlay.addEventListener('click', closeMenu);
 
-        if (input.type === 'password') {
-            input.type = 'text';
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
-        } else {
-            input.type = 'password';
-            icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye');
+            nav.querySelectorAll('a').forEach(function (link) {
+                link.addEventListener('click', closeMenu);
+            });
+        })();
+    </script>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <script>
+        function handleGoogleCredential(response) {
+            fetch('/Account/GoogleSignIn', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken: response.credential })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = data.redirectUrl;
+                    } else {
+                        alert(data.message || "Google sign-in failed.");
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Google sign-in failed.");
+                });
         }
-    }
-</script>
+
+        function togglePassword() {
+            const input = document.getElementById('passwordInput');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
+}

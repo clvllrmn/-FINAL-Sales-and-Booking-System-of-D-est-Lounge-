@@ -3,7 +3,6 @@
 }
 
 @Html.AntiForgeryToken()
-<!-- Use the correct module name: DestLoungeSalesandBooking -->
 <div ng-app="DestLoungeSalesandBooking" ng-controller="DestLoungeSalesandBookingController">
 
     <!-- Sidebar Navigation -->
@@ -23,8 +22,6 @@
             <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
             <a href="@Url.Action("AdminGalleryPage","Main")" class="nav-item">GALLERY</a>
             <a href="@Url.Action("AdminPaymentSetting","Main")" class="nav-item">PAYMENT</a>
-
-
         </nav>
         <div class="sidebar-footer">
             <a href="@Url.Action("Logout","Account")" class="admin-link" title="Logout">
@@ -36,7 +33,6 @@
 
     <!-- Main Content Area -->
     <div class="main-content">
-        <!-- Page Header -->
         <div class="page-header">
             <h1 class="page-title">Contact Information Management</h1>
             <button class="add-btn" ng-click="addNewContact()">
@@ -44,28 +40,20 @@
             </button>
         </div>
 
-        <!-- Contact Container -->
         <div class="contact-container">
-            <!-- Map Section -->
             <div class="map-wrapper">
                 <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3860.3958514777332!2d121.09269817603956!3d14.633456876269488!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397b8336d0f8f21%3A0x727b2bab93034843!2s35%20M.%20Cruz%20St%2C%20Marikina%2C%201800%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1767855448965!5m2!1sen!2sph"
-                        width="100%"
-                        height="100%"
-                        style="border:0;"
-                        allowfullscreen=""
-                        loading="lazy"
+                        width="100%" height="100%" style="border:0;"
+                        allowfullscreen="" loading="lazy"
                         referrerpolicy="no-referrer-when-downgrade">
                 </iframe>
             </div>
 
-            <!-- Contact Info List -->
             <div class="contact-list-wrapper">
                 <div class="list-header">
                     <h2>D'est Lounge</h2>
                     <p class="subtitle">Manage contact information below</p>
                 </div>
-
-                <!-- Contact Items -->
                 <div class="contact-list">
                     <div class="contact-card" ng-repeat="contact in contactInfo">
                         <div class="card-icon">
@@ -91,7 +79,6 @@
                         </div>
                     </div>
 
-                    <!-- Empty State -->
                     <div ng-if="contactInfo.length === 0" class="empty-state">
                         <i class="fa-solid fa-inbox"></i>
                         <p>No contact information yet</p>
@@ -101,62 +88,160 @@
             </div>
         </div>
 
-        <!-- Trash / Deleted Contacts -->
+        <!-- Trash Panel -->
         <div class="contact-trash-container">
-            <button class="trash-toggle-btn" ng-click="toggleContactTrash()">
-                <i class="fa-solid fa-trash-can-arrow-up"></i>
-                {{ showContactTrash ? 'Hide Deleted Contacts' : 'View Deleted Contacts' }}
-                <span class="trash-count" ng-if="deletedContacts.length > 0">({{deletedContacts.length}})</span>
-            </button>
-
-            <div class="contact-trash-panel" ng-show="showContactTrash">
-                <h2 class="trash-title">Deleted Contacts</h2>
-
-                <p class="trash-empty" ng-if="deletedContacts.length === 0">No deleted contacts found.</p>
-
-                <div class="deleted-contact-card" ng-repeat="contact in deletedContacts">
-                    <div class="deleted-contact-icon">
-                        <i ng-class="contact.icon"></i>
+            <div class="trash-section">
+                <div class="trash-header">
+                    <div class="trash-header-left">
+                        <i class="fa-solid fa-trash-can" style="color:#6b4423; font-size:15px;"></i>
+                        <span class="trash-label">Deleted Contacts</span>
+                        <span class="trash-badge" ng-if="deletedContacts.length > 0">{{deletedContacts.length}}</span>
                     </div>
-                    <div class="deleted-contact-info">
-                        <h3>{{ contact.label }}</h3>
-                        <p><strong>Type:</strong> {{ contact.infoType }}</p>
-                        <p>{{ contact.value }}</p>
-                    </div>
-                    <div class="deleted-contact-actions">
-                        <button class="restore-btn" ng-click="restoreContact(contact.contactID)">
-                            <i class="fa-solid fa-rotate-left"></i> Restore
-                        </button>
-                        <button class="perm-delete-btn" ng-click="permanentDeleteContact(contact.contactID)">
-                            <i class="fa-solid fa-trash"></i> Delete Forever
-                        </button>
+                    <button class="trash-toggle" ng-click="toggleContactTrash()">
+                        {{ showContactTrash ? 'Hide' : 'Show Deleted' }}
+                    </button>
+                </div>
+                <div class="trash-list" ng-show="showContactTrash">
+                    <p class="trash-empty-state" ng-if="deletedContacts.length === 0">No deleted contacts found.</p>
+                    <div class="deleted-card" ng-repeat="contact in deletedContacts">
+                        <div class="deleted-avatar">
+                            <i ng-class="contact.icon"></i>
+                        </div>
+                        <div class="deleted-info">
+                            <span class="deleted-type-pill">{{contact.infoType}}</span>
+                            <h4>{{ contact.label }}</h4>
+                            <p>{{ contact.value }}</p>
+                        </div>
+                        <div class="deleted-actions">
+                            <button class="btn-restore" ng-click="restoreContact(contact.contactID)">
+                                <i class="fa-solid fa-rotate-left"></i> Restore
+                            </button>
+                            <button class="btn-perm-delete" ng-click="permanentDeleteContact(contact.contactID)">
+                                <i class="fa-solid fa-trash"></i> Delete
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
         <!-- Footer -->
         <footer>
             <div class="footer-container">
                 <h2 class="footer-title">Follow our Socials!</h2>
                 <div class="social-links">
                     <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank">
-                        <i class="fa-brands fa-tiktok"></i>
-                        <span>destlounge</span>
+                        <i class="fa-brands fa-tiktok"></i><span>destlounge</span>
                     </a>
                     <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
-                        <i class="fa-brands fa-facebook"></i>
-                        <span>D'est Lounge</span>
+                        <i class="fa-brands fa-facebook"></i><span>D'est Lounge</span>
                     </a>
                     <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
-                        <i class="fa-brands fa-instagram"></i>
-                        <span>destlounge</span>
+                        <i class="fa-brands fa-instagram"></i><span>destlounge</span>
                     </a>
                 </div>
             </div>
         </footer>
     </div>
-    @@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
+    <!-- ADD / EDIT MODAL -->
+    <div class="modal-backdrop" ng-show="showModal" ng-click="closeModalBackdrop($event)">
+        <div class="modal" ng-click="$event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-header-left">
+                    <div class="modal-icon"><i class="fa-solid fa-pen"></i></div>
+                    <div>
+                        <span class="modal-title">{{ editingIndex !== null ? 'Edit Contact' : 'Add Contact Info' }}</span>
+                        <div class="modal-subtitle">This will appear on your public contact page</div>
+                    </div>
+                </div>
+                <button class="modal-close" ng-click="closeModal()">&#10005;</button>
+            </div>
+            <div class="modal-body">
+                <div class="field-group">
+                    <label class="field-label">What type of contact is this?</label>
+                    <div class="type-picker">
+                        <div class="type-option" ng-class="{'type-option-active': formData.infoType === 'phone'}" ng-click="setContactType('phone')">
+                            <i class="fa-solid fa-phone type-icon"></i>
+                            <span>Phone</span>
+                        </div>
+                        <div class="type-option" ng-class="{'type-option-active': formData.infoType === 'email'}" ng-click="setContactType('email')">
+                            <i class="fa-solid fa-envelope type-icon"></i>
+                            <span>Email</span>
+                        </div>
+                        <div class="type-option" ng-class="{'type-option-active': formData.infoType === 'address'}" ng-click="setContactType('address')">
+                            <i class="fa-solid fa-location-dot type-icon"></i>
+                            <span>Address</span>
+                        </div>
+                        <div class="type-option" ng-class="{'type-option-active': formData.infoType === 'hours'}" ng-click="setContactType('hours')">
+                            <i class="fa-solid fa-clock type-icon"></i>
+                            <span>Hours</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Display Label</label>
+                    <input class="field-input" type="text" ng-model="formData.label" placeholder="e.g. Customer Hotline" />
+                    <span class="field-hint">Shown as the card title</span>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Contact Details</label>
+                    <input class="field-input" type="text" ng-model="formData.value" placeholder="{{ contactPlaceholder }}" />
+                    <span class="field-hint">{{ contactHint }}</span>
+                </div>
+                <div class="modal-preview" ng-if="formData.label || formData.value">
+                    <div class="preview-label">Preview</div>
+                    <div class="preview-card">
+                        <div class="preview-icon"><i ng-class="formData.icon"></i></div>
+                        <div class="preview-content">
+                            <div class="preview-title">{{ formData.label || 'Label not set' }}</div>
+                            <div class="preview-value">{{ formData.value || 'Details not set' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" ng-click="closeModal()">Cancel</button>
+                <button class="btn-save" ng-click="saveContact()">Save Contact</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Top Bar -->
+    <div class="mobile-topbar">
+        <a href="@Url.Action("AdminHomepage","Main")">
+            <img src="~/Content/Pictures/DestLogo.png" alt="D'est Lounge">
+        </a>
+        <button class="mobile-menu-btn" onclick="toggleMobileNav()">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+    </div>
+
+    <div class="mobile-nav-overlay" id="mobileOverlay" onclick="toggleMobileNav()"></div>
+
+    <div class="mobile-nav-drawer" id="mobileDrawer">
+        <nav class="sidebar-nav">
+            <a href="@Url.Action("AdminHomepage","Main")" class="nav-item">HOME</a>
+            <a href="@Url.Action("AdminBookingPage","Main")" class="nav-item">BOOKINGS</a>
+            <a href="@Url.Action("AdminServicePage","Main")" class="nav-item">SERVICES</a>
+            <a href="@Url.Action("AdminContactPage","Main")" class="nav-item active">CONTACT</a>
+            <a href="@Url.Action("AdminFAQsPage","Main")" class="nav-item">FAQs</a>
+            <a href="@Url.Action("AdminInboxPage","Main")" class="nav-item">INBOX</a>
+            <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
+            <a href="@Url.Action("AdminGalleryPage","Main")" class="nav-item">GALLERY</a>
+            <a href="@Url.Action("AdminPaymentSetting","Main")" class="nav-item">PAYMENT</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="@Url.Action("Logout","Account")" class="admin-link" title="Logout">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+
     <style>
+        @@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
         * {
             margin: 0;
             padding: 0;
@@ -164,13 +249,11 @@
         }
 
         body {
-            margin: 0;
-            padding: 0;
             font-family: 'Georgia', serif;
             background-color: #d4c4b0;
         }
 
-        /* Sidebar Styles */
+        /* SIDEBAR */
         .sidebar {
             position: fixed;
             left: 0;
@@ -243,7 +326,7 @@
                 font-size: 1.25rem;
             }
 
-        /* Main Content */
+        /* MAIN */
         .main-content {
             margin-left: 10%;
             background-color: #d4c4b0;
@@ -252,7 +335,7 @@
             min-height: 100vh;
         }
 
-        /* Page Header */
+        /* PAGE HEADER */
         .page-header {
             padding: 2rem 3rem;
             display: flex;
@@ -287,10 +370,10 @@
             .add-btn:hover {
                 background-color: #3a6449;
                 transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             }
 
-        /* Contact Container */
+        /* CONTACT CONTAINER */
         .contact-container {
             flex: 1;
             display: grid;
@@ -300,22 +383,20 @@
             max-height: calc(100vh - 300px);
         }
 
-        /* Map */
         .map-wrapper {
             border: 3px solid #5a4a3a;
             border-radius: 0.625rem;
             overflow: hidden;
-            box-shadow: 0.25rem 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
+            box-shadow: 0.25rem 0.25rem 0.75rem rgba(0,0,0,0.2);
             min-height: 400px;
         }
 
-        /* Contact List */
         .contact-list-wrapper {
             background-color: rgba(232, 223, 213, 0.95);
             padding: 2rem;
             border: 3px solid #5a4a3a;
             border-radius: 0.625rem;
-            box-shadow: 0.25rem 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
+            box-shadow: 0.25rem 0.25rem 0.75rem rgba(0,0,0,0.2);
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -332,7 +413,6 @@
                 font-size: 2rem;
                 color: #6b4423;
                 margin: 0 0 0.5rem 0;
-                font-family: 'Georgia', serif;
                 font-style: italic;
             }
 
@@ -350,7 +430,6 @@
             gap: 1rem;
         }
 
-        /* Contact Card */
         .contact-card {
             display: flex;
             align-items: flex-start;
@@ -360,12 +439,11 @@
             border-radius: 0.5rem;
             border-left: 4px solid #4a7c59;
             transition: all 0.3s;
-            font-family: 'Georgia', serif;
         }
 
             .contact-card:hover {
                 transform: translateX(5px);
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             }
 
         .card-icon {
@@ -410,19 +488,20 @@
                     color: #3a6449;
                     text-decoration: underline;
                 }
+
             .card-content div {
                 font-size: 0.9rem;
                 color: #5a4a3a;
                 font-family: 'Montserrat', sans-serif;
             }
+
         .card-actions {
             flex-shrink: 0;
             display: flex;
             gap: 0.5rem;
         }
 
-        .btn-edit,
-        .btn-delete {
+        .btn-edit, .btn-delete {
             width: 2rem;
             height: 2rem;
             border: none;
@@ -434,7 +513,7 @@
             transition: all 0.3s;
             font-size: 0.75rem;
             background-color: white;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
         }
 
         .btn-edit {
@@ -457,7 +536,6 @@
                 transform: scale(1.1);
             }
 
-        /* Empty State */
         .empty-state {
             text-align: center;
             padding: 2rem;
@@ -482,20 +560,453 @@
                 color: #a89878;
             }
 
-        /* Footer */
+        /* MODAL */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            backdrop-filter: blur(1px);
+            -webkit-backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .modal-backdrop.ng-hide {
+                display: none !important;
+            }
+
+            .modal-backdrop:not(.ng-hide) {
+                display: flex !important;
+            }
+
+        .modal {
+            background: #faf7f4;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 480px;
+            border: 1.5px solid #c9b89e;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: #6b4423;
+            padding: 1.4rem 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .modal-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fce8d5;
+            font-size: 15px;
+        }
+
+        .modal-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #fce8d5;
+        }
+
+        .modal-subtitle {
+            font-size: 0.73rem;
+            color: rgba(252,232,213,0.65);
+            margin-top: 2px;
+        }
+
+        .modal-close {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: #fce8d5;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+            .modal-close:hover {
+                background: rgba(255,255,255,0.3);
+            }
+
+        .modal-body {
+            padding: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .field-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #8b6030;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+        }
+
+        .field-input {
+            background: #fff;
+            border: 1.5px solid #d6c4ae;
+            border-radius: 10px;
+            padding: 0.65rem 0.9rem;
+            font-size: 0.95rem;
+            color: #4a3018;
+            font-family: 'Georgia', serif;
+            outline: none;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+
+            .field-input:focus {
+                border-color: #8b6030;
+            }
+
+        .field-hint {
+            font-size: 0.78rem;
+            color: #a08060;
+        }
+
+        .modal-footer {
+            padding: 1.25rem 1.75rem;
+            background: #f2ece5;
+            border-top: 1px solid #ddd0c0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        .btn-cancel {
+            padding: 0.6rem 1.4rem;
+            border-radius: 50px;
+            border: 1.5px solid #c9b89e;
+            background: transparent;
+            color: #6b4423;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            transition: background 0.2s;
+        }
+
+            .btn-cancel:hover {
+                background: #e8dcd1;
+            }
+
+        .btn-save {
+            padding: 0.6rem 1.6rem;
+            border-radius: 50px;
+            border: none;
+            background: #6b4423;
+            color: #fce8d5;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            transition: background 0.2s;
+        }
+
+            .btn-save:hover {
+                background: #8b5a2b;
+            }
+
+        /* Type picker */
+        .type-picker {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .type-option {
+            border: 1.5px solid #d6c4ae;
+            border-radius: 10px;
+            padding: 10px 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+            .type-option span {
+                font-size: 0.72rem;
+                font-weight: 600;
+                color: #9a7050;
+                font-family: 'Georgia', serif;
+            }
+
+            .type-option:hover {
+                border-color: #8b6030;
+                background: #fef9f5;
+            }
+
+        .type-option-active {
+            border: 2px solid #6b4423 !important;
+            background: #fef9f5;
+        }
+
+            .type-option-active span {
+                color: #6b4423 !important;
+            }
+
+        .type-icon {
+            font-size: 1.2rem;
+            color: #9a7050;
+        }
+
+        .type-option-active .type-icon {
+            color: #6b4423;
+        }
+
+        /* Preview */
+        .modal-preview {
+            background: #f5f0ea;
+            border-radius: 10px;
+            border: 1px dashed #c9b89e;
+            padding: 0.85rem 1rem;
+        }
+
+        .preview-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #8b6030;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 8px;
+        }
+
+        .preview-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .preview-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #f0e6dd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #8b6f47;
+            flex-shrink: 0;
+        }
+
+        .preview-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #6b4423;
+            font-family: 'Georgia', serif;
+        }
+
+        .preview-value {
+            font-size: 0.8rem;
+            color: #4a7c59;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* TRASH PANEL */
+        .contact-trash-container {
+            margin: 0 3rem 2rem;
+        }
+
+        .trash-section {
+            background: #faf7f4;
+            border-radius: 16px;
+            border: 1.5px solid #c9b89e;
+            overflow: hidden;
+        }
+
+        .trash-header {
+            background: #f2ece5;
+            border-bottom: 1px solid #ddd0c0;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .trash-header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+        }
+
+        .trash-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #6b4423;
+        }
+
+        .trash-badge {
+            background: #c84b4b;
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .trash-toggle {
+            font-size: 0.82rem;
+            color: #8b6030;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            text-decoration: underline;
+        }
+
+        .trash-list {
+            padding: 1rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .trash-empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #a08060;
+            font-style: italic;
+        }
+
+        .deleted-card {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #e0d0bc;
+            padding: 0.9rem 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            opacity: 0.88;
+        }
+
+        .deleted-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f0e4d4;
+            border: 1.5px solid #d6c0a8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8b6030;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .deleted-info {
+            flex: 1;
+        }
+
+            .deleted-info h4 {
+                font-size: 0.92rem;
+                color: #4a3018;
+                margin-bottom: 2px;
+            }
+
+            .deleted-info p {
+                font-size: 0.8rem;
+                color: #9a7050;
+                margin: 0;
+            }
+
+        .deleted-type-pill {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 9px;
+            border-radius: 20px;
+            background: #f0e4d4;
+            color: #7a4a20;
+            display: inline-block;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .deleted-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .btn-restore {
+            padding: 0.45rem 1rem;
+            border-radius: 50px;
+            border: 1.5px solid #4a7c59;
+            background: transparent;
+            color: #4a7c59;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+            .btn-restore:hover {
+                background: #4a7c59;
+                color: white;
+            }
+
+        .btn-perm-delete {
+            padding: 0.45rem 1rem;
+            border-radius: 50px;
+            border: 1.5px solid #c84b4b;
+            background: transparent;
+            color: #c84b4b;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+            .btn-perm-delete:hover {
+                background: #c84b4b;
+                color: white;
+            }
+
+        /* FOOTER */
         footer {
             background-color: #e7d7c8;
             border: 2px solid #d4c4b0;
             border-left: none;
             border-right: none;
             padding: 2.5rem 3rem;
-            margin: 0;
             text-align: center;
-        }
-
-        .footer-container {
-            padding: 0;
-            margin: 0 auto;
         }
 
         .footer-title {
@@ -504,7 +1015,7 @@
             color: #6b4423;
             margin: 0 0 2rem 0;
             font-style: italic;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
         .social-links {
@@ -536,37 +1047,172 @@
                 font-weight: 500;
             }
 
-        /* Responsive */
-        @@media (max-width: 1200px) {
-            .contact-container {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-                max-height: none;
-            }
-
-            .map-wrapper {
-                min-height: 300px;
-            }
+        /* MOBILE TOP BAR */
+        .mobile-topbar {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #e7dfd6;
+            z-index: 1100;
+            padding: 0.75rem 1rem;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #c1b2a5;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
 
-        @@media (max-width: 768px) {
+            .mobile-topbar img {
+                height: 2.5rem;
+                width: auto;
+            }
+
+        .mobile-menu-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #5a4a3a;
+            cursor: pointer;
+        }
+
+        .mobile-nav-drawer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 75%;
+            max-width: 16rem;
+            height: 100vh;
+            background-color: #e7dfd6;
+            z-index: 1200;
+            flex-direction: column;
+            padding: 1.5rem 0;
+            box-shadow: 4px 0 12px rgba(0,0,0,0.15);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+            .mobile-nav-drawer.open {
+                transform: translateX(0);
+            }
+
+            .mobile-nav-drawer .nav-item {
+                font-size: 1rem;
+                padding: 1rem 1.5rem;
+                text-align: left;
+                color: #5a4a3a;
+            }
+
+            .mobile-nav-drawer .sidebar-footer {
+                margin-top: auto;
+                padding: 1rem 1.5rem;
+            }
+
+        .mobile-nav-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1150;
+        }
+
+            .mobile-nav-overlay.open {
+                display: block;
+            }
+
+        /* ── TABLET (max 64rem) ── */
+        @@media (max-width: 64rem) {
             .sidebar {
-                width: 6%;
-                min-width: 5rem;
+                width: 5.5rem;
+                min-width: unset;
             }
 
             .main-content {
-                margin-left: 6%;
+                margin-left: 5.5rem;
+            }
+
+            .nav-item {
+                font-size: 0.6rem;
+                padding: 0.75rem 0.25rem;
+                letter-spacing: 0;
+            }
+
+            .sidebar-logo {
+                width: 2.5rem;
+            }
+
+            .admin-link span {
+                font-size: 0.6rem;
             }
 
             .page-header {
+                padding: 1.5rem 2rem;
                 flex-direction: column;
                 gap: 1rem;
                 align-items: flex-start;
             }
 
             .page-title {
-                font-size: 1.5rem;
+                font-size: 1.75rem;
+            }
+
+            .contact-container {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+                padding: 1.5rem 2rem;
+                max-height: none;
+            }
+
+            .map-wrapper {
+                min-height: 300px;
+            }
+
+            .contact-trash-container {
+                margin: 0 2rem 2rem;
+            }
+        }
+
+        /* ── LARGE MOBILE (max 48rem) ── */
+        @@media (max-width: 48rem) {
+            .sidebar {
+                width: 5rem;
+                min-width: unset;
+            }
+
+            .main-content {
+                margin-left: 5rem;
+            }
+
+            .nav-item {
+                font-size: 0.55rem;
+                padding: 0.65rem 0.2rem;
+                letter-spacing: 0;
+            }
+
+            .sidebar-logo {
+                width: 2rem;
+            }
+
+            .admin-link {
+                font-size: 0.6rem;
+            }
+
+                .admin-link i {
+                    font-size: 1rem;
+                }
+
+            .page-header {
+                padding: 1.25rem 1rem;
+            }
+
+            .page-title {
+                font-size: 1.4rem;
+            }
+
+            .add-btn {
+                font-size: 0.85rem;
+                padding: 0.6rem 1rem;
             }
 
             .contact-container {
@@ -575,156 +1221,182 @@
             }
 
             .contact-list-wrapper {
-                padding: 1.5rem;
+                padding: 1.25rem;
             }
 
             .list-header h2 {
                 font-size: 1.5rem;
-
-            }
-        }
-        /* Contact Trash Panel */
-        .contact-trash-container {
-            margin: 0 3rem 2rem 3rem;
-        }
-
-        .trash-toggle-btn {
-            background: transparent;
-            border: 2px solid #6b4423;
-            color: #6b4423;
-            padding: 0.6rem 1.5rem;
-            border-radius: 1.875rem;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin: 0 auto;
-        }
-
-            .trash-toggle-btn:hover {
-                background-color: #6b4423;
-                color: white;
             }
 
-        .trash-count {
-            background: #c84b4b;
-            color: white;
-            border-radius: 1rem;
-            padding: 0.1rem 0.5rem;
-            font-size: 0.8rem;
+            .deleted-actions {
+                flex-direction: column;
+            }
+
+            .contact-trash-container {
+                margin: 0 1rem 1.5rem;
+            }
+
+            .footer-title {
+                font-size: 1.75rem;
+            }
+
+            .social-links {
+                gap: 1.5rem;
+            }
+
+            .social-item i {
+                font-size: 1.25rem;
+            }
+
+            .social-item span {
+                font-size: 0.8rem;
+            }
+
+            .modal {
+                max-width: 95vw;
+            }
+
+            .modal-body {
+                padding: 1.25rem;
+            }
         }
 
-        .contact-trash-panel {
-            margin-top: 1.5rem;
-            background: rgba(107, 68, 35, 0.08);
-            border: 2px dashed #6b4423;
-            border-radius: 1rem;
-            padding: 1.5rem;
-        }
+        /* ── MOBILE (max 30rem) ── */
+        @@media (max-width: 30rem) {
+            .sidebar {
+                display: none;
+            }
 
-        .trash-title {
-            color: #6b4423;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            text-align: center;
-        }
+            .main-content {
+                margin-left: 0;
+                padding-top: 4.5rem;
+            }
 
-        .trash-empty {
-            color: #8a7060;
-            text-align: center;
-            font-style: italic;
-            padding: 1rem 0;
-        }
+            .mobile-topbar {
+                display: flex !important;
+            }
 
-        .deleted-contact-card {
-            background: white;
-            border-radius: 0.75rem;
-            padding: 1rem 1.25rem;
-            margin-bottom: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-            opacity: 0.85;
-        }
+            .mobile-nav-drawer {
+                display: flex;
+            }
 
-        .deleted-contact-icon {
-            width: 2.5rem;
-            height: 2.5rem;
-            background-color: #f0e6dd;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #8b6f47;
-            font-size: 1.2rem;
-            flex-shrink: 0;
-        }
+            .page-header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 0.75rem;
+                align-items: flex-start;
+            }
 
-        .deleted-contact-info {
-            flex: 1;
-        }
+            .page-title {
+                font-size: 1.25rem;
+            }
 
-            .deleted-contact-info h3 {
-                color: #4a3020;
+            .add-btn {
+                font-size: 0.8rem;
+                padding: 0.6rem 0.875rem;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .contact-container {
+                padding: 0.75rem;
+                gap: 0.75rem;
+            }
+
+            .contact-list-wrapper {
+                padding: 1rem;
+            }
+
+            .list-header h2 {
+                font-size: 1.25rem;
+            }
+
+            .contact-card {
+                padding: 0.875rem;
+                gap: 0.75rem;
+            }
+
+            .card-icon {
+                width: 2rem;
+                height: 2rem;
                 font-size: 1rem;
-                margin-bottom: 0.2rem;
             }
 
-            .deleted-contact-info p {
-                color: #7a6050;
-                font-size: 0.875rem;
-                margin: 0.1rem 0;
+            .card-content h3 {
+                font-size: 0.9rem;
             }
 
-        .deleted-contact-actions {
-            display: flex;
-            gap: 0.5rem;
-            flex-shrink: 0;
+            .card-content p, .card-content div {
+                font-size: 0.8rem;
+            }
+
+            .deleted-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .deleted-actions {
+                flex-direction: row;
+                width: 100%;
+            }
+
+            .btn-restore, .btn-perm-delete {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .contact-trash-container {
+                margin: 0 0.75rem 1rem;
+            }
+
+            .footer-title {
+                font-size: 1.5rem;
+            }
+
+            .social-links {
+                gap: 1rem;
+            }
+
+            .social-item i {
+                font-size: 1.1rem;
+            }
+
+            .social-item span {
+                font-size: 0.75rem;
+            }
+
+            .type-picker {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .modal {
+                max-width: 100vw;
+                border-radius: 16px 16px 0 0;
+                position: fixed;
+                bottom: 0;
+            }
+
+            .modal-body {
+                padding: 1rem;
+            }
+
+            .modal-header {
+                padding: 1rem 1.25rem;
+            }
+
+            .modal-footer {
+                padding: 1rem 1.25rem;
+            }
         }
-
-        .restore-btn {
-            background: #4a7c59;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 1rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            transition: all 0.3s;
-        }
-
-            .restore-btn:hover {
-                background: #3a6048;
-                transform: translateY(-1px);
-            }
-
-        .perm-delete-btn {
-            background: #c84b4b;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 1rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            transition: all 0.3s;
-        }
-
-            .perm-delete-btn:hover {
-                background: #a83a3a;
-                transform: translateY(-1px);
-            }
     </style>
 
-</div> <!-- Close ng-app and ng-controller div -->
+</div>
+
+<script>
+    function toggleMobileNav() {
+        var drawer = document.getElementById('mobileDrawer');
+        var overlay = document.getElementById('mobileOverlay');
+        drawer.classList.toggle('open');
+        overlay.classList.toggle('open');
+    }
+</script>

@@ -19,8 +19,6 @@
         <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
         <a href="@Url.Action("AdminGalleryPage","Main")" class="nav-item">GALLERY</a>
         <a href="@Url.Action("AdminPaymentSetting","Main")" class="nav-item">PAYMENT</a>
-
-
     </nav>
     <div class="sidebar-footer">
         <a href="@Url.Action("Logout","Account")" class="admin-link" title="Logout">
@@ -29,6 +27,40 @@
         </a>
     </div>
 </aside>
+
+<!-- Mobile Top Bar -->
+<div class="mobile-topbar">
+    <a href="@Url.Action("AdminHomepage","Main")">
+        <img src="~/Content/Pictures/DestLogo.png" alt="D'est Lounge">
+    </a>
+    <button class="mobile-menu-btn" onclick="toggleMobileNav()">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+</div>
+
+<!-- Mobile Nav Overlay -->
+<div class="mobile-nav-overlay" id="mobileOverlay" onclick="toggleMobileNav()"></div>
+
+<!-- Mobile Nav Drawer -->
+<div class="mobile-nav-drawer" id="mobileDrawer">
+    <nav class="sidebar-nav">
+        <a href="@Url.Action("AdminHomepage","Main")" class="nav-item">HOME</a>
+        <a href="@Url.Action("AdminBookingPage","Main")" class="nav-item">BOOKINGS</a>
+        <a href="@Url.Action("AdminServicePage","Main")" class="nav-item">SERVICES</a>
+        <a href="@Url.Action("AdminContactPage","Main")" class="nav-item">CONTACT</a>
+        <a href="@Url.Action("AdminFAQsPage","Main")" class="nav-item">FAQs</a>
+        <a href="@Url.Action("AdminInboxPage","Main")" class="nav-item active">INBOX</a>
+        <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
+        <a href="@Url.Action("AdminGalleryPage","Main")" class="nav-item">GALLERY</a>
+        <a href="@Url.Action("AdminPaymentSetting","Main")" class="nav-item">PAYMENT</a>
+    </nav>
+    <div class="sidebar-footer">
+        <a href="@Url.Action("Logout","Account")" class="admin-link" title="Logout">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Logout</span>
+        </a>
+    </div>
+</div>
 
 <!-- Main Content Area -->
 <div class="main-content">
@@ -106,9 +138,7 @@
         <div class="footer-container">
             <h2 class="footer-title">Follow our Socials!</h2>
             <div class="social-links">
-                <a href="https://www.tiktok.com/&#64;destlounge"
-                   class="social-item"
-                   target="_blank">
+                <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank">
                     <i class="fa-brands fa-tiktok"></i>
                     <span>destlounge</span>
                 </a>
@@ -139,7 +169,7 @@
         background-color: #d4c4b0;
     }
 
-    /* Sidebar Styles */
+    /* Sidebar */
     .sidebar {
         position: fixed;
         left: 0;
@@ -185,11 +215,11 @@
     }
 
         .nav-item:hover {
-            background-color: rgba(90, 74, 58, 0.1);
+            background-color: rgba(90,74,58,0.1);
         }
 
         .nav-item.active {
-            background-color: rgba(139, 111, 71, 0.3);
+            background-color: rgba(139,111,71,0.3);
             border-left: 0.25rem solid #8b6f47;
         }
 
@@ -238,7 +268,7 @@
         border-radius: 12px;
         padding: 1.5rem 1.75rem;
         margin-bottom: 1.25rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
     /* Inbox Row */
@@ -302,7 +332,7 @@
     }
 
         .inbox-arrow:hover {
-            background-color: rgba(139, 111, 71, 0.15);
+            background-color: rgba(139,111,71,0.15);
         }
 
         .inbox-arrow .rotated {
@@ -321,8 +351,7 @@
         padding: 0.75rem 0 0.25rem;
     }
 
-    .btn-confirm,
-    .btn-cancel-booking {
+    .btn-confirm, .btn-cancel-booking {
         border: none;
         border-radius: 20px;
         padding: 0.5rem 1.25rem;
@@ -377,7 +406,7 @@
         color: #6b4423;
         margin: 0 0 2rem 0;
         font-style: italic;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }
 
     .social-links {
@@ -411,28 +440,301 @@
             font-weight: 500;
         }
 
-    /* Responsive */
-    @@media (max-width: 768px) {
+    /* Mobile Top Bar */
+    .mobile-topbar {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background-color: #e7dfd6;
+        z-index: 1100;
+        padding: 0.75rem 1rem;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 2px solid #c1b2a5;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+        .mobile-topbar img {
+            height: 2.5rem;
+            width: auto;
+        }
+
+    .mobile-menu-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #5a4a3a;
+        cursor: pointer;
+    }
+
+    /* Mobile Nav Drawer */
+    .mobile-nav-drawer {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 75%;
+        max-width: 16rem;
+        height: 100vh;
+        background-color: #e7dfd6;
+        z-index: 1200;
+        flex-direction: column;
+        padding: 1.5rem 0;
+        box-shadow: 4px 0 12px rgba(0,0,0,0.15);
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+        .mobile-nav-drawer.open {
+            transform: translateX(0);
+        }
+
+        .mobile-nav-drawer .nav-item {
+            font-size: 1rem;
+            padding: 1rem 1.5rem;
+            text-align: left;
+            color: #5a4a3a;
+        }
+
+        .mobile-nav-drawer .sidebar-footer {
+            margin-top: auto;
+            padding: 1rem 1.5rem;
+        }
+
+    /* Mobile Nav Overlay */
+    .mobile-nav-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 1150;
+    }
+
+        .mobile-nav-overlay.open {
+            display: block;
+        }
+
+    /* Tablet (≤ 64rem) */
+    @@media (max-width: 64rem) {
         .sidebar {
-            width: 6%;
-            min-width: 5rem;
+            width: 5.5rem;
+            min-width: unset;
         }
 
         .main-content {
-            margin-left: 6%;
+            margin-left: 5.5rem;
         }
 
         .nav-item {
-            font-size: 0.65rem;
-            padding: 0.75rem 0.3125rem;
+            font-size: 0.6rem;
+            padding: 0.75rem 0.25rem;
+            letter-spacing: 0;
+        }
+
+        .sidebar-logo {
+            width: 2.5rem;
+        }
+
+        .admin-link span {
+            font-size: 0.6rem;
+        }
+
+        .inbox-page-container {
+            padding: 2rem 2rem;
+        }
+
+        .inbox-page-title {
+            font-size: 1.75rem;
+        }
+
+        .footer-title {
+            font-size: 2rem;
+        }
+
+        .social-links {
+            gap: 3rem;
+        }
+
+        .social-item i {
+            font-size: 2.25rem;
+        }
+
+        .social-item span {
+            font-size: 1rem;
+        }
+    }
+
+    /* Large Mobile (≤ 48rem) */
+    @@media (max-width: 48rem) {
+        .sidebar {
+            width: 5rem;
+            min-width: unset;
+        }
+
+        .main-content {
+            margin-left: 5rem;
+        }
+
+        .nav-item {
+            font-size: 0.55rem;
+            padding: 0.65rem 0.2rem;
+        }
+
+        .sidebar-logo {
+            width: 2rem;
+        }
+
+        .admin-link i {
+            font-size: 1rem;
         }
 
         .inbox-page-container {
             padding: 1.5rem 1rem;
         }
 
+        .inbox-page-title {
+            font-size: 1.5rem;
+        }
+
         .inbox-card {
             padding: 1rem 1.25rem;
         }
+
+        .inbox-icon-circle {
+            width: 2.25rem;
+            height: 2.25rem;
+            min-width: 2.25rem;
+            font-size: 0.9rem;
+        }
+
+        .inbox-label {
+            font-size: 0.85rem;
+        }
+
+        .inbox-value {
+            font-size: 0.8rem;
+        }
+
+        .inbox-expanded-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .btn-confirm, .btn-cancel-booking {
+            justify-content: center;
+        }
+
+        .footer-title {
+            font-size: 1.75rem;
+        }
+
+        .social-links {
+            gap: 1.5rem;
+        }
+
+        .social-item i {
+            font-size: 1.25rem;
+        }
+
+        .social-item span {
+            font-size: 0.8rem;
+        }
+    }
+
+    /* Mobile (≤ 30rem) */
+    @@media (max-width: 30rem) {
+        .sidebar {
+            display: none;
+        }
+
+        .main-content {
+            margin-left: 0;
+            padding-top: 4.5rem;
+        }
+
+        .mobile-topbar {
+            display: flex !important;
+        }
+
+        .mobile-nav-drawer {
+            display: flex;
+        }
+
+        .inbox-page-container {
+            padding: 1.25rem 0.75rem;
+            max-width: 100%;
+        }
+
+        .inbox-page-title {
+            font-size: 1.35rem;
+            margin-bottom: 1rem;
+        }
+
+        .inbox-card {
+            padding: 0.9rem 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .inbox-row {
+            gap: 0.75rem;
+        }
+
+        .inbox-icon-circle {
+            width: 2rem;
+            height: 2rem;
+            min-width: 2rem;
+            font-size: 0.8rem;
+        }
+
+        .inbox-label {
+            font-size: 0.8rem;
+        }
+
+        .inbox-value {
+            font-size: 0.75rem;
+        }
+
+        .inbox-expanded-actions {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.5rem;
+        }
+
+        .btn-confirm, .btn-cancel-booking {
+            justify-content: center;
+            font-size: 0.8rem;
+            padding: 0.5rem 1rem;
+        }
+
+        footer {
+            padding: 1.75rem 1rem;
+        }
+
+        .footer-title {
+            font-size: 1.5rem;
+        }
+
+        .social-links {
+            gap: 1.25rem;
+        }
+
+        .social-item i {
+            font-size: 1.1rem;
+        }
+
+        .social-item span {
+            font-size: 0.75rem;
+        }
     }
 </style>
+
+<script>
+    function toggleMobileNav() {
+        var drawer = document.getElementById('mobileDrawer');
+        var overlay = document.getElementById('mobileOverlay');
+        drawer.classList.toggle('open');
+        overlay.classList.toggle('open');
+    }
+</script>

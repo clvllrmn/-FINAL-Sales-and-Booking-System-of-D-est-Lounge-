@@ -11,14 +11,34 @@
                 <img src="~/Content/Pictures/DestLogo.png" alt="D'est Lounge">
             </a>
         </div>
-        <nav class="main-nav">
+
+        <nav class="main-nav" id="mainNav">
             <a href="@Url.Action("Homepage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "Homepage" ? "nav-active" : "")">HOME</a>
             <a href="@Url.Action("ServicePage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ServicePage" ? "nav-active" : "")">SERVICES</a>
             <a href="@Url.Action("GalleryPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "GalleryPage" ? "nav-active" : "")">GALLERY</a>
             <a href="@Url.Action("ContactPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ContactPage" ? "nav-active" : "")">CONTACT</a>
             <a href="@Url.Action("FAQsPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "FAQsPage" ? "nav-active" : "")">FAQs</a>
+
+            <div class="mobile-nav-actions">
+                @if (isLoggedIn)
+                {
+                    <a href="@Url.Action("ProfilePage","Main")">
+                        <i class="fa-solid fa-circle-user"></i> Welcome, @userFirstName!
+                    </a>
+                }
+                else
+                {
+                    <a href="@Url.Action("LoginPage","Main")">
+                        <i class="fa-regular fa-user"></i> LOGIN
+                    </a>
+                }
+                <a href="#">
+                    <i class="fa-solid fa-bell"></i> Notifications
+                </a>
+            </div>
         </nav>
-        <div class="header-actions">
+
+        <div class="header-actions desktop-only">
             @if (isLoggedIn)
             {
                 <a href="@Url.Action("ProfilePage","Main")" class="welcome-text">
@@ -35,7 +55,15 @@
                 <i class="fa-solid fa-bell"></i>
             </a>
         </div>
+
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
     </div>
+
+    <div class="nav-overlay" id="navOverlay"></div>
 </header>
 
 <!-- FAQs Section -->
@@ -62,9 +90,7 @@
     <div class="footer-container">
         <h2 class="footer-title">Follow our Socials!</h2>
         <div class="social-links">
-            <a href="https://www.tiktok.com/&#64;destlounge"
-               class="social-item"
-               target="_blank">
+            <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank">
                 <i class="fa-brands fa-tiktok"></i>
                 <span>destlounge</span>
             </a>
@@ -81,6 +107,67 @@
 </footer>
 
 <style>
+    /* ── Hamburger ── */
+    .hamburger-btn {
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.5rem;
+        z-index: 1100;
+        position: relative;
+        flex-shrink: 0;
+    }
+
+        .hamburger-btn span {
+            display: block;
+            width: 26px;
+            height: 3px;
+            background-color: #5d4037;
+            border-radius: 3px;
+            transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease;
+            transform-origin: center;
+        }
+
+        .hamburger-btn.open span:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+
+        .hamburger-btn.open span:nth-child(2) {
+            opacity: 0;
+            width: 0;
+        }
+
+        .hamburger-btn.open span:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+    /* ── Nav Overlay ── */
+    .nav-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0,0,0,0.4);
+        z-index: 900;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+
+        .nav-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+    .mobile-nav-actions {
+        display: none;
+    }
+
+    /* ── FAQs ── */
     .faqs-container {
         min-height: calc(100vh - 400px);
         background-color: #e7dfd6;
@@ -93,7 +180,7 @@
         color: #5d4037;
         text-align: center;
         margin: 0 0 3rem 0;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }
 
     .faqs-grid {
@@ -110,7 +197,7 @@
         padding: 2rem;
         cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);
+        box-shadow: 4px 4px 12px rgba(0,0,0,0.2);
         min-height: 200px;
         display: flex;
         flex-direction: column;
@@ -118,7 +205,7 @@
 
         .faq-card:hover {
             transform: translateY(-5px);
-            box-shadow: 6px 6px 16px rgba(0, 0, 0, 0.3);
+            box-shadow: 6px 6px 16px rgba(0,0,0,0.3);
         }
 
         .faq-card.active {
@@ -150,7 +237,7 @@
     .faq-answer {
         margin-top: 1.5rem;
         padding-top: 1.5rem;
-        border-top: 2px solid rgba(255, 255, 255, 0.3);
+        border-top: 2px solid rgba(255,255,255,0.3);
         animation: fadeIn 0.3s ease;
     }
 
@@ -173,20 +260,362 @@
         }
     }
 
-    /* Responsive Design */
-    @@media (max-width: 1024px) {
-        .faqs-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
+    /* ── Footer ── */
+    footer {
+        background-color: #e7d7c8;
+        border: 2px solid #d4c4b0;
+        border-left: none;
+        border-right: none;
+        padding: 2.5rem 3rem;
+        text-align: center;
     }
 
-    @@media (max-width: 768px) {
-        .faqs-grid {
-            grid-template-columns: 1fr;
+    .footer-container {
+        margin: 0 auto;
+    }
+
+    .footer-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #6b4423;
+        margin: 0 0 2rem 0;
+        font-style: italic;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .social-links {
+        display: flex;
+        justify-content: center;
+        gap: 3rem;
+        flex-wrap: wrap;
+    }
+
+    .social-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        color: #5a4a3a;
+        transition: color 0.3s;
+    }
+
+        .social-item:hover {
+            color: #8b6f47;
+        }
+
+        .social-item i {
+            font-size: 1.5rem;
+        }
+
+        .social-item span {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+    /* =============================================
+       DESKTOP (above 1024px)
+    ============================================= */
+    @@media (min-width: 1025px) {
+        .hamburger-btn {
+            display: none !important;
+        }
+
+        .desktop-only {
+            display: flex !important;
+        }
+
+        .mobile-nav-actions {
+            display: none !important;
+        }
+
+        .nav-overlay {
+            display: none !important;
+        }
+
+        .main-nav {
+            position: static !important;
+            top: auto !important;
+            right: auto !important;
+            left: auto !important;
+            width: auto !important;
+            height: auto !important;
+            background: none !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin-left: 3rem !important;
+            margin-right: auto !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            gap: 2.5rem !important;
+            overflow: visible !important;
+            transform: none !important;
+            transition: none !important;
+            z-index: auto !important;
+        }
+
+            .main-nav a {
+                width: auto !important;
+                padding: 0 !important;
+                border-bottom: none !important;
+                font-size: 1.3rem !important;
+                font-weight: 600 !important;
+                color: #5d4037 !important;
+                letter-spacing: 0.5px !important;
+                display: inline !important;
+            }
+
+                .main-nav a.nav-active {
+                    color: #6b4423 !important;
+                    border-bottom: 2.5px solid #6b4423 !important;
+                    padding-bottom: 2px !important;
+                }
+    }
+
+    /* =============================================
+       TABLET + MOBILE (max-width: 1024px)
+    ============================================= */
+    @@media (max-width: 1024px) {
+        .hamburger-btn {
+            display: flex;
+        }
+
+        .desktop-only {
+            display: none !important;
+        }
+
+        .nav-overlay {
+            display: block;
+        }
+
+        .main-nav {
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            left: auto !important;
+            width: 280px !important;
+            height: 100vh !important;
+            background-color: #f5f0eb !important;
+            z-index: 1000 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            justify-content: flex-start !important;
+            padding: 5rem 2rem 2rem 2rem !important;
+            gap: 0 !important;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.15) !important;
+            transform: translateX(100%) !important;
+            transition: transform 0.35s cubic-bezier(0.4,0,0.2,1) !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            margin: 0 !important;
+        }
+
+            .main-nav.open {
+                transform: translateX(0) !important;
+            }
+
+            .main-nav a {
+                width: 100% !important;
+                padding: 0.9rem 0 !important;
+                font-size: 1rem !important;
+                font-weight: 600 !important;
+                color: #5d4037 !important;
+                border-bottom: 1px solid #e0d5c8 !important;
+                letter-spacing: 0.05em !important;
+                display: block !important;
+                text-decoration: none !important;
+                background: none !important;
+            }
+
+                .main-nav a.nav-active {
+                    color: #6b4423 !important;
+                    border-bottom: 1px solid #e0d5c8 !important;
+                }
+
+        .mobile-nav-actions {
+            display: flex !important;
+            flex-direction: column;
+            width: 100%;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #d4c4b0;
+            gap: 0;
+        }
+
+            .mobile-nav-actions a {
+                display: flex !important;
+                align-items: center;
+                gap: 0.6rem;
+                padding: 0.75rem 0 !important;
+                font-size: 0.97rem !important;
+                color: #5d4037 !important;
+                border-bottom: 1px solid #e0d5c8 !important;
+                width: 100% !important;
+                font-weight: 600 !important;
+                text-decoration: none !important;
+                background: none !important;
+            }
+
+                .mobile-nav-actions a:last-child {
+                    border-bottom: none !important;
+                }
+        /* FAQs layout */
+        .faqs-container {
+            padding: 2rem 1.5rem;
         }
 
         .faqs-title {
             font-size: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        .faqs-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .faq-card {
+            min-height: 160px;
+            padding: 1.5rem;
+        }
+
+            .faq-card:hover {
+                transform: translateY(-3px);
+            }
+
+        .faq-question h3 {
+            font-size: 1.1rem;
+        }
+    }
+
+    /* =============================================
+       MOBILE (max-width: 768px)
+    ============================================= */
+    @@media (max-width: 768px) {
+        .faqs-container {
+            padding: 1.5rem 0.75rem;
+        }
+
+        .faqs-title {
+            font-size: 2.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .faqs-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .faq-card {
+            min-height: unset;
+            padding: 1.2rem;
+            border-radius: 14px;
+        }
+
+            .faq-card:hover {
+                transform: none;
+            }
+
+        .faq-question h3 {
+            font-size: 1rem;
+        }
+
+        .faq-question i {
+            font-size: 1rem;
+        }
+
+        .faq-answer {
+            margin-top: 1rem;
+            padding-top: 1rem;
+        }
+
+            .faq-answer p {
+                font-size: 0.92rem;
+            }
+        /* Footer */
+        footer {
+            padding: 1.5rem 1rem;
+        }
+
+        .footer-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .social-links {
+            gap: 1.5rem;
+        }
+
+        .social-item i {
+            font-size: 1.25rem;
+        }
+
+        .social-item span {
+            font-size: 0.8rem;
+        }
+    }
+
+    /* =============================================
+       SMALL MOBILE (max-width: 400px)
+    ============================================= */
+    @@media (max-width: 400px) {
+        .faqs-container {
+            padding: 1rem 0.5rem;
+        }
+
+        .faqs-title {
+            font-size: 1.8rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .faq-card {
+            padding: 1rem;
+            border-radius: 12px;
+        }
+
+        .faq-question h3 {
+            font-size: 0.95rem;
+        }
+
+        .faq-answer p {
+            font-size: 0.88rem;
         }
     }
 </style>
+
+@section scripts {
+    <script>
+        (function () {
+            var btn = document.getElementById('hamburgerBtn');
+            var nav = document.getElementById('mainNav');
+            var overlay = document.getElementById('navOverlay');
+
+            function openMenu() {
+                btn.classList.add('open');
+                nav.classList.add('open');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeMenu() {
+                btn.classList.remove('open');
+                nav.classList.remove('open');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            btn.addEventListener('click', function () {
+                nav.classList.contains('open') ? closeMenu() : openMenu();
+            });
+
+            overlay.addEventListener('click', closeMenu);
+
+            nav.querySelectorAll('a').forEach(function (link) {
+                link.addEventListener('click', closeMenu);
+            });
+        })();
+    </script>
+}
