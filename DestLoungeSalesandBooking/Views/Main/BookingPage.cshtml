@@ -198,7 +198,9 @@
             <label>Choose Time</label>
             <select ng-model="booking.time" class="form-select" required>
                 <option value="">Select Time</option>
-                <option ng-repeat="time in availableTimes" value="{{time}}">{{time}}</option>
+                <option ng-repeat="t in availableTimes" value="{{t}}" ng-disabled="isTimeDisabled(t)">
+                    {{t}}
+                </option>
             </select>
         </div>
         <div class="form-group">

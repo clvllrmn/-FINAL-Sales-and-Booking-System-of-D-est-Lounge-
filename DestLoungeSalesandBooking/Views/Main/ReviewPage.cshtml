@@ -122,7 +122,7 @@
                 <div class="photo-upload-section">
                     <label class="review-label">Add your image</label>
                     <div class="photo-upload-box" id="photoUploadBox">
-                        <input type="file" id="photoInput" name="PhotoUpload" accept="image/*" style="display: none;" />
+                        <input type="file" id="photoInput" name="PhotoUpload" accept="image/*" multiple style="display: none;" />
                         <div class="upload-placeholder" id="uploadPlaceholder">
                             <i class="fa-solid fa-camera camera-icon"></i>
                             <p class="upload-text">Add photo</p>
@@ -177,30 +177,61 @@
     const previewImage = document.getElementById('previewImage');
     const removePhoto = document.getElementById('removePhoto');
 
+    let selectedFiles = [];
+
     photoUploadBox.addEventListener('click', function () {
-        if (photoPreview.style.display === 'none') {
-            photoInput.click();
-        }
+        photoInput.click();
     });
 
     photoInput.addEventListener('change', function (e) {
-        const file = e.target.files[0];
-        if (file) {
+        const files = Array.from(e.target.files);
+
+        // Limit to 5
+        if (selectedFiles.length + files.length > 5) {
+            alert("Maximum of 5 photos only.");
+            return;
+        }
+
+        files.forEach(file => {
+            selectedFiles.push(file);
+
             const reader = new FileReader();
             reader.onload = function (e) {
-                previewImage.src = e.target.result;
-                uploadPlaceholder.style.display = 'none';
-                photoPreview.style.display = 'block';
-            }
-            reader.readAsDataURL(file);
-        }
-    });
+                const container = document.createElement("div");
+                container.style.position = "relative";
+                container.style.display = "inline-block";
+                container.style.margin = "5px";
 
-    removePhoto.addEventListener('click', function (e) {
-        e.stopPropagation();
-        photoInput.value = '';
-        photoPreview.style.display = 'none';
-        uploadPlaceholder.style.display = 'flex';
+                const img = document.createElement("img");
+                img.src = e.target.result;
+                img.style.width = "100px";
+                img.style.borderRadius = "10px";
+
+                const removeBtn = document.createElement("button");
+                removeBtn.innerText = "×";
+                removeBtn.style.position = "absolute";
+                removeBtn.style.top = "-5px";
+                removeBtn.style.right = "-5px";
+                removeBtn.style.background = "#6b5544";
+                removeBtn.style.color = "white";
+                removeBtn.style.border = "none";
+                removeBtn.style.borderRadius = "50%";
+                removeBtn.style.cursor = "pointer";
+
+                removeBtn.onclick = function () {
+                    container.remove();
+                    selectedFiles = selectedFiles.filter(f => f !== file);
+                };
+
+                container.appendChild(img);
+                container.appendChild(removeBtn);
+
+                photoUploadBox.appendChild(container);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        uploadPlaceholder.style.display = "none";
     });
 </script>
 

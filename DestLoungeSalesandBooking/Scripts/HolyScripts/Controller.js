@@ -699,6 +699,8 @@ app.controller("DestLoungeSalesandBookingController",
             return;
         }
 
+        
+
         var d = $scope.booking.date;
         var dateObj = (d instanceof Date) ? d : new Date(d);
         if (isNaN(dateObj.getTime())) {
@@ -780,7 +782,11 @@ app.controller("DestLoungeSalesandBookingController",
             console.error("Error checking slot:", error);
             alert("Unable to check slot availability. Please try again.");
         });
-    };
+        };
+
+        
+
+
 
     // ===== SUBMIT PAYMENT (UPDATED WITH SERVICES) =====
     $scope.submitPayment = function () {
@@ -1555,7 +1561,7 @@ app.controller("DestLoungeSalesandBookingController",
 
        
 
-
+        const bookingId = urlParams.get("bookingId");
 
 });
 

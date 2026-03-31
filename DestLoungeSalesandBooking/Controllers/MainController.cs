@@ -3,6 +3,7 @@ using DestLoungeSalesandBooking.Models.Context;
 using DestLoungeSalesandBooking.Models.Maps;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -280,5 +281,30 @@ namespace DestLoungeSalesandBooking.Controllers
             }
             base.Dispose(disposing);
         }
+
+
+        [HttpPost]
+        public ActionResult SubmitReview(int? BookingId, int Rating, string ReviewText, IEnumerable<HttpPostedFileBase> PhotoUpload)
+        {
+            if (PhotoUpload != null)
+            {
+                foreach (var file in PhotoUpload)
+                {
+                    if (file != null && file.ContentLength > 0)
+                    {
+                        string path = Path.Combine(Server.MapPath("~/Uploads"), Path.GetFileName(file.FileName));
+                        file.SaveAs(path);
+                    }
+                }
+            }
+
+            if (BookingId == null)
+            {
+                return Content("BookingId is missing. Please access review from booking page.");
+            }
+
+            return RedirectToAction("ReviewPage");
+        }
+
     }
 }
