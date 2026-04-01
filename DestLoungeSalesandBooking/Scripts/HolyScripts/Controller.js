@@ -1561,7 +1561,7 @@ app.controller("DestLoungeSalesandBookingController",
 
        
 
-        const bookingId = urlParams.get("bookingId");
+      
 
 });
 

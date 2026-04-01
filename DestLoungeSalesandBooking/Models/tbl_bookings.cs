@@ -19,5 +19,8 @@ namespace DestLoungeSalesandBooking.Models
         public string Notes { get; set; }
         public DateTime CreatedAt { get; set; }
         public string NailTech { get; internal set; }
+
+        public bool ReminderSent { get; set; }
+        public bool Reminder3HoursSent { get; set; }
     }
 }

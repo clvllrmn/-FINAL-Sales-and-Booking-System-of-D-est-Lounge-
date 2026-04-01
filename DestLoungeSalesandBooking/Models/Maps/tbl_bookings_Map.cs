@@ -47,6 +47,14 @@ namespace DestLoungeSalesandBooking.Models.Maps
             Property(b => b.CreatedAt)
                 .HasColumnName("CreatedAt")
                 .IsRequired();
+
+            Property(b => b.ReminderSent)
+    .HasColumnName("ReminderSent")
+    .IsRequired();
+
+            Property(b => b.Reminder3HoursSent)
+    .HasColumnName("Reminder3HoursSent")
+    .IsRequired();
         }
     }
 }

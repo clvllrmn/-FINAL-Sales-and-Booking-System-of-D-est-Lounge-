@@ -190,6 +190,7 @@
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\BookingController.cs" />
     <Compile Include="Controllers\MainController.cs" />
+    <Compile Include="Controllers\ReminderController.cs" />
     <Compile Include="Controllers\SalesController.cs" />
     <Compile Include="Controllers\ServiceController.cs" />
     <Compile Include="Global.asax.cs">
@@ -1076,6 +1077,7 @@
     <Folder Include="App_Data\" />
     <Folder Include="Uploads\" />
     <Folder Include="Views\GoogleSignInRequest\" />
+    <Folder Include="Views\Reminder\" />
     <Folder Include="Views\tbl_services\" />
     <Folder Include="Views\tbl_services_Map\" />
   </ItemGroup>
