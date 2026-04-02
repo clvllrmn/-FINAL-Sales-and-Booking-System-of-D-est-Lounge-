@@ -1,4 +1,5 @@
-﻿using DestLoungeSalesandBooking.Models;
+﻿using DestLoungeSalesandBooking.Filters;
+using DestLoungeSalesandBooking.Models;
 using DestLoungeSalesandBooking.Models.Context;
 using DestLoungeSalesandBooking.Models.Maps;
 using System;
@@ -14,9 +15,9 @@ namespace DestLoungeSalesandBooking.Controllers
 {
     public class MainController : Controller
     {
-        private DestLoungeSalesandBookingContext db = new DestLoungeSalesandBookingContext(); // Replace with your actual DbContext name
+        private DestLoungeSalesandBookingContext db = new DestLoungeSalesandBookingContext();
 
-        // GET: Main
+        // ── Public pages (no login required) ──
         public ActionResult Homepage()
         {
             return View();
@@ -37,112 +38,217 @@ namespace DestLoungeSalesandBooking.Controllers
             return View();
         }
 
+        [NoCache]
         public ActionResult LoginPage()
         {
+            // If already logged in, redirect away from login page
+            if (Session["UserID"] != null)
+            {
+                if (Session["RoleID"] != null && (int)Session["RoleID"] == 1)
+                    return RedirectToAction("AdminHomepage", "Main");
+                return RedirectToAction("Homepage", "Main");
+            }
             return View();
         }
 
-        // GET: SignupPage
+        [NoCache]
         public ActionResult SignupPage()
         {
             return View();
         }
-        public ActionResult AdminHomepage()
-        {
-            return View();
-        }
-        public ActionResult AdminContactPage() 
-        {
-            return View();
-        }
-        public ActionResult AdminFAQsPage()
-        {
-            return View();
-        }
-        public ActionResult AdminBookingPage()
-        {
-            return View();
-        }
-        public ActionResult AdminServicePage()
-        {
-            return View();
-        }
-        public ActionResult AdminInboxPage()
-        {
-            return View();
-        }
-        public ActionResult AdminSalesPage()
-        {
-            return View();
-        }
+
         public ActionResult ForgotPasswordPage()
         {
             return View();
         }
-        public ActionResult CurrentBookingPage()
-        {
-            return View();
-        }
-        public ActionResult ReviewPage()
-        {
-            return View();
-        }
+
         public ActionResult GalleryPage()
         {
             return View();
         }
-        public ActionResult AdminGalleryPage()
+
+        // ── User-only protected pages ──
+        [SessionCheck]
+        [NoCache]
+        public ActionResult BookingPage()
         {
             return View();
         }
+
+        [SessionCheck]
+        [NoCache]
         public ActionResult PaymentPage()
         {
             return View();
         }
+
+        [SessionCheck]
+        [NoCache]
+        public ActionResult CurrentBookingPage()
+        {
+            return View();
+        }
+
+        [SessionCheck]
+        [NoCache]
+        public ActionResult ReviewPage()
+        {
+            return View();
+        }
+
+        [SessionCheck]
+        [NoCache]
+        public ActionResult ProfilePage()
+        {
+            int userId = (int)Session["UserID"];
+            var user = db.tbl_users.FirstOrDefault(u => u.userID == userId);
+
+            if (user == null)
+            {
+                TempData["ErrorMessage"] = "User not found.";
+                return RedirectToAction("LoginPage", "Main");
+            }
+
+            ViewBag.UserName = user.firstname + " " + user.lastname;
+            ViewBag.UserEmail = user.email;
+            ViewBag.ContactNumber = user.coNum;
+            ViewBag.Address = user.address;
+
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [SessionCheck]
+        [NoCache]
+        public ActionResult UpdateProfile(string coNum, string address)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(coNum) || string.IsNullOrWhiteSpace(address))
+                {
+                    TempData["ErrorMessage"] = "Contact number and address are required.";
+                    return RedirectToAction("ProfilePage", "Main");
+                }
+
+                if (!System.Text.RegularExpressions.Regex.IsMatch(coNum.Trim(), @"^\d{11}$"))
+                {
+                    TempData["ErrorMessage"] = "Contact number must be exactly 11 digits.";
+                    return RedirectToAction("ProfilePage", "Main");
+                }
+
+                int userId = (int)Session["UserID"];
+                var user = db.tbl_users.FirstOrDefault(u => u.userID == userId);
+
+                if (user == null)
+                {
+                    TempData["ErrorMessage"] = "User not found.";
+                    return RedirectToAction("ProfilePage", "Main");
+                }
+
+                user.coNum = coNum.Trim();
+                user.address = address.Trim();
+                user.updatedAt = DateTime.Now;
+                db.SaveChanges();
+
+                TempData["SuccessMessage"] = "Profile updated successfully!";
+                return RedirectToAction("ProfilePage", "Main");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("UpdateProfile Error: " + ex.ToString());
+                TempData["ErrorMessage"] = "A technical error occurred. Please try again.";
+                return RedirectToAction("ProfilePage", "Main");
+            }
+        }
+
+        // ── Admin-only protected pages ──
+        [SessionCheck(RequireAdmin = true)]
+        [NoCache]
+        public ActionResult AdminHomepage()
+        {
+            return View();
+        }
+
+        [SessionCheck(RequireAdmin = true)]
+        [NoCache]
+        public ActionResult AdminContactPage()
+        {
+            return View();
+        }
+
+        [SessionCheck(RequireAdmin = true)]
+        [NoCache]
+        public ActionResult AdminFAQsPage()
+        {
+            return View();
+        }
+
+        [SessionCheck(RequireAdmin = true)]
+        [NoCache]
+        public ActionResult AdminBookingPage()
+        {
+            return View();
+        }
+
+        [SessionCheck(RequireAdmin = true)]
+        [NoCache]
+        public ActionResult AdminServicePage()
+        {
+            return View();
+        }
+
+        [SessionCheck(RequireAdmin = true)]
+        [NoCache]
+        public ActionResult AdminInboxPage()
+        {
+            return View();
+        }
+
+        [SessionCheck(RequireAdmin = true)]
+        [NoCache]
+        public ActionResult AdminSalesPage()
+        {
+            return View();
+        }
+
+        [SessionCheck(RequireAdmin = true)]
+        [NoCache]
+        public ActionResult AdminGalleryPage()
+        {
+            return View();
+        }
+
+        [SessionCheck(RequireAdmin = true)]
+        [NoCache]
         public ActionResult AdminPaymentSetting()
         {
             return View();
         }
- 
 
-        // ═══════════════════════════════════════════════════════════
-        // FIX 1: Add this action to MainController.cs
-        // (alongside your other GET actions like AdminHomepage, etc.)
-        // ═══════════════════════════════════════════════════════════
-
+        [SessionCheck(RequireAdmin = true)]
+        [NoCache]
         public ActionResult AdminChangePasswordPage()
         {
-            // Guard: only logged-in admins can reach this page
-            if (Session["RoleID"] == null || (int)Session["RoleID"] != 1)
-            {
-                TempData["ErrorMessage"] = "Unauthorized access.";
-                return RedirectToAction("LoginPage", "Main");
-            }
             return View();
         }
 
-        // ADD THIS METHOD TO YOUR EXISTING MainController.cs
+        [SessionCheck(RequireAdmin = true)]
+        [NoCache]
         public ActionResult AdminHomepageEditPage()
         {
-            if (Session["RoleID"] == null || (int)Session["RoleID"] != 1)
-            {
-                TempData["ErrorMessage"] = "Unauthorized access.";
-                return RedirectToAction("LoginPage", "Main");
-            }
             return View();
         }
 
-        // POST: SignupPage - Handle form submission
+        // ── POST: SignupPage ──
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult SignupPage(string FNAME, string LNAME, string EMAIL, string CONTACT, string ADDRESS, string PASSWORD, string CONFIRMPASSWORD)
         {
             try
             {
-                // Debug: Log what we received
                 System.Diagnostics.Debug.WriteLine($"Received - FNAME: {FNAME}, LNAME: {LNAME}, EMAIL: {EMAIL}, CONTACT: {CONTACT}, PASSWORD Length: {PASSWORD?.Length}");
 
-                // Validate input
                 if (string.IsNullOrWhiteSpace(FNAME) || string.IsNullOrWhiteSpace(LNAME) ||
                     string.IsNullOrWhiteSpace(EMAIL) || string.IsNullOrWhiteSpace(CONTACT) ||
                     string.IsNullOrWhiteSpace(ADDRESS) || string.IsNullOrWhiteSpace(PASSWORD))
@@ -151,14 +257,12 @@ namespace DestLoungeSalesandBooking.Controllers
                     return View();
                 }
 
-                // Check if passwords match
                 if (PASSWORD != CONFIRMPASSWORD)
                 {
                     TempData["ErrorMessage"] = "Passwords do not match.";
                     return View();
                 }
 
-                // Check if email already exists
                 var existingUser = db.tbl_users.FirstOrDefault(u => u.email.ToLower() == EMAIL.ToLower().Trim());
                 if (existingUser != null)
                 {
@@ -166,15 +270,12 @@ namespace DestLoungeSalesandBooking.Controllers
                     return View();
                 }
 
-                // Validate contact number format (must be exactly 11 digits)
                 if (!System.Text.RegularExpressions.Regex.IsMatch(CONTACT, @"^\d{11}$"))
                 {
                     TempData["ErrorMessage"] = "Contact number must be exactly 11 digits.";
                     return View();
                 }
 
-
-                // Validate password strength - allow more special characters
                 bool hasLower = PASSWORD.Any(char.IsLower);
                 bool hasUpper = PASSWORD.Any(char.IsUpper);
                 bool hasDigit = PASSWORD.Any(char.IsDigit);
@@ -194,13 +295,11 @@ namespace DestLoungeSalesandBooking.Controllers
                     return View();
                 }
 
-                // Hash the password for security
                 string hashedPassword = HashPassword(PASSWORD);
 
-                // Create new user object
                 var newUser = new tbl_users
                 {
-                    roleID = 2, // 2 = Customer role (adjust if needed)
+                    roleID = 2,
                     firstname = FNAME.Trim(),
                     lastname = LNAME.Trim(),
                     email = EMAIL.Trim().ToLower(),
@@ -211,78 +310,32 @@ namespace DestLoungeSalesandBooking.Controllers
                     updatedAt = DateTime.Now
                 };
 
-                // Add to database and save
                 db.tbl_users.Add(newUser);
                 db.SaveChanges();
 
-                // Success - redirect to login
                 TempData["SuccessMessage"] = "Registration successful! Please login with your new account.";
                 return RedirectToAction("LoginPage", "Main");
             }
             catch (System.Data.Entity.Validation.DbEntityValidationException ex)
             {
-                // Handle validation errors
                 string errorMessages = string.Empty;
                 foreach (var validationErrors in ex.EntityValidationErrors)
-                {
                     foreach (var validationError in validationErrors.ValidationErrors)
-                    {
                         errorMessages += validationError.PropertyName + ": " + validationError.ErrorMessage + "\n";
-                    }
-                }
+
                 TempData["ErrorMessage"] = "Validation error: " + errorMessages;
                 return View();
             }
             catch (Exception ex)
             {
-                // This looks for the "real" error hidden inside Entity Framework
                 var realError = ex.InnerException?.InnerException?.Message ?? ex.Message;
-
                 System.Diagnostics.Debug.WriteLine("Signup Error: " + ex.ToString());
                 TempData["ErrorMessage"] = "Technical Error: " + realError;
                 return View();
             }
         }
 
-        public ActionResult BookingPage()
-        {
-            return View();
-        }
-
-        public ActionResult ProfilePage()
-        {
-            return View();
-        }
-
-        // Helper method to hash passwords using SHA256
-        private string HashPassword(string password)
-        {
-            using (SHA256 sha256Hash = SHA256.Create())
-            {
-                // Convert password string to bytes
-                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(password));
-
-                // Convert byte array to hexadecimal string
-                StringBuilder builder = new StringBuilder();
-                for (int i = 0; i < bytes.Length; i++)
-                {
-                    builder.Append(bytes[i].ToString("x2"));
-                }
-                return builder.ToString();
-            }
-        }
-
-        // Clean up database connection when controller is disposed
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
-
-
+        // ── POST: SubmitReview ──
         [HttpPost]
         public ActionResult SubmitReview(int? BookingId, int Rating, string ReviewText, IEnumerable<HttpPostedFileBase> PhotoUpload)
         {
@@ -299,12 +352,37 @@ namespace DestLoungeSalesandBooking.Controllers
             }
 
             if (BookingId == null)
-            {
                 return Content("BookingId is missing. Please access review from booking page.");
-            }
 
             return RedirectToAction("ReviewPage");
         }
 
+        // ── Helper: SHA256 hash ──
+        private string HashPassword(string password)
+        {
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(password));
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                    builder.Append(bytes[i].ToString("x2"));
+                return builder.ToString();
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) db.Dispose();
+            base.Dispose(disposing);
+        }
+
+        // Add this inside MainController.cs
+        public ActionResult CheckSession()
+        {
+            if (Session["UserID"] == null)
+                return Json(new { loggedIn = false }, JsonRequestBehavior.AllowGet);
+
+            return Json(new { loggedIn = true }, JsonRequestBehavior.AllowGet);
+        }
     }
 }

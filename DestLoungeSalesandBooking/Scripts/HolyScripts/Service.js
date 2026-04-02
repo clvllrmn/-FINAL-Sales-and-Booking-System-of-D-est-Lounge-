@@ -1,4 +1,5 @@
-﻿app.service("DestLoungeSalesandBookingService", function ($http) {
+﻿var app = angular.module("DestLoungeSalesandBooking"); // ✅ add this line
+app.service("DestLoungeSalesandBookingService", function ($http) {
 
     // Method to get booking details
     this.getBookingDetails = function (bookingId) {

@@ -8,6 +8,7 @@ namespace DestLoungeSalesandBooking.Controllers
 {
     public class AdminController :  Controller
     {
+ 
         [HttpPost]
         public ActionResult SavePayment(string gcash, string bank)
         {

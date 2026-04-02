@@ -68,7 +68,11 @@
         <h1 class="inbox-page-title">Recent Activity</h1>
 
         <div class="inbox-card-list" ng-controller="DestLoungeSalesandBookingController">
-            <!-- Inbox Card -->
+
+            <p ng-if="inboxItems.length === 0" style="color:#888; text-align:center; padding:2rem;">
+                No recent activity.
+            </p>
+
             <div class="inbox-card" ng-repeat="item in inboxItems">
                 <div class="inbox-row">
                     <div class="inbox-icon-circle">
@@ -87,7 +91,7 @@
                     </div>
                     <div class="inbox-info">
                         <span class="inbox-label">Service:</span>
-                        <span class="inbox-value">{{item.serviceName}}</span>
+                        <span class="inbox-value">{{item.service}}</span>
                     </div>
                 </div>
                 <hr class="inbox-divider">
@@ -105,33 +109,49 @@
 
                 <div class="inbox-row">
                     <div class="inbox-icon-circle">
-                        <i class="fa-solid fa-phone"></i>
+                        <!-- Icon changes by status -->
+                        <i class="fa-solid fa-check" ng-if="item.status === 'Approved'"></i>
+                        <i class="fa-solid fa-clock" ng-if="item.status === 'Pending'"></i>
+                        <i class="fa-solid fa-xmark" ng-if="item.status === 'Cancelled'"></i>
+                        <i class="fa-solid fa-star" ng-if="item.status === 'Completed'"></i>
                     </div>
                     <div class="inbox-info">
-                        <span class="inbox-label">Contact:</span>
-                        <span class="inbox-value">{{item.phone}} - {{item.email}}</span>
+                        <span class="inbox-label">Status:</span>
+                        <span class="inbox-value"
+                              ng-style="{
+                          'color': item.status === 'Approved' ? '#4a7c59' :
+                                   item.status === 'Cancelled' ? '#b8423e' :
+                                   item.status === 'Completed' ? '#4a7c59' : '#8b6f47',
+                          'font-weight': '700'
+                      }">
+                            {{item.status}}
+                        </span>
+                        <span class="inbox-value" ng-if="item.cancelReason" style="color:#b8423e; font-style:italic;">
+                            Reason: {{item.cancelReason}}
+                        </span>
                     </div>
-                    <!-- Expand/Collapse Arrow -->
                     <button class="inbox-arrow" ng-click="item.expanded = !item.expanded">
                         <i class="fa-solid fa-chevron-left" ng-class="{'rotated': item.expanded}"></i>
                     </button>
                 </div>
 
-                <!-- Expanded Detail Section -->
+                <!-- Expanded Detail -->
                 <div class="inbox-expanded-detail" ng-show="item.expanded">
                     <hr class="inbox-divider">
-                    <div class="inbox-expanded-actions">
-                        <button class="btn-confirm" ng-click="confirmBooking(item)">
-                            <i class="fa-solid fa-check"></i> Confirm
+                    <div class="inbox-expanded-actions" ng-if="item.status === 'Pending'">
+                        <button class="btn-confirm" ng-click="updateBookingStatus(item.bookingId, 'Approved'); loadInboxItems()">
+                            <i class="fa-solid fa-check"></i> Approve
                         </button>
-                        <button class="btn-cancel-booking" ng-click="cancelBooking(item)">
+                        <button class="btn-cancel-booking" ng-click="cancelBooking(item.bookingId)">
                             <i class="fa-solid fa-xmark"></i> Cancel
                         </button>
+                    </div>
+                    <div ng-if="item.status !== 'Pending'" style="padding: 0.5rem 0; color:#888; font-size:0.9rem;">
+                        No actions available for {{item.status}} bookings.
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- Footer -->
     <footer>

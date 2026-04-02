@@ -55,17 +55,15 @@
             <div class="bell-icon" ng-click="toggleNotif()" style="position: relative;">
                 <i class="fa-solid fa-bell"></i>
                 <span ng-if="notifications.length > 0"
-                      style="position:absolute; top:-5px; right:-5px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:12px;">
+                      style="position:absolute;top:-5px;right:-5px;background:red;color:white;border-radius:50%;padding:2px 6px;font-size:12px;">
                     {{notifications.length}}
                 </span>
                 <div ng-show="showNotif" class="notif-dropdown">
                     <h3>Notifications</h3>
-                    <div ng-if="notifications.length === 0">
-                        <p>No notifications</p>
-                    </div>
+                    <div ng-if="notifications.length === 0"><p>No notifications</p></div>
                     <div ng-repeat="n in notifications"
                          ng-click="goToBooking()"
-                         style="cursor:pointer; padding:5px; border-bottom:1px solid #ccc;">
+                         style="cursor:pointer;padding:5px;border-bottom:1px solid #ccc;">
                         <p>{{n.Message}}</p>
                         <small>{{n.CreatedAt}}</small>
                     </div>
@@ -74,14 +72,12 @@
         </div>
 
         <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
-            <span></span>
-            <span></span>
-            <span></span>
+            <span></span><span></span><span></span>
         </button>
     </div>
-
     <div class="nav-overlay" id="navOverlay"></div>
 </header>
+
 
 <div class="profile-container">
     <aside class="sidebar">
@@ -100,60 +96,68 @@
     </aside>
 
     <main class="profile-content"
-          ng-controller="DestLoungeSalesandBookingController"
-          ng-app="DestLoungeSalesandBookingController">
-        {{test}}
+          ng-controller="DestLoungeSalesandBookingController">
 
         <div class="booking-wrapper">
-
             <h2 class="booking-heading">My Bookings</h2>
 
-            <div class="booking-grid" ng-if="userBookings.length > 0">
+            <!-- Loading state -->
+            <div ng-if="bookingsLoading" class="loading-state">
+                <p>Loading your bookings...</p>
+            </div>
 
+            <!-- Bookings list -->
+            <div class="booking-grid" ng-if="!bookingsLoading && userBookings.length > 0">
                 <div class="booking-item" ng-repeat="b in userBookings">
 
                     <div class="booking-top">
-                        <span class="booking-date">{{b.BookingDate}}</span>
-                        <span class="booking-status" ng-class="b.Status.toLowerCase()">
+                        <span class="booking-date">{{formatBookingDate(b.BookingDate)}}</span>
+                        <span class="booking-status" ng-class="b.Status.toLowerCase().trim()">
                             {{b.Status}}
                         </span>
                     </div>
 
                     <div class="booking-body">
-                        <p><strong>Time:</strong> {{b.StartTime}} - {{b.EndTime}}</p>
-                        <p><strong>Service:</strong> {{b.Notes.split('|')[0].replace('Services:', '').trim()}}</p>
-                        <p ng-if="b.Notes.split('|')[1]"><strong>Nail Tech:</strong> {{b.Notes.split('|')[1].replace('NailTech:', '').trim()}}</p>
-                        <p ng-if="b.Notes.split('|')[2]"><strong>Downpayment:</strong> ₱{{b.Notes.split('|')[2].replace('Downpayment:', '').trim()}}</p>
+                        <p><strong>Time:</strong> {{formatTime(b.StartTime)}} - {{formatTime(b.EndTime)}}</p>
+                        <p><strong>Service:</strong> {{getService(b.Notes)}}</p>
+                        <p ng-if="getNailTech(b.Notes)"><strong>Nail Tech:</strong> {{getNailTech(b.Notes)}}</p>
+                        <p ng-if="getDownpayment(b.Notes)"><strong>Downpayment Paid:</strong> ₱{{getDownpayment(b.Notes)}}</p>
+                        <p ng-if="getCancelReason(b.Notes)" class="cancel-reason">
+                            <strong>Cancel Reason:</strong> {{getCancelReason(b.Notes)}}
+                        </p>
                     </div>
 
-                    <div class="booking-actions">
-                        <button class="btn-cancel"
-                                ng-if="b.Status.trim() == 'Pending' || b.Status.trim() == 'Approved'"
-                                ng-click="cancelUserBooking(b.BookingId)">
-                            Cancel
-                        </button>
-                        <button class="btn-review"
-                                ng-if="b.Status == 'Completed'"
-                                ng-click="goToReview(b.BookingId)">
-                            Review
+                    <!-- Cancel button: only show if Pending or Approved AND more than 24hrs away -->
+                    <div class="booking-actions" ng-if="b.Status.trim() == 'Pending' || b.Status.trim() == 'Approved'">
+                        <div ng-if="canCancel(b)">
+                            <button class="btn-cancel-booking"
+                                    ng-click="cancelUserBooking(b.BookingId)">
+                                <i class="fa-solid fa-xmark"></i> Cancel Booking
+                            </button>
+                        </div>
+                        <div ng-if="!canCancel(b)" class="cancel-locked">
+                            <i class="fa-solid fa-lock"></i> Cannot cancel — within 24 hours of appointment
+                        </div>
+                    </div>
+
+                    <!-- Review button for completed bookings -->
+                    <div class="booking-actions" ng-if="b.Status.trim() == 'Completed'">
+                        <button class="btn-review" ng-click="goToReview(b.BookingId)">
+                            <i class="fa-solid fa-star"></i> Leave a Review
                         </button>
                     </div>
 
                 </div>
-
             </div>
 
-            <div class="empty-state" ng-if="userBookings.length === 0">
+            <!-- Empty state -->
+            <div class="empty-state" ng-if="!bookingsLoading && userBookings.length === 0">
                 <img src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
-                     alt="No bookings"
-                     class="empty-img" />
+                     alt="No bookings" class="empty-img" />
                 <h3>No bookings yet</h3>
                 <p>Looks like you haven't booked any service.</p>
-                <a href="@Url.Action("ServicePage","Main")" class="btn-book-now">
-                    Book Now
-                </a>
+                <a href="@Url.Action("ServicePage","Main")" class="btn-book-now">Book Now</a>
             </div>
-
         </div>
 
     </main>
@@ -161,38 +165,20 @@
 
 <script>
     window.loggedInUserId = '@Session["UserID"]';
-
-    if (window.angular) {
-        var el = document.querySelector('[ng-controller]');
-        if (el) {
-            var scope = angular.element(el).scope();
-            if (scope) {
-                scope.$applyAsync(function () {
-                    scope.loadNotifications();
-                    scope.loadUserBookings();
-                });
-            }
-        }
-    }
 </script>
-
-<script src="@Url.Content("~/Scripts/HolyScripts/Module.js")"></script>
 
 <footer>
     <div class="footer-container">
         <h2 class="footer-title">Follow our Socials!</h2>
         <div class="social-links">
             <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank">
-                <i class="fa-brands fa-tiktok"></i>
-                <span>destlounge</span>
+                <i class="fa-brands fa-tiktok"></i><span>destlounge</span>
             </a>
             <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
-                <i class="fa-brands fa-facebook"></i>
-                <span>D'est Lounge</span>
+                <i class="fa-brands fa-facebook"></i><span>D'est Lounge</span>
             </a>
             <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
-                <i class="fa-brands fa-instagram"></i>
-                <span>destlounge</span>
+                <i class="fa-brands fa-instagram"></i><span>destlounge</span>
             </a>
         </div>
     </div>
@@ -221,7 +207,7 @@
             height: 3px;
             background-color: #5d4037;
             border-radius: 3px;
-            transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease;
+            transition: transform 0.3s ease,opacity 0.3s ease,width 0.3s ease;
             transform-origin: center;
         }
 
@@ -238,7 +224,6 @@
             transform: translateY(-8px) rotate(-45deg);
         }
 
-    /* ── Nav Overlay ── */
     .nav-overlay {
         display: none;
         position: fixed;
@@ -269,7 +254,7 @@
         vertical-align: middle;
     }
 
-    /* ===== SHARED CONTAINER & SIDEBAR ===== */
+    /* ── Layout ── */
     .profile-container {
         display: flex;
         min-height: calc(100vh - 200px);
@@ -279,7 +264,6 @@
     .sidebar {
         width: 280px;
         background-color: #d4c4b5;
-        padding: 0;
         min-height: 100%;
     }
 
@@ -302,16 +286,14 @@
             display: block;
         }
 
-            .profile-nav .nav-item:hover {
+            .profile-nav .nav-item:hover, .profile-nav .nav-item.active {
                 background-color: #c9b5a3;
                 border-left-color: #6b5544;
             }
 
-            .profile-nav .nav-item.active {
-                background-color: #c9b5a3;
-                font-weight: 600;
-                border-left-color: #6b5544;
-            }
+    .nav-logout {
+        color: #a04040;
+    }
 
     .profile-content {
         flex: 1;
@@ -321,7 +303,7 @@
         padding: 80px 40px;
     }
 
-    /* ===== BOOKING WRAPPER ===== */
+    /* ── Booking wrapper ── */
     .booking-wrapper {
         width: 100%;
         max-width: 900px;
@@ -332,22 +314,28 @@
         font-size: 32px;
         font-weight: 600;
         margin-bottom: 40px;
-        text-align: left;
     }
 
-    /* ===== BOOKING GRID ===== */
     .booking-grid {
         display: flex;
         flex-direction: column;
         gap: 20px;
     }
 
+    .loading-state {
+        text-align: center;
+        padding: 40px;
+        color: #8a7060;
+        font-size: 16px;
+    }
+
+    /* ── Booking card ── */
     .booking-item {
         background: #e8ddd1;
-        padding: 20px;
+        padding: 24px;
         border-radius: 20px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition: transform 0.3s ease,box-shadow 0.3s ease;
     }
 
         .booking-item:hover {
@@ -360,7 +348,7 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 15px;
-        padding-bottom: 10px;
+        padding-bottom: 12px;
         border-bottom: 1px solid #c9b5a3;
     }
 
@@ -370,12 +358,14 @@
         font-size: 16px;
     }
 
+    /* ── Status badges ── */
     .booking-status {
-        padding: 5px 12px;
+        padding: 5px 14px;
         border-radius: 10px;
         font-size: 12px;
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
         .booking-status.pending {
@@ -398,6 +388,7 @@
             color: white;
         }
 
+    /* ── Booking body ── */
     .booking-body {
         margin: 15px 0;
     }
@@ -406,7 +397,7 @@
             margin: 8px 0;
             color: #5a4a3a;
             font-size: 14px;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         .booking-body strong {
@@ -414,36 +405,64 @@
             font-weight: 600;
         }
 
-    .booking-actions {
-        margin-top: 15px;
-        display: flex;
-        gap: 10px;
+    .cancel-reason {
+        color: #a04040 !important;
+        font-style: italic;
     }
 
-    .btn-cancel {
-        padding: 10px 25px;
+    /* ── Actions ── */
+    .booking-actions {
+        margin-top: 16px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn-cancel-booking {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 10px 22px;
         background: #b8423e;
         color: white;
         border: none;
         border-radius: 20px;
         cursor: pointer;
         font-weight: 600;
+        font-size: 14px;
         transition: all 0.3s ease;
     }
 
-        .btn-cancel:hover {
+        .btn-cancel-booking:hover {
             background: #9a3531;
             transform: translateY(-2px);
         }
 
+    .cancel-locked {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 10px 16px;
+        background: #ece4db;
+        color: #8a7060;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 500;
+        border: 1px dashed #c9b5a3;
+    }
+
     .btn-review {
-        padding: 10px 25px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 10px 22px;
         background: #6b5544;
         color: white;
         border: none;
         border-radius: 20px;
         cursor: pointer;
         font-weight: 600;
+        font-size: 14px;
         transition: all 0.3s ease;
     }
 
@@ -452,7 +471,7 @@
             transform: translateY(-2px);
         }
 
-    /* ===== EMPTY STATE ===== */
+    /* ── Empty state ── */
     .empty-state {
         text-align: center;
         padding: 80px 20px;
@@ -492,7 +511,6 @@
         .btn-book-now:hover {
             background-color: #5a4635;
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
     /* ── Footer ── */
@@ -503,10 +521,6 @@
         border-right: none;
         padding: 2.5rem 3rem;
         text-align: center;
-    }
-
-    .footer-container {
-        margin: 0 auto;
     }
 
     .footer-title {
@@ -547,9 +561,7 @@
             font-weight: 500;
         }
 
-    /* =============================================
-       DESKTOP (above 1024px)
-    ============================================= */
+    /* ── Responsive ── */
     @@media (min-width: 1025px) {
         .hamburger-btn {
             display: none !important;
@@ -569,13 +581,9 @@
 
         .main-nav {
             position: static !important;
-            top: auto !important;
-            right: auto !important;
-            left: auto !important;
             width: auto !important;
             height: auto !important;
             background: none !important;
-            background-color: transparent !important;
             box-shadow: none !important;
             padding: 0 !important;
             margin-left: 3rem !important;
@@ -583,12 +591,9 @@
             display: flex !important;
             flex-direction: row !important;
             align-items: center !important;
-            justify-content: flex-start !important;
             gap: 2.5rem !important;
-            overflow: visible !important;
             transform: none !important;
             transition: none !important;
-            z-index: auto !important;
         }
 
             .main-nav a {
@@ -598,7 +603,6 @@
                 font-size: 1.3rem !important;
                 font-weight: 600 !important;
                 color: #5d4037 !important;
-                letter-spacing: 0.5px !important;
                 display: inline !important;
             }
 
@@ -609,9 +613,6 @@
                 }
     }
 
-    /* =============================================
-       TABLET + MOBILE (max-width: 1024px)
-    ============================================= */
     @@media (max-width: 1024px) {
         .hamburger-btn {
             display: flex;
@@ -636,16 +637,12 @@
             z-index: 1000 !important;
             display: flex !important;
             flex-direction: column !important;
-            align-items: flex-start !important;
-            justify-content: flex-start !important;
             padding: 5rem 2rem 2rem 2rem !important;
             gap: 0 !important;
             box-shadow: -4px 0 20px rgba(0,0,0,0.15) !important;
             transform: translateX(100%) !important;
             transition: transform 0.35s cubic-bezier(0.4,0,0.2,1) !important;
             overflow-y: auto !important;
-            overflow-x: hidden !important;
-            margin: 0 !important;
         }
 
             .main-nav.open {
@@ -659,16 +656,8 @@
                 font-weight: 600 !important;
                 color: #5d4037 !important;
                 border-bottom: 1px solid #e0d5c8 !important;
-                letter-spacing: 0.05em !important;
                 display: block !important;
-                text-decoration: none !important;
-                background: none !important;
             }
-
-                .main-nav a.nav-active {
-                    color: #6b4423 !important;
-                    border-bottom: 1px solid #e0d5c8 !important;
-                }
 
         .mobile-nav-actions {
             display: flex !important;
@@ -677,7 +666,6 @@
             margin-top: 1.5rem;
             padding-top: 1.5rem;
             border-top: 2px solid #d4c4b0;
-            gap: 0;
         }
 
             .mobile-nav-actions a {
@@ -690,14 +678,8 @@
                 border-bottom: 1px solid #e0d5c8 !important;
                 width: 100% !important;
                 font-weight: 600 !important;
-                text-decoration: none !important;
-                background: none !important;
             }
 
-                .mobile-nav-actions a:last-child {
-                    border-bottom: none !important;
-                }
-        /* Sidebar becomes horizontal tab bar on tablet */
         .profile-container {
             flex-direction: column;
         }
@@ -714,11 +696,9 @@
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             justify-content: flex-start;
-            white-space: nowrap;
         }
 
-            .profile-nav .nav-top,
-            .profile-nav .nav-bottom {
+            .profile-nav .nav-top, .profile-nav .nav-bottom {
                 display: flex;
                 flex-direction: row;
             }
@@ -731,12 +711,7 @@
                 border-bottom: 4px solid transparent;
             }
 
-                .profile-nav .nav-item:hover {
-                    border-left-color: transparent;
-                    border-bottom-color: #6b5544;
-                }
-
-                .profile-nav .nav-item.active {
+                .profile-nav .nav-item:hover, .profile-nav .nav-item.active {
                     border-left-color: transparent;
                     border-bottom-color: #6b5544;
                 }
@@ -744,28 +719,11 @@
         .profile-content {
             padding: 40px 24px;
         }
-
-        .booking-heading {
-            font-size: 26px;
-            margin-bottom: 28px;
-        }
     }
 
-    /* =============================================
-       MOBILE (max-width: 768px)
-    ============================================= */
     @@media (max-width: 768px) {
-        .profile-nav .nav-item {
-            padding: 14px 18px;
-            font-size: 14px;
-        }
-
         .profile-content {
             padding: 28px 16px;
-        }
-
-        .booking-wrapper {
-            max-width: 100%;
         }
 
         .booking-heading {
@@ -774,7 +732,7 @@
         }
 
         .booking-item {
-            padding: 15px;
+            padding: 16px;
             border-radius: 14px;
         }
 
@@ -784,108 +742,26 @@
             gap: 8px;
         }
 
-        .booking-date {
-            font-size: 14px;
-        }
-
-        .booking-body p {
-            font-size: 13px;
-        }
-
         .booking-actions {
             flex-direction: column;
-            gap: 8px;
         }
 
-        .btn-cancel,
-        .btn-review {
+        .btn-cancel-booking, .btn-review {
             width: 100%;
-            text-align: center;
-            padding: 10px;
+            justify-content: center;
         }
 
-        .empty-state {
-            padding: 50px 16px;
-            border-radius: 14px;
-        }
-
-            .empty-state h3 {
-                font-size: 20px;
-            }
-
-            .empty-state p {
-                font-size: 14px;
-            }
-
-        .empty-img {
-            width: 90px;
-        }
-
-        .btn-book-now {
-            width: 100%;
-            text-align: center;
-            padding: 12px;
-        }
-        /* Footer */
         footer {
             padding: 1.5rem 1rem;
         }
 
         .footer-title {
             font-size: 1.5rem;
-            margin-bottom: 1.25rem;
         }
 
         .social-links {
             gap: 1.5rem;
         }
-
-        .social-item i {
-            font-size: 1.25rem;
-        }
-
-        .social-item span {
-            font-size: 0.8rem;
-        }
-    }
-
-    /* =============================================
-       SMALL MOBILE (max-width: 400px)
-    ============================================= */
-    @@media (max-width: 400px) {
-        .profile-nav .nav-item {
-            padding: 12px 14px;
-            font-size: 13px;
-        }
-
-        .profile-content {
-            padding: 20px 12px;
-        }
-
-        .booking-heading {
-            font-size: 20px;
-        }
-
-        .booking-item {
-            padding: 12px;
-            border-radius: 12px;
-        }
-
-        .booking-date {
-            font-size: 13px;
-        }
-
-        .booking-body p {
-            font-size: 12px;
-        }
-
-        .empty-state {
-            padding: 40px 12px;
-        }
-
-            .empty-state h3 {
-                font-size: 18px;
-            }
     }
 </style>
 
@@ -895,30 +771,11 @@
             var btn = document.getElementById('hamburgerBtn');
             var nav = document.getElementById('mainNav');
             var overlay = document.getElementById('navOverlay');
-
-            function openMenu() {
-                btn.classList.add('open');
-                nav.classList.add('open');
-                overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-
-            function closeMenu() {
-                btn.classList.remove('open');
-                nav.classList.remove('open');
-                overlay.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-
-            btn.addEventListener('click', function () {
-                nav.classList.contains('open') ? closeMenu() : openMenu();
-            });
-
+            function openMenu() { btn.classList.add('open'); nav.classList.add('open'); overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
+            function closeMenu() { btn.classList.remove('open'); nav.classList.remove('open'); overlay.classList.remove('active'); document.body.style.overflow = ''; }
+            btn.addEventListener('click', function () { nav.classList.contains('open') ? closeMenu() : openMenu(); });
             overlay.addEventListener('click', closeMenu);
-
-            nav.querySelectorAll('a').forEach(function (link) {
-                link.addEventListener('click', closeMenu);
-            });
+            nav.querySelectorAll('a').forEach(function (l) { l.addEventListener('click', closeMenu); });
         })();
     </script>
 }

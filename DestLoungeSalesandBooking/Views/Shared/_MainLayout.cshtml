@@ -5,7 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewBag.Title</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        (function () {
+            // Only run on protected pages, not on login/signup/public pages
+            var publicPages = [
+                '/Main/LoginPage',
+                '/Main/SignupPage',
+                '/Main/Homepage',
+                '/Main/ContactPage',
+                '/Main/FAQsPage',
+                '/Main/ServicePage',
+                '/Main/GalleryPage',
+                '/Main/ForgotPasswordPage'
+            ];
 
+            var currentPath = window.location.pathname;
+
+            // Check if current page is a public page
+            var isPublic = publicPages.some(function (p) {
+                return currentPath.toLowerCase() === p.toLowerCase();
+            });
+
+            if (isPublic) return; // Don't check session on public pages
+
+            // On every pageshow event (fires on back button too, unlike load)
+            window.addEventListener('pageshow', function (event) {
+                // event.persisted = true means page was loaded from browser cache (back button)
+                fetch('/Main/CheckSession', { method: 'GET', credentials: 'same-origin' })
+                    .then(function (res) { return res.json(); })
+                    .then(function (data) {
+                        if (!data.loggedIn) {
+                            // Replace history so back button can't return here
+                            window.location.replace('/Main/LoginPage');
+                        }
+                    })
+                    .catch(function () {
+                        window.location.replace('/Main/LoginPage');
+                    });
+            });
+        })();
+    </script>
 </head>
 <body ng-app="DestLoungeSalesandBooking">
 

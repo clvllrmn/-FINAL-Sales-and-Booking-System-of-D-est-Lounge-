@@ -70,7 +70,7 @@
     <aside class="sidebar">
         <nav class="profile-nav">
             <div class="nav-top">
-                <a href="@Url.Action("ProfilePage","Main")" class="nav-item">Profile</a>
+                <a href="@Url.Action("ProfilePage","Main")" class="nav-item active">Profile</a>
                 <a href="@Url.Action("CurrentBookingPage","Main")" class="nav-item">Current booking</a>
                 <a href="@Url.Action("ReviewPage","Main")" class="nav-item">To Review</a>
             </div>
@@ -83,18 +83,105 @@
     </aside>
 
     <main class="profile-content">
-        <div class="profile-card">
-            <h2 class="profile-heading">Profile</h2>
+
+        @* ── Alert messages ── *@
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">
+                <i class="fa-solid fa-circle-check"></i> @TempData["SuccessMessage"]
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-error">
+                <i class="fa-solid fa-circle-exclamation"></i> @TempData["ErrorMessage"]
+            </div>
+        }
+
+        @* ── View Mode ── *@
+        <div class="profile-card" id="viewCard">
+            <div class="profile-card-header">
+                <h2 class="profile-heading">Profile</h2>
+                <button class="btn-edit" onclick="showEditMode()">
+                    <i class="fa-solid fa-pen"></i> Edit
+                </button>
+            </div>
 
             <div class="profile-info">
                 <p class="profile-name">@ViewBag.UserName</p>
                 <p class="profile-email">@ViewBag.UserEmail</p>
+
                 <p class="profile-label">Contact Number</p>
-                <p class="profile-value">@ViewBag.ContactNumber</p>
+                <p class="profile-value">
+                    @(string.IsNullOrWhiteSpace(ViewBag.ContactNumber as string) ? "Not set" : ViewBag.ContactNumber)
+                </p>
+
                 <p class="profile-label">Address</p>
-                <p class="profile-value">@ViewBag.Address</p>
+                <p class="profile-value">
+                    @(string.IsNullOrWhiteSpace(ViewBag.Address as string) ? "Not set" : ViewBag.Address)
+                </p>
             </div>
         </div>
+
+        @* ── Edit Mode ── *@
+        <div class="profile-card" id="editCard" style="display:none;">
+            <div class="profile-card-header">
+                <h2 class="profile-heading">Edit Profile</h2>
+                <button class="btn-cancel" onclick="showViewMode()">
+                    <i class="fa-solid fa-xmark"></i> Cancel
+                </button>
+            </div>
+
+            @using (Html.BeginForm("UpdateProfile", "Main", FormMethod.Post, new { @class = "edit-form" }))
+            {
+                @Html.AntiForgeryToken()
+
+                @* Read-only fields — shown for context but not submitted *@
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-input form-input-readonly" value="@ViewBag.UserName" readonly />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input form-input-readonly" value="@ViewBag.UserEmail" readonly />
+                </div>
+
+                @* Editable fields *@
+                <div class="form-group">
+                    <label class="form-label" for="coNum">Contact Number <span class="required">*</span></label>
+                    <input type="tel"
+                           id="coNum"
+                           name="coNum"
+                           class="form-input"
+                           value="@ViewBag.ContactNumber"
+                           placeholder="e.g. 09123456789"
+                           maxlength="11"
+                           pattern="\d{11}"
+                           required />
+                    <small class="form-hint">11-digit Philippine mobile number</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="address">Address <span class="required">*</span></label>
+                    <textarea id="address"
+                              name="address"
+                              class="form-input form-textarea"
+                              placeholder="e.g. 123 Main St, Dasmariñas, Cavite"
+                              rows="3"
+                              required>@ViewBag.Address</textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-save">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                    </button>
+                    <button type="button" class="btn-cancel-outline" onclick="showViewMode()">
+                        Cancel
+                    </button>
+                </div>
+            }
+        </div>
+
     </main>
 </div>
 
@@ -119,6 +206,191 @@
 </footer>
 
 <style>
+    /* ── Alerts ── */
+    .alert {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.9rem 1.2rem;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 500;
+        margin-bottom: 1.2rem;
+        max-width: 600px;
+        width: 100%;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        color: #2d6a3f;
+        border: 1px solid #b8ddc5;
+    }
+
+    .alert-error {
+        background-color: #fde8e8;
+        color: #a04040;
+        border: 1px solid #f5c6c6;
+    }
+
+    /* ── Profile Card Header ── */
+    .profile-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .profile-heading {
+        color: #6b5544;
+        font-size: 32px;
+        font-weight: 600;
+        margin: 0;
+        text-align: left;
+    }
+
+    /* ── Buttons ── */
+    .btn-edit {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background-color: #6b5544;
+        color: white;
+        border: none;
+        padding: 0.5rem 1.2rem;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        text-decoration: none;
+    }
+
+        .btn-edit:hover {
+            background-color: #5a4a3a;
+        }
+
+    .btn-cancel {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background-color: #c9b5a3;
+        color: #5a4a3a;
+        border: none;
+        padding: 0.5rem 1.2rem;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+        .btn-cancel:hover {
+            background-color: #b9a593;
+        }
+
+    /* ── Edit Form ── */
+    .edit-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .form-label {
+        color: #6b5544;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    .required {
+        color: #a04040;
+    }
+
+    .form-input {
+        padding: 0.65rem 0.9rem;
+        border: 1.5px solid #c9b5a3;
+        border-radius: 8px;
+        font-size: 15px;
+        color: #5a4a3a;
+        background-color: #f5f0eb;
+        transition: border-color 0.2s ease;
+        width: 100%;
+        box-sizing: border-box;
+        font-family: inherit;
+    }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #6b5544;
+            background-color: #fff;
+        }
+
+    .form-input-readonly {
+        background-color: #ece4db;
+        color: #8a7060;
+        cursor: not-allowed;
+    }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .form-hint {
+        color: #8a7060;
+        font-size: 12px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 0.8rem;
+        margin-top: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-save {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background-color: #6b5544;
+        color: white;
+        border: none;
+        padding: 0.65rem 1.6rem;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+        .btn-save:hover {
+            background-color: #5a4a3a;
+        }
+
+    .btn-cancel-outline {
+        display: inline-flex;
+        align-items: center;
+        background-color: transparent;
+        color: #6b5544;
+        border: 1.5px solid #6b5544;
+        padding: 0.65rem 1.4rem;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+        .btn-cancel-outline:hover {
+            background-color: #6b5544;
+            color: white;
+        }
+
     /* ── Hamburger ── */
     .hamburger-btn {
         display: none;
@@ -190,7 +462,6 @@
         width: 280px;
         flex-shrink: 0;
         background-color: #d4c4b5;
-        padding: 0;
         min-height: 100%;
     }
 
@@ -213,14 +484,9 @@
             display: block;
         }
 
-            .profile-nav .nav-item:hover {
-                background-color: #c9b5a3;
-                border-left-color: #6b5544;
-            }
-
+            .profile-nav .nav-item:hover,
             .profile-nav .nav-item.active {
                 background-color: #c9b5a3;
-                font-weight: 600;
                 border-left-color: #6b5544;
             }
 
@@ -231,9 +497,9 @@
     .profile-content {
         flex: 1;
         display: flex;
-        justify-content: center;
-        align-items: flex-start;
-        padding: 80px 40px;
+        flex-direction: column;
+        align-items: center;
+        padding: 60px 40px;
     }
 
     /* ── Profile Card ── */
@@ -246,18 +512,10 @@
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
 
-    .profile-heading {
-        color: #6b5544;
-        font-size: 32px;
-        font-weight: 600;
-        margin-bottom: 40px;
-        text-align: left;
-    }
-
     .profile-info {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: 8px;
     }
 
     .profile-name {
@@ -275,14 +533,14 @@
 
     .profile-label {
         color: #6b5544;
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 600;
-        margin: 15px 0 5px 0;
+        margin: 14px 0 2px;
     }
 
     .profile-value {
         color: #5a4a3a;
-        font-size: 16px;
+        font-size: 15px;
         margin: 0;
     }
 
@@ -294,10 +552,6 @@
         border-right: none;
         padding: 2.5rem 3rem;
         text-align: center;
-    }
-
-    .footer-container {
-        margin: 0 auto;
     }
 
     .footer-title {
@@ -360,9 +614,6 @@
 
         .main-nav {
             position: static !important;
-            top: auto !important;
-            right: auto !important;
-            left: auto !important;
             width: auto !important;
             height: auto !important;
             background: none !important;
@@ -374,12 +625,10 @@
             display: flex !important;
             flex-direction: row !important;
             align-items: center !important;
-            justify-content: flex-start !important;
             gap: 2.5rem !important;
             overflow: visible !important;
             transform: none !important;
             transition: none !important;
-            z-index: auto !important;
         }
 
             .main-nav a {
@@ -435,8 +684,6 @@
             transform: translateX(100%) !important;
             transition: transform 0.35s cubic-bezier(0.4,0,0.2,1) !important;
             overflow-y: auto !important;
-            overflow-x: hidden !important;
-            margin: 0 !important;
         }
 
             .main-nav.open {
@@ -450,16 +697,10 @@
                 font-weight: 600 !important;
                 color: #5d4037 !important;
                 border-bottom: 1px solid #e0d5c8 !important;
-                letter-spacing: 0.05em !important;
                 display: block !important;
                 text-decoration: none !important;
                 background: none !important;
             }
-
-                .main-nav a.nav-active {
-                    color: #6b4423 !important;
-                    border-bottom: 1px solid #e0d5c8 !important;
-                }
 
         .mobile-nav-actions {
             display: flex !important;
@@ -484,11 +725,7 @@
                 text-decoration: none !important;
                 background: none !important;
             }
-
-                .mobile-nav-actions a:last-child {
-                    border-bottom: none !important;
-                }
-        /* Profile sidebar becomes a top tab bar */
+        /* Sidebar → top tab bar */
         .profile-container {
             flex-direction: column;
         }
@@ -532,12 +769,7 @@
             border-bottom: 4px solid transparent;
         }
 
-            .profile-nav .nav-item:hover {
-                background-color: #c9b5a3;
-                border-left-color: transparent;
-                border-bottom-color: #6b5544;
-            }
-
+            .profile-nav .nav-item:hover,
             .profile-nav .nav-item.active {
                 background-color: #c9b5a3;
                 border-left-color: transparent;
@@ -545,18 +777,22 @@
             }
 
         .profile-content {
-            padding: 2rem 1.5rem;
+            padding: 1.5rem 1.2rem;
+            align-items: stretch;
         }
 
         .profile-card {
-            padding: 2rem 2rem;
+            padding: 2rem;
             border-radius: 20px;
             max-width: 100%;
         }
 
         .profile-heading {
             font-size: 26px;
-            margin-bottom: 28px;
+        }
+
+        .alert {
+            max-width: 100%;
         }
     }
 
@@ -570,7 +806,7 @@
         }
 
         .profile-content {
-            padding: 1.5rem 1rem;
+            padding: 1.2rem 0.9rem;
         }
 
         .profile-card {
@@ -580,7 +816,6 @@
 
         .profile-heading {
             font-size: 22px;
-            margin-bottom: 22px;
         }
 
         .profile-name {
@@ -591,12 +826,9 @@
             font-size: 15px;
         }
 
-        .profile-label {
-            font-size: 15px;
-        }
-
-        .profile-value {
-            font-size: 14px;
+        .btn-edit, .btn-cancel {
+            padding: 0.4rem 0.9rem;
+            font-size: 13px;
         }
 
         footer {
@@ -610,14 +842,6 @@
 
         .social-links {
             gap: 1.5rem;
-        }
-
-        .social-item i {
-            font-size: 1.25rem;
-        }
-
-        .social-item span {
-            font-size: 0.8rem;
         }
     }
 
@@ -647,51 +871,53 @@
             font-size: 18px;
         }
 
-        .profile-email {
-            font-size: 14px;
+        .form-actions {
+            flex-direction: column;
         }
 
-        .profile-label {
-            font-size: 14px;
-            margin-top: 10px;
-        }
-
-        .profile-value {
-            font-size: 13px;
+        .btn-save, .btn-cancel-outline {
+            width: 100%;
+            justify-content: center;
         }
     }
 </style>
 
 @section scripts {
     <script>
+        // ── Toggle view / edit mode ──
+        function showEditMode() {
+            document.getElementById('viewCard').style.display = 'none';
+            document.getElementById('editCard').style.display = 'block';
+            document.getElementById('editCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function showViewMode() {
+            document.getElementById('editCard').style.display = 'none';
+            document.getElementById('viewCard').style.display = 'block';
+        }
+
+        // ── Numbers-only enforcement for contact field ──
+        document.addEventListener('DOMContentLoaded', function () {
+            var coNumInput = document.getElementById('coNum');
+            if (coNumInput) {
+                coNumInput.addEventListener('input', function () {
+                    this.value = this.value.replace(/\D/g, '').slice(0, 11);
+                });
+            }
+        });
+
+        // ── Hamburger menu ──
         (function () {
             var btn = document.getElementById('hamburgerBtn');
             var nav = document.getElementById('mainNav');
             var overlay = document.getElementById('navOverlay');
 
-            function openMenu() {
-                btn.classList.add('open');
-                nav.classList.add('open');
-                overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
+            function openMenu() { btn.classList.add('open'); nav.classList.add('open'); overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
+            function closeMenu() { btn.classList.remove('open'); nav.classList.remove('open'); overlay.classList.remove('active'); document.body.style.overflow = ''; }
 
-            function closeMenu() {
-                btn.classList.remove('open');
-                nav.classList.remove('open');
-                overlay.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-
-            btn.addEventListener('click', function () {
-                nav.classList.contains('open') ? closeMenu() : openMenu();
-            });
-
+            btn.addEventListener('click', function () { nav.classList.contains('open') ? closeMenu() : openMenu(); });
             overlay.addEventListener('click', closeMenu);
-
-            nav.querySelectorAll('a').forEach(function (link) {
-                link.addEventListener('click', closeMenu);
-            });
+            nav.querySelectorAll('a').forEach(function (link) { link.addEventListener('click', closeMenu); });
         })();
     </script>
 }

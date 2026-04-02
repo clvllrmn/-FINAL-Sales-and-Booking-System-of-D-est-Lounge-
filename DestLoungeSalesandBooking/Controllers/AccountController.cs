@@ -152,6 +152,13 @@ namespace DestLoungeSalesandBooking.Controllers
             FormsAuthentication.SignOut();
             Session.Clear();
             Session.Abandon();
+
+            // ← These must come BEFORE the return
+            Response.Cache.SetCacheability(System.Web.HttpCacheability.NoCache);
+            Response.Cache.SetNoStore();
+            Response.Cache.SetExpires(System.DateTime.UtcNow.AddDays(-1));
+            Response.Cache.SetAllowResponseInBrowserHistory(false);
+
             TempData["SuccessMessage"] = "You have been successfully logged out.";
             return RedirectToAction("LoginPage", "Main");
         }
@@ -168,12 +175,11 @@ namespace DestLoungeSalesandBooking.Controllers
         // ─────────────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult ResetPassword(string email, string currentPassword, string newPassword, string confirmPassword)
+        public ActionResult ResetPassword(string email, string newPassword, string confirmPassword)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(email) ||
-                    string.IsNullOrWhiteSpace(currentPassword) ||
                     string.IsNullOrWhiteSpace(newPassword) ||
                     string.IsNullOrWhiteSpace(confirmPassword))
                 {
@@ -210,18 +216,12 @@ namespace DestLoungeSalesandBooking.Controllers
 
                 if (user == null)
                 {
-                    TempData["ErrorMessage"] = "Invalid email or current password.";
-                    return RedirectToAction("ForgotPasswordPage", "Main");
-                }
-
-                string hashedCurrentPassword = HashPassword(currentPassword);
-                if (user.password != hashedCurrentPassword)
-                {
-                    TempData["ErrorMessage"] = "Invalid email or current password.";
+                    TempData["ErrorMessage"] = "Email not found.";
                     return RedirectToAction("ForgotPasswordPage", "Main");
                 }
 
                 string hashedNewPassword = HashPassword(newPassword);
+
                 if (user.password == hashedNewPassword)
                 {
                     TempData["ErrorMessage"] = "New password cannot be the same as your current password.";

@@ -1,4 +1,6 @@
-﻿var _currentContentType = null;
+﻿var app = angular.module("DestLoungeSalesandBooking"); // ✅ add this
+console.log("CONTROLLER FILE LOADED, app:", app);
+var _currentContentType = null;
 
 
 app.controller("DestLoungeSalesandBookingController",
@@ -414,70 +416,84 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.currentService = {};
     };
 
-    // Handle image file selection
-    $scope.handleImageUpload = function (file) {
-        if (!file) return;
+        $scope.handleImageUpload = function (file) {
+            if (!file) return;
 
-        var maxSize = 2 * 1024 * 1024;
-        if (file.size > maxSize) {
-            alert('Image is too large. Maximum size is 2MB.');
-            document.getElementById('serviceImage').value = '';
-            return;
-        }
+            // ✅ Block non-image files (videos, etc.)
+            if (!file.type.startsWith('image/')) {
+                alert('Only image files are allowed. Videos and other file types are not accepted.');
+                document.getElementById('serviceImage').value = '';
+                return;
+            }
 
-        var reader = new FileReader();
-        reader.onload = function (e) {
-            $scope.$apply(function () {
-                $scope.currentService.image = e.target.result;
-                $scope.currentService._imageFile = file;
-            });
+            // ✅ Updated to 5MB
+            var maxSize = 5 * 1024 * 1024;
+            if (file.size > maxSize) {
+                alert('Image is too large. Maximum size is 5MB.');
+                document.getElementById('serviceImage').value = '';
+                return;
+            }
+
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                $scope.$apply(function () {
+                    $scope.currentService.image = e.target.result;
+                    $scope.currentService._imageFile = file;
+                });
+            };
+            reader.readAsDataURL(file);
         };
-        reader.readAsDataURL(file);
-    };
 
     // Save service
-    $scope.saveService = function () {
-        var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
-        var tokenValue = tokenElement ? tokenElement.value : '';
+        $scope.saveService = function (confirmDuplicate) {
+            var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            var tokenValue = tokenElement ? tokenElement.value : '';
 
-        console.log("Token found:", tokenElement);  // ADD THIS
-        console.log("Token value:", tokenValue);     // ADD THIS
+            var formData = new FormData();
+            formData.append('name', $scope.currentService.name || '');
+            formData.append('description', $scope.currentService.description || '');
+            formData.append('price', $scope.currentService.price || 0);
+            formData.append('category', $scope.currentService.category || '');
+            formData.append('__RequestVerificationToken', tokenValue);
 
-        var formData = new FormData();
-        formData.append('name', $scope.currentService.name || '');
-        formData.append('description', $scope.currentService.description || '');
-        formData.append('price', $scope.currentService.price || 0);
-        formData.append('category', $scope.currentService.category || '');
-        formData.append('__RequestVerificationToken', tokenValue);
+            // ✅ Pass confirmDuplicate flag
+            formData.append('confirmDuplicate', confirmDuplicate ? 'true' : 'false');
 
-        if ($scope.currentService._imageFile) {
-            formData.append('imageFile', $scope.currentService._imageFile);
-        }
+            if ($scope.currentService._imageFile) {
+                formData.append('imageFile', $scope.currentService._imageFile);
+            }
 
-        var url = $scope.isEditMode
-            ? '/Service/UpdateService/' + $scope.currentService.serviceId
-            : '/Service/CreateService';
+            var url = $scope.isEditMode
+                ? '/Service/UpdateService/' + $scope.currentService.serviceId
+                : '/Service/CreateService';
 
-        $http({
-            method: 'POST',
-            url: url,
-            data: formData,
-            headers: { 'Content-Type': undefined }
-        })
-            .then(function (response) {
-                if (response.data.success) {
-                    alert($scope.isEditMode ? 'Service updated!' : 'Service created!');
-                    $scope.closeServiceModal();
-                    $scope.loadServices();
-                } else {
-                    alert('Error: ' + response.data.message);
-                }
+            $http({
+                method: 'POST',
+                url: url,
+                data: formData,
+                headers: { 'Content-Type': undefined }
             })
-            .catch(function (error) {
-                console.error('Error saving service:', error);
-                alert('Failed to save service.');
-            });
-    };
+                .then(function (response) {
+                    if (response.data.success) {
+                        alert($scope.isEditMode ? 'Service updated!' : 'Service created!');
+                        $scope.closeServiceModal();
+                        $scope.loadServices();
+
+                        // ✅ Duplicate warning: ask admin to confirm
+                    } else if (response.data.isDuplicate) {
+                        if (confirm(response.data.message)) {
+                            $scope.saveService(true); // re-submit with confirmDuplicate = true
+                        }
+
+                    } else {
+                        alert('Error: ' + response.data.message);
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error saving service:', error);
+                    alert('Failed to save service.');
+                });
+        };
 
     // Soft-delete a service
     $scope.deleteService = function (service) {
@@ -1386,6 +1402,61 @@ app.controller("DestLoungeSalesandBookingController",
         console.log("Not on homepage");
     }
 
+        // ===== INBOX PAGE =====
+        $scope.inboxItems = [];
+
+        $scope.loadInboxItems = function () {
+            $http.get('/Booking/GetInboxItems')
+                .then(function (res) {
+                    $scope.inboxItems = (res.data || []).map(function (b) {
+                        var dateMatch = /\/Date\((\d+)\)\//.exec(b.bookingDate);
+                        var d = dateMatch ? new Date(parseInt(dateMatch[1])) : new Date(b.bookingDate);
+                        var dateStr = isNaN(d) ? 'N/A' : d.toLocaleDateString('en-PH', {
+                            year: 'numeric', month: 'long', day: 'numeric'
+                        });
+
+                        // Format time helper
+                        function fmt(t) {
+                            if (!t) return '';
+                            var parts = t.split(':');
+                            var h = parseInt(parts[0]);
+                            var m = parts[1] || '00';
+                            var ampm = h >= 12 ? 'PM' : 'AM';
+                            h = h % 12 || 12;
+                            return h + ':' + m + ' ' + ampm;
+                        }
+
+                        // Get cancel reason from notes
+                        var cancelReason = '';
+                        if (b.notes && b.notes.indexOf('Cancel reason:') !== -1) {
+                            var parts = b.notes.split('|');
+                            for (var i = 0; i < parts.length; i++) {
+                                if (parts[i].indexOf('Cancel reason:') !== -1)
+                                    cancelReason = parts[i].replace('Cancel reason:', '').trim();
+                            }
+                        }
+
+                        return {
+                            bookingId: b.bookingId,
+                            clientName: b.clientName,
+                            service: b.service,
+                            dateTime: dateStr + ' ' + fmt(b.startTime) + ' - ' + fmt(b.endTime),
+                            status: b.status,
+                            cancelReason: cancelReason,
+                            notes: b.notes,
+                            expanded: false
+                        };
+                    });
+                })
+                .catch(function (err) {
+                    console.error('Error loading inbox:', err);
+                });
+        };
+
+        if (window.location.pathname.toLowerCase().indexOf('admininboxpage') !== -1) {
+            $scope.loadInboxItems();
+        }
+
     // ===== UTILITY FUNCTIONS =====
     $scope.openTerms = function (event) {
         if (event) {
@@ -1428,31 +1499,96 @@ app.controller("DestLoungeSalesandBookingController",
     };
 
     // ===== USER BOOKINGS =====
-    $scope.userBookings = [];
+        // ── Booking page helpers ──
+        $scope.bookingsLoading = false;
 
-    $scope.loadUserBookings = function () {
+        $scope.formatBookingDate = function (raw) {
+            if (!raw) return '';
+            var match = /\/Date\((\d+)\)\//.exec(raw);
+            var d = match ? new Date(parseInt(match[1])) : new Date(raw);
+            if (isNaN(d)) return raw;
+            return d.toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
+        };
 
-        if (!window.loggedInUserId || window.loggedInUserId === "null" || parseInt(window.loggedInUserId) <= 0) {
-            console.log("No user logged in");
-            return;
-        }
+        $scope.formatTime = function (t) {
+            if (!t) return '';
+            var parts = t.toString().split(':');
+            var h = parseInt(parts[0]);
+            var m = parts[1] || '00';
+            var ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12 || 12;
+            return h + ':' + m + ' ' + ampm;
+        };
 
-        var userId = parseInt(window.loggedInUserId);
+        $scope.getService = function (notes) {
+            if (!notes) return 'N/A';
+            var part = notes.split('|')[0];
+            return part.replace('Services:', '').trim() || 'N/A';
+        };
 
-        console.log("Loading bookings for user:", userId);
+        $scope.getNailTech = function (notes) {
+            if (!notes) return '';
+            var parts = notes.split('|');
+            for (var i = 0; i < parts.length; i++) {
+                if (parts[i].indexOf('NailTech:') !== -1)
+                    return parts[i].replace('NailTech:', '').trim();
+            }
+            return '';
+        };
 
-        $http.get("/Booking/GetUserBookings?userId=" + userId)
-            .then(function (res) {
+        $scope.getDownpayment = function (notes) {
+            if (!notes) return '';
+            var parts = notes.split('|');
+            for (var i = 0; i < parts.length; i++) {
+                if (parts[i].indexOf('Downpayment:') !== -1)
+                    return parts[i].replace('Downpayment:', '').trim();
+            }
+            return '';
+        };
 
-                console.log("Bookings response:", res.data);
+        $scope.getCancelReason = function (notes) {
+            if (!notes) return '';
+            var parts = notes.split('|');
+            for (var i = 0; i < parts.length; i++) {
+                if (parts[i].indexOf('Cancel reason:') !== -1)
+                    return parts[i].replace('Cancel reason:', '').trim();
+            }
+            return '';
+        };
 
-                $scope.userBookings = res.data || [];
+        $scope.canCancel = function (b) {
+            if (!b.BookingDate || !b.StartTime) return false;
+            var match = /\/Date\((\d+)\)\//.exec(b.BookingDate);
+            var bookingDay = match ? new Date(parseInt(match[1])) : new Date(b.BookingDate);
+            if (isNaN(bookingDay)) return false;
+            var parts = (b.StartTime || '00:00:00').split(':');
+            bookingDay.setHours(parseInt(parts[0] || 0), parseInt(parts[1] || 0), 0, 0);
+            var cutoff = new Date();
+            cutoff.setHours(cutoff.getHours() + 24);
+            return bookingDay > cutoff;
+        };
 
-            })
-            .catch(function (err) {
-                console.error("Error loading bookings:", err);
-            });
-    };
+        // ── Updated loadUserBookings with loading flag ──
+        $scope.loadUserBookings = function () {
+            if (!window.loggedInUserId || window.loggedInUserId === "null" || parseInt(window.loggedInUserId) <= 0) {
+                console.log("No user logged in");
+                return;
+            }
+
+            var userId = parseInt(window.loggedInUserId);
+            $scope.bookingsLoading = true;
+
+            return $http.get("/Booking/GetUserBookings?userId=" + userId)
+                .then(function (res) {
+                    $scope.userBookings = res.data || [];
+                    $scope.bookingsLoading = false;
+                    console.log("Loaded bookings:", $scope.userBookings);
+                })
+                .catch(function (err) {
+                    console.error("Error loading bookings:", err);
+                    $scope.bookingsLoading = false;
+                });
+        };
 
 
     if (window.loggedInUserId && window.loggedInUserId !== "null") {

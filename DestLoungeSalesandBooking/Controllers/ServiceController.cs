@@ -1,4 +1,4 @@
-using DestLoungeSalesandBooking.Models;
+﻿using DestLoungeSalesandBooking.Models;
 using DestLoungeSalesandBooking.Models.Context;
 using System;
 using System.IO;
@@ -43,17 +43,42 @@ namespace DestLoungeSalesandBooking.Controllers
             }
         }
 
-        // POST /Service/CreateService
         [HttpPost]
         [ValidateAntiForgeryToken]
         public JsonResult CreateService(string name, string description,
-                                        decimal price, string category,
-                                        HttpPostedFileBase imageFile)
+                                decimal price, string category,
+                                HttpPostedFileBase imageFile,
+                                bool confirmDuplicate = false)  // ✅ add this param
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(name))
                     return Json(new { success = false, message = "Name is required." });
+
+                // ✅ Duplicate check
+                if (!confirmDuplicate)
+                {
+                    bool duplicateExists = db.tbl_services.Any(s =>
+                        s.name.ToLower() == name.ToLower().Trim() && s.is_active == 1);
+
+                    if (duplicateExists)
+                        return Json(new
+                        {
+                            success = false,
+                            isDuplicate = true,
+                            message = "A service named \"" + name.Trim() + "\" already exists. Are you sure you want to add it anyway?"
+                        });
+                }
+
+                if (imageFile != null && imageFile.ContentLength > 0)
+                {
+                    var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+                    if (!allowedTypes.Contains(imageFile.ContentType.ToLower()))
+                        return Json(new { success = false, message = "Only image files are allowed." });
+
+                    if (imageFile.ContentLength > 5 * 1024 * 1024)
+                        return Json(new { success = false, message = "Image must be 5MB or less." });
+                }
 
                 var service = new tbl_services
                 {
@@ -70,23 +95,8 @@ namespace DestLoungeSalesandBooking.Controllers
                 if (imageFile != null && imageFile.ContentLength > 0)
                     SaveServiceImage(imageFile, service.service_id);
 
-                return Json(new
-                {
-                    success = true,
-                    message = "Service created successfully.",
-                    serviceId = service.service_id
-                });
-                if (imageFile != null && imageFile.ContentLength > 0)
-                {
-                    // 2MB limit
-                    if (imageFile.ContentLength > 2 * 1024 * 1024)
-                        return Json(new { success = false, message = "Image must be 2MB or less." });
-
-                    SaveServiceImage(imageFile, service.service_id);
-                }
-
+                return Json(new { success = true, message = "Service created successfully.", serviceId = service.service_id });
             }
-
             catch (Exception ex)
             {
                 var innerMsg = ex.InnerException?.InnerException?.Message
@@ -108,6 +118,17 @@ namespace DestLoungeSalesandBooking.Controllers
                 var service = db.tbl_services.Find(id);
                 if (service == null)
                     return Json(new { success = false, message = "Service not found." });
+
+                // ✅ Validate image BEFORE saving
+                if (imageFile != null && imageFile.ContentLength > 0)
+                {
+                    var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+                    if (!allowedTypes.Contains(imageFile.ContentType.ToLower()))
+                        return Json(new { success = false, message = "Only image files (JPG, PNG, GIF, WEBP) are allowed." });
+
+                    if (imageFile.ContentLength > 5 * 1024 * 1024)
+                        return Json(new { success = false, message = "Image must be 5MB or less." });
+                }
 
                 service.name = name.Trim();
                 service.description = (description ?? "").Trim();

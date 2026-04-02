@@ -249,6 +249,7 @@ namespace DestLoungeSalesandBooking.Controllers
             });
         }
 
+        // REPLACE your existing Cancel action in BookingController.cs with this
         [HttpPost]
         public ActionResult Cancel(int bookingId, string reason = null)
         {
@@ -256,11 +257,20 @@ namespace DestLoungeSalesandBooking.Controllers
             if (booking == null)
                 return Json(new { success = false, message = "Booking not found." });
 
-            // ✅ ADD NOTIFICATION FOR CANCELLATION
-            CreateNotification(
-                booking.CustomerId,
-                $"Your booking #{booking.BookingId} has been CANCELLED ❌"
-            );
+            // ── Only Pending or Approved bookings can be cancelled ──
+            if (booking.Status != "Pending" && booking.Status != "Approved")
+                return Json(new { success = false, message = "Only Pending or Approved bookings can be cancelled." });
+
+            // ── 24-hour rule: cannot cancel within 24 hours of booking ──
+            DateTime bookingDateTime = booking.BookingDate.Date + booking.StartTime;
+            if (bookingDateTime <= DateTime.Now.AddHours(24))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Bookings cannot be cancelled within 24 hours of the appointment."
+                });
+            }
 
             booking.Status = "Cancelled";
 
@@ -275,7 +285,13 @@ namespace DestLoungeSalesandBooking.Controllers
 
             db.SaveChanges();
 
-            return Json(new { success = true, message = $"Booking #{bookingId} cancelled." });
+            // ── Notify the customer ──
+            CreateNotification(
+                booking.CustomerId,
+                $"Your booking #{booking.BookingId} has been CANCELLED ❌"
+            );
+
+            return Json(new { success = true, message = $"Booking #{bookingId} cancelled successfully." });
         }
 
         [HttpPost]
@@ -591,6 +607,34 @@ namespace DestLoungeSalesandBooking.Controllers
                 .ToList();
 
             return Json(slots, JsonRequestBehavior.AllowGet);
+        }
+
+        public ActionResult GetInboxItems()
+        {
+            var items = db.tbl_bookings
+                .OrderByDescending(b => b.CreatedAt)
+                .Take(50)
+                .ToList()
+                .Select(b => new
+                {
+                    bookingId = b.BookingId,
+                    clientName = db.tbl_users
+                        .Where(u => u.userID == b.CustomerId)
+                        .Select(u => u.firstname + " " + u.lastname)
+                        .FirstOrDefault() ?? ("Customer #" + b.CustomerId),
+                    service = b.Notes != null && b.Notes.Contains("Services:")
+                        ? b.Notes.Split('|')[0].Replace("Services:", "").Trim()
+                        : "N/A",
+                    bookingDate = b.BookingDate,
+                    startTime = b.StartTime.ToString(),
+                    endTime = b.EndTime.ToString(),
+                    status = b.Status,
+                    notes = b.Notes,
+                    createdAt = b.CreatedAt
+                })
+                .ToList();
+
+            return Json(items, JsonRequestBehavior.AllowGet);
         }
 
     }
