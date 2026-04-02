@@ -13,6 +13,7 @@ using System.Web.Mvc;
 
 namespace DestLoungeSalesandBooking.Controllers
 {
+    [SessionCheck(RequireAdmin = true)]
     public class MainController : Controller
     {
         private DestLoungeSalesandBookingContext db = new DestLoungeSalesandBookingContext();

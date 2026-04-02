@@ -1,13 +1,15 @@
-﻿using System;
+﻿using DestLoungeSalesandBooking.Filters;
+using DestLoungeSalesandBooking.Models.Context;
+using System;
+using System.Configuration;
 using System.Linq;
-using System.Web.Mvc;
 using System.Net;
 using System.Net.Mail;
-using System.Configuration;
-using DestLoungeSalesandBooking.Models.Context;
+using System.Web.Mvc;
 
 namespace DestLoungeSalesandBooking.Controllers
 {
+    [SessionCheck(RequireAdmin = true)]
     public class ReminderController : Controller
     {
         private DestLoungeSalesandBookingContext db = new DestLoungeSalesandBookingContext();

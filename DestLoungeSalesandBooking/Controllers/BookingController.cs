@@ -1,4 +1,5 @@
-﻿using DestLoungeSalesandBooking.Models;
+﻿using DestLoungeSalesandBooking.Filters;
+using DestLoungeSalesandBooking.Models;
 using DestLoungeSalesandBooking.Models.Context;
 using System;
 using System.Configuration;
@@ -13,6 +14,7 @@ using System.Web.Mvc;
 
 namespace DestLoungeSalesandBooking.Controllers
 {
+    [SessionCheck] // Baseline: all actions require login
     public class BookingController : Controller
     {
         private readonly DestLoungeSalesandBookingContext db = new DestLoungeSalesandBookingContext();
@@ -23,6 +25,7 @@ namespace DestLoungeSalesandBooking.Controllers
         }
 
         [HttpPost]
+        [SessionCheck(RequireAdmin = true)]
         public ActionResult Create(
             int customerId,
             int serviceId,
@@ -34,7 +37,6 @@ namespace DestLoungeSalesandBooking.Controllers
             string notes = null
         )
         {
-            // ✅ LOGIN CHECK (OLD)
             if (Session["UserID"] == null)
                 return Json(new { success = false, message = "Please login first." });
 
@@ -45,7 +47,7 @@ namespace DestLoungeSalesandBooking.Controllers
             if (!userExists)
                 return Json(new { success = false, message = "User does not exist." });
 
-            // ✅ DATE PARSE
+            // DATE PARSE
             DateTime date;
             var dateFormats = new[] { "yyyy-MM-dd", "MM/dd/yyyy", "dd/MM/yyyy" };
 
@@ -56,7 +58,7 @@ namespace DestLoungeSalesandBooking.Controllers
                     return Json(new { success = false, message = "Invalid bookingDate." });
             }
 
-            // ✅ TIME PARSE
+            // TIME PARSE
             if (!TryParseTime(startTime, out TimeSpan st))
                 return Json(new { success = false, message = "Invalid startTime." });
 
@@ -66,7 +68,7 @@ namespace DestLoungeSalesandBooking.Controllers
             if (et <= st)
                 return Json(new { success = false, message = "EndTime must be after StartTime." });
 
-            // 🔥 24-HOUR RULE (RESTORED)
+            // 24-HOUR RULE
             var bookingDateTime = date.Date + st;
             if (bookingDateTime < DateTime.Now.AddHours(24))
             {
@@ -77,7 +79,7 @@ namespace DestLoungeSalesandBooking.Controllers
                 });
             }
 
-            // 🔥 DOWNPAYMENT REQUIRED (RESTORED)
+            // DOWNPAYMENT REQUIRED
             if (string.IsNullOrWhiteSpace(downpayment))
             {
                 return Json(new
@@ -87,7 +89,7 @@ namespace DestLoungeSalesandBooking.Controllers
                 });
             }
 
-            // 🔥 CONFLICT CHECK WITH NAIL TECH (MERGED)
+            // CONFLICT CHECK WITH NAIL TECH
             var conflict = db.tbl_bookings.Any(b =>
                 b.BookingDate == date.Date &&
                 (b.Status == "Pending" || b.Status == "Approved") &&
@@ -101,7 +103,7 @@ namespace DestLoungeSalesandBooking.Controllers
             if (conflict)
                 return Json(new { success = false, message = "Time slot already taken." });
 
-            // ✅ NOTES BUILDING
+            // NOTES BUILDING
             var finalNotes = notes ?? "";
 
             if (!string.IsNullOrWhiteSpace(nailTech))
@@ -133,6 +135,7 @@ namespace DestLoungeSalesandBooking.Controllers
             });
         }
 
+        [SessionCheck(RequireAdmin = true)]
         public ActionResult List()
         {
             var items = db.tbl_bookings
@@ -165,6 +168,7 @@ namespace DestLoungeSalesandBooking.Controllers
         }
 
         [HttpPost]
+        [SessionCheck(RequireAdmin = true)]
         public ActionResult UpdateStatus(int bookingId, string status)
         {
             if (string.IsNullOrWhiteSpace(status))
@@ -178,7 +182,7 @@ namespace DestLoungeSalesandBooking.Controllers
             if (booking == null)
                 return Json(new { success = false, message = "Booking not found." });
 
-            // ✅ 24-HOUR CHECK FOR APPROVALS
+            // 24-HOUR CHECK FOR APPROVALS
             if (status == "Approved")
             {
                 DateTime selectedDateTime = booking.BookingDate.Date + booking.StartTime;
@@ -194,7 +198,7 @@ namespace DestLoungeSalesandBooking.Controllers
                 }
             }
 
-            // ✅ TIME LOCK FIX (BEST VERSION)
+            // TIME LOCK: CANNOT COMPLETE FUTURE APPOINTMENTS
             if (status == "Completed")
             {
                 var bookingEndDateTime = booking.BookingDate.Date + booking.EndTime;
@@ -212,7 +216,6 @@ namespace DestLoungeSalesandBooking.Controllers
             booking.Status = status;
             db.SaveChanges();
 
-            // ✅ EMAIL (NEW)
             if (status == "Approved")
             {
                 SendBookingEmail(booking);
@@ -222,7 +225,6 @@ namespace DestLoungeSalesandBooking.Controllers
                 );
             }
 
-            // ✅ NOTIFICATION FOR CANCELLED
             if (status == "Cancelled")
             {
                 CreateNotification(
@@ -231,7 +233,6 @@ namespace DestLoungeSalesandBooking.Controllers
                 );
             }
 
-            // ✅ NOTIFICATION + REVIEW FOR COMPLETED
             if (status == "Completed")
             {
                 CreateNotification(
@@ -249,19 +250,18 @@ namespace DestLoungeSalesandBooking.Controllers
             });
         }
 
-        // REPLACE your existing Cancel action in BookingController.cs with this
         [HttpPost]
+        [SessionCheck(RequireAdmin = true)]
         public ActionResult Cancel(int bookingId, string reason = null)
         {
             var booking = db.tbl_bookings.FirstOrDefault(b => b.BookingId == bookingId);
             if (booking == null)
                 return Json(new { success = false, message = "Booking not found." });
 
-            // ── Only Pending or Approved bookings can be cancelled ──
             if (booking.Status != "Pending" && booking.Status != "Approved")
                 return Json(new { success = false, message = "Only Pending or Approved bookings can be cancelled." });
 
-            // ── 24-hour rule: cannot cancel within 24 hours of booking ──
+            // 24-HOUR RULE: Cannot cancel within 24 hours of appointment
             DateTime bookingDateTime = booking.BookingDate.Date + booking.StartTime;
             if (bookingDateTime <= DateTime.Now.AddHours(24))
             {
@@ -285,7 +285,6 @@ namespace DestLoungeSalesandBooking.Controllers
 
             db.SaveChanges();
 
-            // ── Notify the customer ──
             CreateNotification(
                 booking.CustomerId,
                 $"Your booking #{booking.BookingId} has been CANCELLED ❌"
@@ -295,6 +294,7 @@ namespace DestLoungeSalesandBooking.Controllers
         }
 
         [HttpPost]
+        [SessionCheck(RequireAdmin = true)]
         public ActionResult CreateWithReceipt()
         {
             var file = Request.Files["receipt"];
@@ -304,9 +304,7 @@ namespace DestLoungeSalesandBooking.Controllers
             var uploadsFolder = Server.MapPath("~/Uploads");
 
             if (!Directory.Exists(uploadsFolder))
-            {
                 Directory.CreateDirectory(uploadsFolder);
-            }
 
             var fileName = Path.GetFileName(file.FileName);
             var path = Path.Combine(uploadsFolder, fileName);
@@ -319,33 +317,22 @@ namespace DestLoungeSalesandBooking.Controllers
             DateTime bookingDate;
             TimeSpan startTime, endTime;
 
-            // VALIDATION
             if (!int.TryParse(Request["customerId"], out customerId))
-            {
                 return Json(new { success = false, message = "Invalid customerId" });
-            }
 
             if (!int.TryParse(Request["serviceId"], out serviceId))
-            {
                 return Json(new { success = false, message = "Invalid serviceId" });
-            }
 
             if (!DateTime.TryParse(Request["bookingDate"], out bookingDate))
-            {
                 return Json(new { success = false, message = "Invalid bookingDate" });
-            }
 
             if (!TimeSpan.TryParse(Request["startTime"], out startTime))
-            {
                 return Json(new { success = false, message = "Invalid startTime" });
-            }
 
             if (!TimeSpan.TryParse(Request["endTime"], out endTime))
-            {
                 return Json(new { success = false, message = "Invalid endTime" });
-            }
 
-            // ✅ ADD 24-HOUR ADVANCE VALIDATION HERE
+            // 24-HOUR ADVANCE VALIDATION
             DateTime selectedDateTime = bookingDate.Date + startTime;
             DateTime now = DateTime.Now;
 
@@ -362,7 +349,6 @@ namespace DestLoungeSalesandBooking.Controllers
             var nailTech = Request["nailTech"] ?? "";
             var downpayment = Request["downpayment"] ?? "";
 
-            // Updated Notes construction
             var notes = "Services: " + services +
                         " | NailTech: " + nailTech +
                         " | Downpayment: " + downpayment +
@@ -381,6 +367,7 @@ namespace DestLoungeSalesandBooking.Controllers
                 CreatedAt = DateTime.Now
             };
 
+            // CONFLICT CHECK
             var conflict = db.tbl_bookings.Any(b =>
                 b.BookingDate == bookingDate.Date &&
                 (b.Status == "Pending" || b.Status == "Approved") &&
@@ -389,27 +376,7 @@ namespace DestLoungeSalesandBooking.Controllers
             );
 
             if (conflict)
-            {
-                return Json(new
-                {
-                    success = false,
-                    message = "This time slot is already taken."
-                });
-            }
-
-            var existing = db.tbl_bookings.ToList().Any(b =>
-            {
-                var sameDate = b.BookingDate.Date == booking.BookingDate.Date;
-                var sameNailTech = (b.NailTech ?? "") == (booking.NailTech ?? "");
-                var notCancelled = b.Status != "Cancelled";
-
-                var overlap =
-                    (booking.StartTime >= b.StartTime && booking.StartTime < b.EndTime) ||
-                    (booking.EndTime > b.StartTime && booking.EndTime <= b.EndTime) ||
-                    (booking.StartTime <= b.StartTime && booking.EndTime >= b.EndTime);
-
-                return sameDate && sameNailTech && notCancelled && overlap;
-            });
+                return Json(new { success = false, message = "This time slot is already taken." });
 
             db.tbl_bookings.Add(booking);
             db.SaveChanges();
@@ -418,6 +385,136 @@ namespace DestLoungeSalesandBooking.Controllers
         }
 
         public string NailTech { get; set; }
+
+        [SessionCheck(RequireAdmin = true)]
+        public ActionResult GetUserBookings(int userId)
+        {
+            var bookings = db.tbl_bookings
+                .Where(b => b.CustomerId == userId)
+                .OrderByDescending(b => b.CreatedAt)
+                .Select(b => new
+                {
+                    b.BookingId,
+                    b.BookingDate,
+                    StartTime = b.StartTime.ToString(),
+                    EndTime = b.EndTime.ToString(),
+                    b.Status,
+                    b.Notes
+                })
+                .ToList();
+
+            return Json(bookings, JsonRequestBehavior.AllowGet);
+        }
+
+        [SessionCheck(RequireAdmin = true)]
+        public ActionResult GetNotifications(int userId)
+        {
+            var notifs = db.tbl_notifications
+                .Where(n => n.CustomerId == userId)
+                .OrderByDescending(n => n.CreatedAt)
+                .Select(n => new
+                {
+                    n.Message,
+                    n.CreatedAt,
+                    n.IsRead
+                })
+                .ToList();
+
+            return Json(notifs, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpGet]
+        public JsonResult CheckSlot(string date, string startTime, string nailTech)
+        {
+            try
+            {
+                DateTime bookingDate;
+                var dateFormats = new[] { "yyyy-MM-dd", "MM/dd/yyyy", "dd/MM/yyyy" };
+
+                if (!DateTime.TryParseExact(date, dateFormats, CultureInfo.InvariantCulture,
+                        DateTimeStyles.None, out bookingDate))
+                {
+                    if (!DateTime.TryParse(date, out bookingDate))
+                        return Json(new { taken = false, error = "Invalid date format" }, JsonRequestBehavior.AllowGet);
+                }
+
+                if (!TryParseTime(startTime, out TimeSpan start))
+                    return Json(new { taken = false, error = "Invalid time format" }, JsonRequestBehavior.AllowGet);
+
+                var end = start.Add(TimeSpan.FromHours(2));
+
+                var exists = db.tbl_bookings.Any(b =>
+                    b.BookingDate.Date == bookingDate.Date &&
+                    (b.NailTech ?? "") == (nailTech ?? "") &&
+                    b.Status != "Cancelled" &&
+                    (
+                        (start >= b.StartTime && start < b.EndTime) ||
+                        (end > b.StartTime && end <= b.EndTime) ||
+                        (start <= b.StartTime && end >= b.EndTime)
+                    )
+                );
+
+                return Json(new { taken = exists }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("CheckSlot Error: " + ex.Message);
+                return Json(new { taken = false, error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        public JsonResult GetTakenSlots(DateTime date)
+        {
+            var slots = db.tbl_bookings
+                .Where(b => b.BookingDate == date && b.Status != "Cancelled")
+                .Select(b => b.StartTime)
+                .ToList();
+
+            return Json(slots, JsonRequestBehavior.AllowGet);
+        }
+
+        [SessionCheck(RequireAdmin = true)]
+        public ActionResult GetInboxItems()
+        {
+            var items = db.tbl_bookings
+                .OrderByDescending(b => b.CreatedAt)
+                .Take(50)
+                .ToList()
+                .Select(b => new
+                {
+                    bookingId = b.BookingId,
+                    clientName = db.tbl_users
+                        .Where(u => u.userID == b.CustomerId)
+                        .Select(u => u.firstname + " " + u.lastname)
+                        .FirstOrDefault() ?? ("Customer #" + b.CustomerId),
+                    service = b.Notes != null && b.Notes.Contains("Services:")
+                        ? b.Notes.Split('|')[0].Replace("Services:", "").Trim()
+                        : "N/A",
+                    bookingDate = b.BookingDate,
+                    startTime = b.StartTime.ToString(),
+                    endTime = b.EndTime.ToString(),
+                    status = b.Status,
+                    notes = b.Notes,
+                    createdAt = b.CreatedAt
+                })
+                .ToList();
+
+            return Json(items, JsonRequestBehavior.AllowGet);
+        }
+
+        // ── Private Helpers ────────────────────────────────────────────────────
+
+        private bool TryParseTime(string s, out TimeSpan t)
+        {
+            t = default(TimeSpan);
+
+            if (string.IsNullOrWhiteSpace(s)) return false;
+
+            if (TimeSpan.TryParseExact(s, @"hh\:mm", CultureInfo.InvariantCulture, out t)) return true;
+            if (TimeSpan.TryParseExact(s, @"hh\:mm\:ss", CultureInfo.InvariantCulture, out t)) return true;
+
+            return TimeSpan.TryParse(s, out t);
+        }
 
         private void CreateNotification(int customerId, string message)
         {
@@ -445,107 +542,6 @@ namespace DestLoungeSalesandBooking.Controllers
 
             db.tbl_review_requests.Add(review);
             db.SaveChanges();
-        }
-
-        public ActionResult GetUserBookings(int userId)
-        {
-            var bookings = db.tbl_bookings
-                .Where(b => b.CustomerId == userId)
-                .OrderByDescending(b => b.CreatedAt)
-                .Select(b => new
-                {
-                    b.BookingId,
-                    b.BookingDate,
-                    StartTime = b.StartTime.ToString(),
-                    EndTime = b.EndTime.ToString(),
-                    b.Status,
-                    b.Notes
-                })
-                .ToList();
-
-            return Json(bookings, JsonRequestBehavior.AllowGet);
-        }
-
-        public ActionResult GetNotifications(int userId)
-        {
-            var notifs = db.tbl_notifications
-                .Where(n => n.CustomerId == userId)
-                .OrderByDescending(n => n.CreatedAt)
-                .Select(n => new
-                {
-                    n.Message,
-                    n.CreatedAt,
-                    n.IsRead
-                })
-                .ToList();
-
-            return Json(notifs, JsonRequestBehavior.AllowGet);
-        }
-
-        public ActionResult TestDb()
-        {
-            var count = db.tbl_bookings.Count();
-            return Content("DB OK. Booking rows = " + count);
-        }
-
-        [HttpGet]
-        public JsonResult CheckSlot(string date, string startTime, string nailTech)
-        {
-            try
-            {
-                // Parse the date
-                DateTime bookingDate;
-                var dateFormats = new[] { "yyyy-MM-dd", "MM/dd/yyyy", "dd/MM/yyyy" };
-
-                if (!DateTime.TryParseExact(date, dateFormats, CultureInfo.InvariantCulture,
-                        DateTimeStyles.None, out bookingDate))
-                {
-                    if (!DateTime.TryParse(date, out bookingDate))
-                    {
-                        return Json(new { taken = false, error = "Invalid date format" }, JsonRequestBehavior.AllowGet);
-                    }
-                }
-
-                // Parse start time
-                if (!TryParseTime(startTime, out TimeSpan start))
-                {
-                    return Json(new { taken = false, error = "Invalid time format" }, JsonRequestBehavior.AllowGet);
-                }
-
-                // Calculate end time (2 hours after start)
-                var end = start.Add(TimeSpan.FromHours(2));
-
-                // Check for conflicts
-                var exists = db.tbl_bookings.Any(b =>
-                    b.BookingDate.Date == bookingDate.Date &&
-                    (b.NailTech ?? "") == (nailTech ?? "") &&
-                    b.Status != "Cancelled" &&
-                    (
-                        (start >= b.StartTime && start < b.EndTime) ||
-                        (end > b.StartTime && end <= b.EndTime) ||
-                        (start <= b.StartTime && end >= b.EndTime)
-                    )
-                );
-
-                return Json(new { taken = exists }, JsonRequestBehavior.AllowGet);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("CheckSlot Error: " + ex.Message);
-                return Json(new { taken = false, error = ex.Message }, JsonRequestBehavior.AllowGet);
-            }
-        }
-
-        private bool TryParseTime(string s, out TimeSpan t)
-        {
-            t = default(TimeSpan);
-
-            if (string.IsNullOrWhiteSpace(s)) return false;
-
-            if (TimeSpan.TryParseExact(s, @"hh\:mm", CultureInfo.InvariantCulture, out t)) return true;
-            if (TimeSpan.TryParseExact(s, @"hh\:mm\:ss", CultureInfo.InvariantCulture, out t)) return true;
-
-            return TimeSpan.TryParse(s, out t);
         }
 
         private void SendBookingEmail(tbl_bookings booking)
@@ -596,46 +592,6 @@ namespace DestLoungeSalesandBooking.Controllers
             {
                 System.Diagnostics.Debug.WriteLine("EMAIL ERROR: " + ex.Message);
             }
-
         }
-
-        public JsonResult GetTakenSlots(DateTime date)
-        {
-            var slots = db.tbl_bookings
-                .Where(b => b.BookingDate == date && b.Status != "Cancelled")
-                .Select(b => b.StartTime)
-                .ToList();
-
-            return Json(slots, JsonRequestBehavior.AllowGet);
-        }
-
-        public ActionResult GetInboxItems()
-        {
-            var items = db.tbl_bookings
-                .OrderByDescending(b => b.CreatedAt)
-                .Take(50)
-                .ToList()
-                .Select(b => new
-                {
-                    bookingId = b.BookingId,
-                    clientName = db.tbl_users
-                        .Where(u => u.userID == b.CustomerId)
-                        .Select(u => u.firstname + " " + u.lastname)
-                        .FirstOrDefault() ?? ("Customer #" + b.CustomerId),
-                    service = b.Notes != null && b.Notes.Contains("Services:")
-                        ? b.Notes.Split('|')[0].Replace("Services:", "").Trim()
-                        : "N/A",
-                    bookingDate = b.BookingDate,
-                    startTime = b.StartTime.ToString(),
-                    endTime = b.EndTime.ToString(),
-                    status = b.Status,
-                    notes = b.Notes,
-                    createdAt = b.CreatedAt
-                })
-                .ToList();
-
-            return Json(items, JsonRequestBehavior.AllowGet);
-        }
-
     }
 }

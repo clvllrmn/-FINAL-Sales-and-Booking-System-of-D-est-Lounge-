@@ -1,4 +1,5 @@
-﻿using DestLoungeSalesandBooking.Models;
+﻿using DestLoungeSalesandBooking.Filters;
+using DestLoungeSalesandBooking.Models;
 using DestLoungeSalesandBooking.Models.Context;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ using System.Web.Mvc;
 
 namespace DestLoungeSalesandBooking.Controllers
 {
+    [SessionCheck(RequireAdmin = true)]
     public class ContactController : Controller
     {
         private DestLoungeSalesandBookingContext db = new DestLoungeSalesandBookingContext();

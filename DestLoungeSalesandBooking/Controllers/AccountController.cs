@@ -1,4 +1,5 @@
-﻿using DestLoungeSalesandBooking.Models;
+﻿using DestLoungeSalesandBooking.Filters;
+using DestLoungeSalesandBooking.Models;
 using DestLoungeSalesandBooking.Models.Context;
 using Google.Apis.Auth;
 using System;
@@ -17,6 +18,7 @@ using System.Web.Security;
 
 namespace DestLoungeSalesandBooking.Controllers
 {
+
     public class AccountController : Controller
     {
         private DestLoungeSalesandBookingContext db = new DestLoungeSalesandBookingContext();
