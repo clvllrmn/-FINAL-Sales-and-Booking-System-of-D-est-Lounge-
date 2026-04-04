@@ -66,7 +66,9 @@
     <div class="nav-overlay" id="navOverlay"></div>
 </header>
 
-<div class="gallery-page-container" ng-controller="DestLoungeSalesandBookingController">
+<div class="gallery-page-container"
+     ng-controller="DestLoungeSalesandBookingController"
+     ng-init="setTab('gallery')">
 
     <div class="gallery-hero">
         <h1 class="gallery-hero-title">Our Work &amp; Your Words</h1>
@@ -123,16 +125,20 @@
         <!-- FILTERS -->
         <div class="reviews-filter-bar">
             <div class="star-filters">
-                <button class="star-filter-btn" ng-class="{'star-filter-active': reviewStarFilter === ''}" ng-click="reviewStarFilter = ''">All</button>
-                <button class="star-filter-btn" ng-repeat="s in [5,4,3,2,1]" ng-class="{'star-filter-active': reviewStarFilter === s}" ng-click="reviewStarFilter = s">
+                <button class="star-filter-btn" ng-class="{'star-filter-active': reviewStarFilter === ''}" ng-click="reviewStarFilter = ''; updatePagedReviews()">All</button>
+                <button class="star-filter-btn" ng-repeat="s in [5,4,3,2,1]" ng-class="{'star-filter-active': reviewStarFilter === s}" ng-click="reviewStarFilter = s; updatePagedReviews()">
                     <i class="fa-solid fa-star"></i> {{s}}
                 </button>
             </div>
-            <input type="text" class="review-search-input" ng-model="reviewSearch" placeholder="Search reviews...">
+            <input type="text"
+                   class="review-search-input"
+                   ng-model="reviewSearch"
+                   ng-change="updatePagedReviews()"
+                   placeholder="Search reviews...">
         </div>
 
         <div class="reviews-grid" ng-show="pagedReviews.length > 0">
-            <div class="review-card" ng-repeat="review in pagedReviews | filter:customerReviewFilter">
+            <div class="review-card" ng-repeat="review in pagedReviews">
                 <div class="review-header">
                     <div class="review-stars">
                         <i ng-repeat="s in [1,2,3,4,5]" class="fa-star" ng-class="s <= review.rating ? 'fa-solid' : 'fa-regular'"></i>
@@ -145,7 +151,7 @@
                 </div>
             </div>
         </div>
-        <div class="empty-state" ng-show="pagedReviews.length === 0 || (pagedReviews | filter:customerReviewFilter).length === 0">
+        <div class="empty-state" ng-show="pagedReviews.length === 0">
             <i class="fa-regular fa-star"></i>
             <p>No reviews match your filter.</p>
         </div>

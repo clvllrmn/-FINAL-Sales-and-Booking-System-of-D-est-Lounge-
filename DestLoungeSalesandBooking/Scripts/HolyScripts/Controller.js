@@ -41,6 +41,90 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.reviews = [];
         $scope.pagedReviews = [];
 
+        // ===== REVIEW SETTINGS =====
+        $scope.reviewsPage = 1;
+        $scope.reviewsPerPage = 6;
+        $scope.reviewStarFilter = '';
+        $scope.reviewSearch = '';
+
+        // ===== LOAD REVIEWS =====
+        $scope.loadReviews = function () {
+            $http.get('/Main/GetReviews')
+                .then(function (res) {
+
+                    console.log("REVIEWS DATA:", res.data);
+
+                    $scope.reviews = res.data.map(function (r) {
+                        return {
+                            rating: r.Rating,
+                            reviewText: r.ReviewText,
+                            serviceAvailed: r.ServiceAvailed || "Service",
+                            date: new Date(parseInt(r.CreatedAt.substr(6)))
+                        };
+                    });
+
+                    $scope.updatePagedReviews();
+                })
+                .catch(function (err) {
+                    console.error("Error loading reviews:", err);
+                });
+        };
+
+        // ===== PAGINATION =====
+        $scope.updatePagedReviews = function () {
+            let filtered = $scope.reviews;
+
+            // ⭐ filter by rating
+            if ($scope.reviewStarFilter !== '') {
+                filtered = filtered.filter(r => r.rating == $scope.reviewStarFilter);
+            }
+
+            // 🔍 search filter
+            if ($scope.reviewSearch) {
+                filtered = filtered.filter(r =>
+                    r.reviewText.toLowerCase().includes($scope.reviewSearch.toLowerCase())
+                );
+            }
+
+            $scope.reviewsTotalPages = Math.ceil(filtered.length / $scope.reviewsPerPage);
+
+            let start = ($scope.reviewsPage - 1) * $scope.reviewsPerPage;
+            $scope.pagedReviews = filtered.slice(start, start + $scope.reviewsPerPage);
+        };
+
+        // ===== FILTER FUNCTION (used in HTML) =====
+        $scope.customerReviewFilter = function (review) {
+            if ($scope.reviewStarFilter && review.rating != $scope.reviewStarFilter) return false;
+            if ($scope.reviewSearch && !review.reviewText.toLowerCase().includes($scope.reviewSearch.toLowerCase())) return false;
+            return true;
+        };
+
+        // ===== PAGINATION BUTTONS =====
+        $scope.reviewsNext = function () {
+            if ($scope.reviewsPage < $scope.reviewsTotalPages) {
+                $scope.reviewsPage++;
+                $scope.updatePagedReviews();
+            }
+        };
+
+        $scope.reviewsPrev = function () {
+            if ($scope.reviewsPage > 1) {
+                $scope.reviewsPage--;
+                $scope.updatePagedReviews();
+            }
+        };
+
+        // ===== AVERAGE RATING =====
+        $scope.averageRating = function () {
+            if ($scope.reviews.length === 0) return 0;
+            let total = $scope.reviews.reduce((sum, r) => sum + r.rating, 0);
+            return (total / $scope.reviews.length).toFixed(1);
+        };
+
+        $scope.roundedAvg = function () {
+            return Math.round($scope.averageRating());
+        };
+
         // ===== LOAD HOMEPAGE CONTENT FROM DATABASE =====
         $scope.loadHomepageContent = function () {
             console.log("loadHomepageContent called!");
@@ -1672,6 +1756,10 @@ app.controller("DestLoungeSalesandBookingController",
 
         $scope.setTab = function (tab) {
             $scope.activeTab = tab;
+
+            if (tab === 'reviews') {
+                $scope.loadReviews(); // 🔥 load only when clicked
+            }
         };
 
         $http.get('/Main/GetReviews').then(function (res) {
@@ -1681,8 +1769,7 @@ app.controller("DestLoungeSalesandBookingController",
                 return {
                     rating: r.Rating,
                     reviewText: r.ReviewText,
-                    date: r.CreatedAt,
-                    serviceAvailed: "Service",
+                    date: new Date(parseInt(r.CreatedAt.substr(6))), // ✅ FIX
                     imageUrl: r.ImageUrl
                 };
             });
@@ -1709,13 +1796,14 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.reviewsPerPage = 6;
 
         $scope.updatePagedReviews = function () {
-            if (!$scope.reviews || $scope.reviews.length === 0) {
-                $scope.pagedReviews = [];
-                return;
+            let filtered = $scope.reviews;
+
+            if ($scope.selectedRating) {
+                filtered = filtered.filter(r => r.rating === $scope.selectedRating);
             }
 
             var start = ($scope.reviewsPage - 1) * $scope.reviewsPerPage;
-            $scope.pagedReviews = $scope.reviews.slice(start, start + $scope.reviewsPerPage);
+            $scope.pagedReviews = filtered.slice(start, start + $scope.reviewsPerPage);
         };
 
         $scope.reviewsNext = function () {
@@ -1741,6 +1829,20 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.closeLightbox = function () {
             $scope.lightboxPhoto = null;
         };
+
+        $scope.selectedRating = null;
+
+        $scope.filterByRating = function (rating) {
+            $scope.selectedRating = rating;
+            $scope.reviewsPage = 1;
+            $scope.updatePagedReviews();
+        };
+
+        if (window.location.pathname.toLowerCase().includes('gallerypage')) {
+            console.log("Gallery page detected");
+
+            $scope.activeTab = 'gallery';
+        }
 
     });
 
