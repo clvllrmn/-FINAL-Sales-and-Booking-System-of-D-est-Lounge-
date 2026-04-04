@@ -294,116 +294,155 @@ namespace DestLoungeSalesandBooking.Controllers
         }
 
         [HttpPost]
-        [SessionCheck(RequireAdmin = true)]
         public ActionResult CreateWithReceipt()
         {
-            var file = Request.Files["receipt"];
-
-            string filePath = null;
-
-            var uploadsFolder = Server.MapPath("~/Uploads");
-
-            if (!Directory.Exists(uploadsFolder))
-                Directory.CreateDirectory(uploadsFolder);
-
-            var fileName = Path.GetFileName(file.FileName);
-            var path = Path.Combine(uploadsFolder, fileName);
-
-            file.SaveAs(path);
-
-            filePath = "/Uploads/" + fileName;
-
-            int customerId, serviceId;
-            DateTime bookingDate;
-            TimeSpan startTime, endTime;
-
-            if (!int.TryParse(Request["customerId"], out customerId))
-                return Json(new { success = false, message = "Invalid customerId" });
-
-            if (!int.TryParse(Request["serviceId"], out serviceId))
-                return Json(new { success = false, message = "Invalid serviceId" });
-
-            if (!DateTime.TryParse(Request["bookingDate"], out bookingDate))
-                return Json(new { success = false, message = "Invalid bookingDate" });
-
-            if (!TimeSpan.TryParse(Request["startTime"], out startTime))
-                return Json(new { success = false, message = "Invalid startTime" });
-
-            if (!TimeSpan.TryParse(Request["endTime"], out endTime))
-                return Json(new { success = false, message = "Invalid endTime" });
-
-            // 24-HOUR ADVANCE VALIDATION
-            DateTime selectedDateTime = bookingDate.Date + startTime;
-            DateTime now = DateTime.Now;
-
-            if (selectedDateTime < now.AddHours(24))
+            try
             {
-                return Json(new
+                var file = Request.Files["receipt"];
+
+                // ✅ CHECK IF FILE EXISTS
+                if (file == null || file.ContentLength == 0)
                 {
-                    success = false,
-                    message = "Bookings must be at least 24 hours in advance."
-                });
+                    return Json(new { success = false, message = "No receipt file uploaded." });
+                }
+
+                string filePath = null;
+
+                var uploadsFolder = Server.MapPath("~/Uploads");
+
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                // ✅ PREVENT SAME FILE NAME OVERWRITE
+                var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+                var path = Path.Combine(uploadsFolder, fileName);
+
+                file.SaveAs(path);
+
+                filePath = "/Uploads/" + fileName;
+
+                int customerId, serviceId;
+                DateTime bookingDate;
+                TimeSpan startTime, endTime;
+
+                if (!int.TryParse(Request["customerId"], out customerId))
+                    return Json(new { success = false, message = "Invalid customerId" });
+
+                if (!int.TryParse(Request["serviceId"], out serviceId))
+                    return Json(new { success = false, message = "Invalid serviceId" });
+
+                if (!DateTime.TryParse(Request["bookingDate"], out bookingDate))
+                    return Json(new { success = false, message = "Invalid bookingDate" });
+
+                if (!TimeSpan.TryParse(Request["startTime"], out startTime))
+                    return Json(new { success = false, message = "Invalid startTime" });
+
+                if (!TimeSpan.TryParse(Request["endTime"], out endTime))
+                    return Json(new { success = false, message = "Invalid endTime" });
+
+                // ✅ 24-HOUR VALIDATION
+                DateTime selectedDateTime = bookingDate.Date + startTime;
+                DateTime now = DateTime.Now;
+
+                if (selectedDateTime < now.AddHours(24))
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Bookings must be at least 24 hours in advance."
+                    });
+                }
+
+                var services = Request["services"] ?? "";
+                var nailTech = Request["nailTech"] ?? "";
+                var downpayment = Request["downpayment"] ?? "";
+
+                var notes = "Services: " + services +
+                            " | NailTech: " + nailTech +
+                            " | Downpayment: " + downpayment +
+                            " | Receipt: " + filePath;
+
+                // ✅ FIXED NULL ERROR HERE
+                var conflict = db.tbl_bookings.Any(b =>
+                    b.BookingDate == bookingDate.Date &&
+                    (b.Status == "Pending" || b.Status == "Approved") &&
+                    ((b.Notes ?? "").Contains(nailTech)) &&
+                    !(endTime <= b.StartTime || startTime >= b.EndTime)
+                );
+
+                if (conflict)
+                    return Json(new { success = false, message = "This time slot is already taken." });
+
+                var booking = new tbl_bookings
+                {
+                    CustomerId = customerId,
+                    ServiceId = serviceId,
+                    BookingDate = bookingDate,
+                    StartTime = startTime,
+                    EndTime = endTime,
+                    NailTech = nailTech,
+                    Status = "Pending",
+                    Notes = notes,
+                    CreatedAt = DateTime.Now
+                };
+
+                db.tbl_bookings.Add(booking);
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Booking successful!" });
             }
-
-            var services = Request["services"] ?? "";
-            var nailTech = Request["nailTech"] ?? "";
-            var downpayment = Request["downpayment"] ?? "";
-
-            var notes = "Services: " + services +
-                        " | NailTech: " + nailTech +
-                        " | Downpayment: " + downpayment +
-                        " | Receipt: " + filePath;
-
-            var booking = new tbl_bookings
+            catch (Exception ex)
             {
-                CustomerId = customerId,
-                ServiceId = serviceId,
-                BookingDate = bookingDate,
-                StartTime = startTime,
-                EndTime = endTime,
-                NailTech = Request["nailTech"],
-                Status = "Pending",
-                Notes = notes,
-                CreatedAt = DateTime.Now
-            };
-
-            // CONFLICT CHECK
-            var conflict = db.tbl_bookings.Any(b =>
-                b.BookingDate == bookingDate.Date &&
-                (b.Status == "Pending" || b.Status == "Approved") &&
-                b.Notes.Contains(nailTech) &&
-                !(endTime <= b.StartTime || startTime >= b.EndTime)
-            );
-
-            if (conflict)
-                return Json(new { success = false, message = "This time slot is already taken." });
-
-            db.tbl_bookings.Add(booking);
-            db.SaveChanges();
-
-            return Json(new { success = true });
+                // ✅ THIS WILL SHOW REAL ERROR NOW
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         public string NailTech { get; set; }
 
         [SessionCheck(RequireAdmin = true)]
-        public ActionResult GetUserBookings(int userId)
+        [HttpGet]
+        public ActionResult GetUserBookings()
         {
-            var bookings = db.tbl_bookings
-                .Where(b => b.CustomerId == userId)
-                .OrderByDescending(b => b.CreatedAt)
-                .Select(b => new
-                {
-                    b.BookingId,
-                    b.BookingDate,
-                    StartTime = b.StartTime.ToString(),
-                    EndTime = b.EndTime.ToString(),
-                    b.Status,
-                    b.Notes
-                })
-                .ToList();
+            try
+            {
+                if (Session["UserID"] == null)
+                    return Json(new { success = false, message = "Please login first." }, JsonRequestBehavior.AllowGet);
 
-            return Json(bookings, JsonRequestBehavior.AllowGet);
+                int userId = Convert.ToInt32(Session["UserID"]);
+
+                var bookings = db.tbl_bookings
+                    .Where(b => b.CustomerId == userId)
+                    .OrderByDescending(b => b.BookingDate)
+                    .ThenByDescending(b => b.StartTime)
+                    .ToList()
+                    .Select(b => new
+                    {
+                        b.BookingId,
+                        BookingDate = b.BookingDate.ToString("yyyy-MM-dd"),
+                        StartTime = b.StartTime.ToString(),
+                        EndTime = b.EndTime.ToString(),
+                        b.Status,
+                        b.Notes,
+                        b.CreatedAt,
+                        b.NailTech
+                    })
+                    .ToList();
+
+                return Json(new
+                {
+                    success = true,
+                    data = bookings
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = ex.Message
+                }, JsonRequestBehavior.AllowGet);
+            }
         }
 
         [SessionCheck(RequireAdmin = true)]

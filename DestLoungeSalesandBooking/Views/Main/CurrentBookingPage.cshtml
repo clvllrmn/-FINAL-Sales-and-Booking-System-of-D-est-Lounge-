@@ -101,62 +101,86 @@
         <div class="booking-wrapper">
             <h2 class="booking-heading">My Bookings</h2>
 
-            <!-- Loading state -->
             <div ng-if="bookingsLoading" class="loading-state">
                 <p>Loading your bookings...</p>
             </div>
 
-            <!-- Bookings list -->
-            <div class="booking-grid" ng-if="!bookingsLoading && userBookings.length > 0">
-                <div class="booking-item" ng-repeat="b in userBookings">
+            <!-- CURRENT BOOKINGS -->
+            <div class="booking-section" ng-if="!bookingsLoading">
+                <h3 class="booking-section-title">Current Bookings</h3>
 
-                    <div class="booking-top">
-                        <span class="booking-date">{{formatBookingDate(b.BookingDate)}}</span>
-                        <span class="booking-status" ng-class="b.Status.toLowerCase().trim()">
-                            {{b.Status}}
-                        </span>
-                    </div>
+                <div class="booking-grid" ng-if="currentBookings.length > 0">
+                    <div class="booking-item" ng-repeat="b in currentBookings">
 
-                    <div class="booking-body">
-                        <p><strong>Time:</strong> {{formatTime(b.StartTime)}} - {{formatTime(b.EndTime)}}</p>
-                        <p><strong>Service:</strong> {{getService(b.Notes)}}</p>
-                        <p ng-if="getNailTech(b.Notes)"><strong>Nail Tech:</strong> {{getNailTech(b.Notes)}}</p>
-                        <p ng-if="getDownpayment(b.Notes)"><strong>Downpayment Paid:</strong> ₱{{getDownpayment(b.Notes)}}</p>
-                        <p ng-if="getCancelReason(b.Notes)" class="cancel-reason">
-                            <strong>Cancel Reason:</strong> {{getCancelReason(b.Notes)}}
-                        </p>
-                    </div>
-
-                    <!-- Cancel button: only show if Pending or Approved AND more than 24hrs away -->
-                    <div class="booking-actions" ng-if="b.Status.trim() == 'Pending' || b.Status.trim() == 'Approved'">
-                        <div ng-if="canCancel(b)">
-                            <button class="btn-cancel-booking"
-                                    ng-click="cancelUserBooking(b.BookingId)">
-                                <i class="fa-solid fa-xmark"></i> Cancel Booking
-                            </button>
+                        <div class="booking-top">
+                            <span class="booking-date">{{formatBookingDate(b.bookingDate)}}</span>
+                            <span class="booking-status" ng-class="(b.status || '').toLowerCase().trim()">
+                                {{b.status}}
+                            </span>
                         </div>
-                        <div ng-if="!canCancel(b)" class="cancel-locked">
-                            <i class="fa-solid fa-lock"></i> Cannot cancel — within 24 hours of appointment
+
+                        <div class="booking-body">
+                            <p><strong>Time:</strong> {{formatTime(b.startTime)}} - {{formatTime(b.endTime)}}</p>
+                            <p><strong>Service:</strong> {{extractServices(b.notes)}}</p>
+                            <p><strong>Nail Tech:</strong> {{b.nailTech || 'Not assigned'}}</p>
+                            <p><strong>Downpayment Paid:</strong> ₱{{extractDownpayment(b.notes)}}</p>
                         </div>
-                    </div>
 
-                    <!-- Review button for completed bookings -->
-                    <div class="booking-actions" ng-if="b.Status.trim() == 'Completed'">
-                        <button class="btn-review" ng-click="goToReview(b.BookingId)">
-                            <i class="fa-solid fa-star"></i> Leave a Review
-                        </button>
-                    </div>
+                        <div class="booking-actions" ng-if="b.status.trim() == 'Pending' || b.status.trim() == 'Approved'">
+                            <div ng-if="canCancelBookingByValues(b.bookingDate, b.startTime)">
+                                <button class="btn-cancel-booking"
+                                        ng-click="cancelUserBooking(b.bookingId)">
+                                    <i class="fa-solid fa-xmark"></i> Cancel Booking
+                                </button>
+                            </div>
+                            <div ng-if="!canCancelBookingByValues(b.bookingDate, b.startTime)" class="cancel-locked">
+                                <i class="fa-solid fa-lock"></i> Cannot cancel — within 24 hours of appointment
+                            </div>
+                        </div>
 
+                    </div>
+                </div>
+
+                <div class="empty-state small-empty" ng-if="currentBookings.length === 0">
+                    <h3>No current bookings</h3>
+                    <p>You do not have any upcoming bookings right now.</p>
                 </div>
             </div>
 
-            <!-- Empty state -->
-            <div class="empty-state" ng-if="!bookingsLoading && userBookings.length === 0">
-                <img src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
-                     alt="No bookings" class="empty-img" />
-                <h3>No bookings yet</h3>
-                <p>Looks like you haven't booked any service.</p>
-                <a href="@Url.Action("ServicePage","Main")" class="btn-book-now">Book Now</a>
+            <!-- BOOKING HISTORY -->
+            <div class="booking-section history-section" ng-if="!bookingsLoading">
+                <h3 class="booking-section-title">Booking History</h3>
+
+                <div class="booking-grid" ng-if="bookingHistory.length > 0">
+                    <div class="booking-item" ng-repeat="b in bookingHistory">
+
+                        <div class="booking-top">
+                            <span class="booking-date">{{formatBookingDate(b.bookingDate)}}</span>
+                            <span class="booking-status" ng-class="(b.status || '').toLowerCase().trim()">
+                                {{b.status}}
+                            </span>
+                        </div>
+
+                        <div class="booking-body">
+                            <p><strong>Time:</strong> {{formatTime(b.startTime)}} - {{formatTime(b.endTime)}}</p>
+                            <p><strong>Service:</strong> {{extractServices(b.notes)}}</p>
+                            <p><strong>Nail Tech:</strong> {{b.nailTech || 'Not assigned'}}</p>
+                            <p><strong>Downpayment Paid:</strong> ₱{{extractDownpayment(b.notes)}}</p>
+                        </div>
+
+                        <div class="booking-actions" ng-if="b.status.trim() == 'Completed'">
+                            <button class="btn-review" ng-click="goToReview(b.bookingId)">
+                                <i class="fa-solid fa-star"></i> Leave a Review
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="empty-state small-empty" ng-if="bookingHistory.length === 0">
+                    <h3>No booking history yet</h3>
+                    <p>Your past bookings will appear here.</p>
+                </div>
             </div>
         </div>
 
@@ -356,6 +380,24 @@
         font-weight: 600;
         color: #6b5544;
         font-size: 16px;
+    }
+    .booking-section {
+        margin-bottom: 40px;
+    }
+
+    .booking-section-title {
+        color: #6b5544;
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    .history-section {
+        margin-top: 10px;
+    }
+
+    .small-empty {
+        padding: 35px 20px;
     }
 
     /* ── Status badges ── */
@@ -560,6 +602,7 @@
             font-size: 0.9rem;
             font-weight: 500;
         }
+
 
     /* ── Responsive ── */
     @@media (min-width: 1025px) {

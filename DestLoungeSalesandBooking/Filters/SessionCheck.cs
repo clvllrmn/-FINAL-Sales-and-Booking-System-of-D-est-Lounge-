@@ -11,7 +11,6 @@ namespace DestLoungeSalesandBooking.Filters
         {
             var session = filterContext.HttpContext.Session;
             var response = filterContext.HttpContext.Response;
-            var request = filterContext.HttpContext.Request;
 
             // ── Set no-cache headers ──
             response.Cache.SetCacheability(System.Web.HttpCacheability.NoCache);
@@ -20,19 +19,39 @@ namespace DestLoungeSalesandBooking.Filters
             response.Cache.SetRevalidation(System.Web.HttpCacheRevalidation.AllCaches);
 
             // ── Regenerate anti-forgery cookie so it always matches the form token ──
-            // This prevents the token mismatch error when back button is used
             AntiForgeryConfig.SuppressXFrameOptionsHeader = false;
             response.Cookies.Remove(AntiForgeryConfig.CookieName);
 
             // ── Check session ──
             if (session["UserID"] == null)
             {
+                if (filterContext.HttpContext.Request.IsAjaxRequest())
+                {
+                    filterContext.Result = new JsonResult
+                    {
+                        Data = new { success = false, message = "Session expired" },
+                        JsonRequestBehavior = JsonRequestBehavior.AllowGet
+                    };
+                    return;
+                }
+
                 filterContext.Result = new RedirectResult("/Main/LoginPage");
                 return;
             }
 
+            // ── Check admin role if needed ──
             if (RequireAdmin && (int)session["RoleID"] != 1)
             {
+                if (filterContext.HttpContext.Request.IsAjaxRequest())
+                {
+                    filterContext.Result = new JsonResult
+                    {
+                        Data = new { success = false, message = "Access denied" },
+                        JsonRequestBehavior = JsonRequestBehavior.AllowGet
+                    };
+                    return;
+                }
+
                 filterContext.Result = new RedirectResult("/Main/Homepage");
                 return;
             }
@@ -40,4 +59,4 @@ namespace DestLoungeSalesandBooking.Filters
             base.OnActionExecuting(filterContext);
         }
     }
-}
+}   

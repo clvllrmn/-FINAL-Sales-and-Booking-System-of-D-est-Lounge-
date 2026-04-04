@@ -874,7 +874,6 @@ app.controller("DestLoungeSalesandBookingController",
 
         // ===== SUBMIT PAYMENT (UPDATED WITH SERVICES) =====
         $scope.submitPayment = function () {
-            console.log("CLICKED SUBMIT"); // 🔥 DEBUG
 
             var fileInput = document.getElementById("receiptUpload");
 
@@ -887,81 +886,54 @@ app.controller("DestLoungeSalesandBookingController",
 
             var booking = JSON.parse(sessionStorage.getItem("pendingBooking"));
 
-            console.log("BOOKING DATA:", booking);
+            if (!booking) {
+                alert("Booking session expired.");
+                return;
+            }
 
-            // 🔥 ENSURE booking.services EXISTS (IMPORTANT)
-            // This prevents the "join undefined" error
             if (!booking.services) {
-                // If booking.selectedServices exists, map it to services
                 if (booking.selectedServices && booking.selectedServices.length > 0) {
                     booking.services = booking.selectedServices.map(function (s) {
                         return s.name;
                     });
-                }
-                // If booking.notes contains services, extract them
-                else if (booking.notes && booking.notes.includes("Services:")) {
-                    var servicesMatch = booking.notes.match(/Services:\s*(.+?)(?:\s*\||$)/);
-                    if (servicesMatch && servicesMatch[1]) {
-                        booking.services = servicesMatch[1].split(',').map(function (s) {
-                            return s.trim();
-                        });
-                    } else {
-                        booking.services = [];
-                    }
-                }
-                else {
+                } else {
                     booking.services = [];
                 }
             }
 
             var formData = new FormData();
 
-            // 🔥 SAFE APPEND (avoid undefined)
             formData.append("customerId", booking.customerId || 0);
             formData.append("serviceId", booking.serviceId || 1);
             formData.append("bookingDate", booking.bookingDate);
             formData.append("startTime", booking.startTime);
             formData.append("endTime", booking.endTime);
-
-            // 🔥 IMPORTANT: Append services as comma-separated string
-            // This ensures we have booking.services available
             formData.append("services", booking.services.join(", "));
             formData.append("nailTech", booking.nailTech || "");
             formData.append("downpayment", booking.downpayment || "");
-
-            // Also include the original selectedServices for backup (if exists)
-            if (booking.selectedServices && booking.selectedServices.length > 0) {
-                var servicesString = booking.selectedServices.map(function (s) {
-                    return s.name;
-                }).join(", ");
-                formData.append("selectedServices", servicesString);
-            }
-
             formData.append("receipt", file);
-
-            console.log("FORM DATA BEING SENT:");
-            console.log("- services:", booking.services.join(", "));
-            console.log("- nailTech:", booking.nailTech);
-            console.log("- downpayment:", booking.downpayment);
-            console.log("- receipt:", file.name);
 
             $http.post("/Booking/CreateWithReceipt", formData, {
                 transformRequest: angular.identity,
                 headers: { "Content-Type": undefined }
-            }).then(function (res) {
-                console.log("SERVER RESPONSE:", res);
+            })
+                .then(function (res) {
 
-                if (res.data && res.data.success) {
-                    alert("Booking successful!");
-                    sessionStorage.removeItem("pendingBooking");
-                    window.location.href = "/Main/CurrentBookingPage";
-                } else {
-                    alert(res.data.message || "Booking failed");
-                }
-            }).catch(function (err) {
-                console.error("ERROR:", err);
-                alert("Server error");
-            });
+                    console.log("SERVER RESPONSE:", res.data);
+
+                    if (res.data && res.data.success) {
+                        alert("Booking successful!");
+                        sessionStorage.removeItem("pendingBooking");
+                        window.location.href = "/Main/CurrentBookingPage";
+                    } else {
+                        alert("ERROR: " + (res.data.message || "Booking failed"));
+                    }
+
+                })
+                .catch(function (err) {
+                    console.error("ERROR:", err);
+                    alert("Server error: " + err.status);
+                });
         };
 
         // ===== ADMIN BOOKING LIST =====
@@ -1557,100 +1529,126 @@ app.controller("DestLoungeSalesandBookingController",
         };
 
         // ===== USER BOOKINGS =====
-        // ── Booking page helpers ──
         $scope.bookingsLoading = false;
+        $scope.currentBookings = [];
+        $scope.bookingHistory = [];
 
         $scope.formatBookingDate = function (raw) {
             if (!raw) return '';
-            var match = /\/Date\((\d+)\)\//.exec(raw);
-            var d = match ? new Date(parseInt(match[1])) : new Date(raw);
+            var d = new Date(raw);
             if (isNaN(d)) return raw;
-            return d.toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
+            return d.toLocaleDateString('en-PH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
         };
 
         $scope.formatTime = function (t) {
             if (!t) return '';
             var parts = t.toString().split(':');
-            var h = parseInt(parts[0]);
+            var h = parseInt(parts[0], 10);
             var m = parts[1] || '00';
             var ampm = h >= 12 ? 'PM' : 'AM';
             h = h % 12 || 12;
             return h + ':' + m + ' ' + ampm;
         };
 
-        $scope.getService = function (notes) {
+        $scope.extractServices = function (notes) {
             if (!notes) return 'N/A';
-            var part = notes.split('|')[0];
-            return part.replace('Services:', '').trim() || 'N/A';
+            var match = notes.match(/Services:\s*([^|]+)/i);
+            return match ? match[1].trim() : 'N/A';
         };
 
-        $scope.getNailTech = function (notes) {
-            if (!notes) return '';
-            var parts = notes.split('|');
-            for (var i = 0; i < parts.length; i++) {
-                if (parts[i].indexOf('NailTech:') !== -1)
-                    return parts[i].replace('NailTech:', '').trim();
+        $scope.extractDownpayment = function (notes) {
+            if (!notes) return 'N/A';
+            var match = notes.match(/Downpayment:\s*([^|]+)/i);
+            return match ? match[1].trim() : 'N/A';
+        };
+
+        $scope.canCancelBookingByValues = function (bookingDate, startTime) {
+            if (!bookingDate || !startTime) return false;
+
+            var datePart = bookingDate;
+            if (bookingDate.indexOf('T') !== -1) {
+                datePart = bookingDate.split('T')[0];
             }
-            return '';
-        };
 
-        $scope.getDownpayment = function (notes) {
-            if (!notes) return '';
-            var parts = notes.split('|');
-            for (var i = 0; i < parts.length; i++) {
-                if (parts[i].indexOf('Downpayment:') !== -1)
-                    return parts[i].replace('Downpayment:', '').trim();
+            var timePart = startTime;
+            if (startTime.indexOf('.') !== -1) {
+                timePart = startTime.split('.')[0];
             }
-            return '';
+
+            var bookingDateTime = new Date(datePart + 'T' + timePart);
+            if (isNaN(bookingDateTime.getTime())) return false;
+
+            var now = new Date();
+            var diffHours = (bookingDateTime - now) / (1000 * 60 * 60);
+
+            return diffHours > 24;
         };
 
-        $scope.getCancelReason = function (notes) {
-            if (!notes) return '';
-            var parts = notes.split('|');
-            for (var i = 0; i < parts.length; i++) {
-                if (parts[i].indexOf('Cancel reason:') !== -1)
-                    return parts[i].replace('Cancel reason:', '').trim();
-            }
-            return '';
-        };
-
-        $scope.canCancel = function (b) {
-            if (!b.BookingDate || !b.StartTime) return false;
-            var match = /\/Date\((\d+)\)\//.exec(b.BookingDate);
-            var bookingDay = match ? new Date(parseInt(match[1])) : new Date(b.BookingDate);
-            if (isNaN(bookingDay)) return false;
-            var parts = (b.StartTime || '00:00:00').split(':');
-            bookingDay.setHours(parseInt(parts[0] || 0), parseInt(parts[1] || 0), 0, 0);
-            var cutoff = new Date();
-            cutoff.setHours(cutoff.getHours() + 24);
-            return bookingDay > cutoff;
-        };
-
-        // ── Updated loadUserBookings with loading flag ──
         $scope.loadUserBookings = function () {
-            if (!window.loggedInUserId || window.loggedInUserId === "null" || parseInt(window.loggedInUserId) <= 0) {
-                console.log("No user logged in");
-                return;
-            }
+            console.log("🔥 loadUserBookings triggered");
 
-            var userId = parseInt(window.loggedInUserId);
             $scope.bookingsLoading = true;
 
-            return $http.get("/Booking/GetUserBookings?userId=" + userId)
+            return $http.get("/Booking/GetUserBookings")
                 .then(function (res) {
-                    $scope.userBookings = res.data || [];
+                    console.log("DATA FROM SERVER:", res.data);
+
+                    if (!res.data || !res.data.success) {
+                        $scope.currentBookings = [];
+                        $scope.bookingHistory = [];
+                        $scope.bookingsLoading = false;
+                        return;
+                    }
+
+                    var now = new Date();
+                    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+                    var bookings = (res.data.data || []).map(function (b) {
+                        var dateObj = new Date(b.BookingDate);
+
+                        return {
+                            bookingId: b.BookingId,
+                            bookingDate: b.BookingDate,
+                            startTime: b.StartTime,
+                            endTime: b.EndTime,
+                            status: b.Status,
+                            notes: b.Notes || "",
+                            nailTech: b.NailTech || "",
+                            dateObj: dateObj
+                        };
+                    });
+
+                    $scope.currentBookings = bookings.filter(function (b) {
+                        return (
+                            (b.status === "Pending" || b.status === "Approved") &&
+                            b.dateObj >= today
+                        );
+                    });
+
+                    $scope.bookingHistory = bookings.filter(function (b) {
+                        return (
+                            b.status === "Completed" ||
+                            b.status === "Cancelled" ||
+                            b.dateObj < today
+                        );
+                    });
+
+                    console.log("CURRENT:", $scope.currentBookings);
+                    console.log("HISTORY:", $scope.bookingHistory);
+
                     $scope.bookingsLoading = false;
-                    console.log("Loaded bookings:", $scope.userBookings);
                 })
                 .catch(function (err) {
-                    console.error("Error loading bookings:", err);
+                    console.error("LOAD USER BOOKINGS ERROR:", err);
+                    $scope.currentBookings = [];
+                    $scope.bookingHistory = [];
                     $scope.bookingsLoading = false;
                 });
         };
-
-        if (window.loggedInUserId && window.loggedInUserId !== "null") {
-            $scope.loadUserBookings();
-        }
 
         // ===== NOTIFICATIONS =====
         $scope.notifications = [];
@@ -1675,9 +1673,9 @@ app.controller("DestLoungeSalesandBookingController",
         };
 
         $scope.checkReviewNotification = function () {
-            var reviewNotif = $scope.notifications.find(n =>
-                n.Message.includes("completed")
-            );
+            var reviewNotif = $scope.notifications.find(function (n) {
+                return n.Message.includes("completed");
+            });
 
             if (reviewNotif) {
                 setTimeout(function () {
@@ -1691,9 +1689,10 @@ app.controller("DestLoungeSalesandBookingController",
         if (window.location.pathname.toLowerCase().indexOf("profile") !== -1) {
             $scope.loadNotifications();
         }
-        if (window.location.pathname.toLowerCase().indexOf("currentbookingpage") !== -1) {
+
+        if (window.location.pathname.toLowerCase().includes("currentbookingpage")) {
             console.log("Current booking page detected");
-            $scope.loadNotifications();
+            $scope.loadUserBookings();
         }
 
         $scope.numbersOnly = function (event) {
@@ -1862,4 +1861,97 @@ app.directive('compareTo', function () {
             });
         }
     };
+    // ===== USER BOOKINGS =====
+    $scope.bookingsLoading = false;
+    $scope.currentBookings = [];
+    $scope.bookingHistory = [];
+
+    $scope.formatBookingDate = function (raw) {
+        if (!raw) return '';
+        var d = new Date(raw);
+        if (isNaN(d)) return raw;
+        return d.toLocaleDateString('en-PH', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
+    $scope.formatTime = function (t) {
+        if (!t) return '';
+        var parts = t.toString().split(':');
+        var h = parseInt(parts[0], 10);
+        var m = parts[1] || '00';
+        var ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        return h + ':' + m + ' ' + ampm;
+    };
+
+    $scope.extractServices = function (notes) {
+        if (!notes) return 'N/A';
+        var match = notes.match(/Services:\s*([^|]+)/i);
+        return match ? match[1].trim() : 'N/A';
+    };
+
+    $scope.extractDownpayment = function (notes) {
+        if (!notes) return 'N/A';
+        var match = notes.match(/Downpayment:\s*([^|]+)/i);
+        return match ? match[1].trim() : 'N/A';
+    };
+
+    $scope.canCancelBookingByValues = function (bookingDate, startTime) {
+        var bookingDateTime = new Date(bookingDate + "T" + startTime);
+        var now = new Date();
+        var diffHours = (bookingDateTime - now) / (1000 * 60 * 60);
+        return diffHours > 24;
+    };
+
+    $scope.bookingsLoading = false;
+    $scope.currentBookings = [];
+    $scope.bookingHistory = [];
+
+    $scope.formatBookingDate = function (raw) {
+        if (!raw) return '';
+        var d = new Date(raw);
+        if (isNaN(d)) return raw;
+        return d.toLocaleDateString('en-PH', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
+    $scope.formatTime = function (t) {
+        if (!t) return '';
+        var parts = t.toString().split(':');
+        var h = parseInt(parts[0], 10);
+        var m = parts[1] || '00';
+        var ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        return h + ':' + m + ' ' + ampm;
+    };
+
+    $scope.extractServices = function (notes) {
+        if (!notes) return 'N/A';
+        var match = notes.match(/Services:\s*([^|]+)/i);
+        return match ? match[1].trim() : 'N/A';
+    };
+
+    $scope.extractDownpayment = function (notes) {
+        if (!notes) return 'N/A';
+        var match = notes.match(/Downpayment:\s*([^|]+)/i);
+        return match ? match[1].trim() : 'N/A';
+    };
+
+    $scope.canCancelBookingByValues = function (bookingDate, startTime) {
+        if (!bookingDate || !startTime) return false;
+
+        var bookingDateTime = new Date(bookingDate + "T" + startTime);
+        if (isNaN(bookingDateTime.getTime())) return false;
+
+        var now = new Date();
+        var diffHours = (bookingDateTime - now) / (1000 * 60 * 60);
+        return diffHours > 24;
+    };
+    
 });
