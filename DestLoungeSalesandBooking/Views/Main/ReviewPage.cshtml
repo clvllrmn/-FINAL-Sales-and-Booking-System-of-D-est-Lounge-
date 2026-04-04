@@ -115,11 +115,14 @@
                               id="reviewText"
                               class="review-textarea"
                               placeholder="Tell us about your experience..."
-                              rows="5"></textarea>
+                              rows="5"
+                              maxlength="500"></textarea>
+                    <p id="charCount" style="font-size:13px;color:#a89585;text-align:right;margin:4px 0 0 0;">0 / 500</p>
                 </div>
 
                 <!-- Photo Upload -->
                 <div class="photo-upload-section">
+                    <p id="photoCount" style="font-size:13px;color:#a89585;margin:6px 0 0 4px;">0 / 5 photos added</p>
                     <label class="review-label">Add your image (MAX: 5)</label>
                     <div class="photo-upload-box" id="photoUploadBox">
                         <input type="file" id="photoInput" name="PhotoUpload" accept="image/*" multiple style="display: none;" />
@@ -454,14 +457,16 @@
     .photo-upload-box {
         background-color: #f8f4ef;
         border-radius: 15px;
-        padding: 40px;
-        text-align: center;
-        cursor: pointer;
+        padding: 20px;
+        cursor: default;
         transition: background-color 0.3s ease;
         min-height: 150px;
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
+        gap: 5px;
+        position: relative; /* ADD THIS */
     }
 
         .photo-upload-box:hover {
@@ -473,6 +478,10 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        cursor: pointer;
+        position: absolute; /* ADD THIS */
+        inset: 0; /* ADD THIS — fills the whole box */
+        border-radius: 15px;
     }
 
     .camera-icon {
@@ -992,5 +1001,116 @@
                 link.addEventListener('click', closeMenu);
             });
         })();
+        const photoInput = document.getElementById('photoInput');
+        const photoUploadBox = document.getElementById('photoUploadBox');
+        const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+
+        let selectedFiles = [];
+
+        function updateCounter() {
+            const count = document.getElementById('photoCount');
+            if (count) count.textContent = selectedFiles.length + ' / 5 photos added';
+        }
+
+        function refreshAddMoreTile() {
+            const existing = document.getElementById('addMoreTile');
+            if (existing) existing.remove();
+            if (selectedFiles.length > 0 && selectedFiles.length < 5) {
+                const tile = document.createElement("div");
+                tile.id = "addMoreTile";
+                tile.style.cssText = "width:90px;height:90px;border-radius:10px;border:2px dashed #6b5544;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:#6b5544;font-size:12px;font-weight:600;gap:4px;flex-shrink:0;transition:background 0.2s;";
+                tile.innerHTML = '<span style="font-size:24px;line-height:1;">+</span><span>Add more</span>';
+                tile.addEventListener('mouseenter', function () { tile.style.background = '#f0e8dd'; });
+                tile.addEventListener('mouseleave', function () { tile.style.background = 'transparent'; });
+                tile.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    photoInput.click();
+                });
+                photoUploadBox.appendChild(tile);
+            }
+            updateCounter();
+        }
+
+        uploadPlaceholder.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (selectedFiles.length < 5) photoInput.click();
+        });
+
+        photoInput.addEventListener('change', function (e) {
+            const files = Array.from(e.target.files);
+
+            if (selectedFiles.length >= 5) {
+                alert("You've already added 5 photos.");
+                photoInput.value = "";
+                return;
+            }
+
+            const remaining = 5 - selectedFiles.length;
+            const toAdd = files.slice(0, remaining);
+
+            if (files.length > remaining) {
+                alert("Maximum of 5 photos. Only the first " + remaining + " were added.");
+            }
+
+            let loadedCount = 0;
+
+            toAdd.forEach(function (file) {
+                selectedFiles.push(file);
+
+                const reader = new FileReader();
+                reader.onload = function (ev) {
+                    const container = document.createElement("div");
+                    container.style.cssText = "position:relative;display:inline-flex;margin:0;flex-shrink:0;";
+
+                    const img = document.createElement("img");
+                    img.src = ev.target.result;
+                    img.style.cssText = "width:90px;height:90px;object-fit:cover;border-radius:10px;display:block;";
+
+                    const removeBtn = document.createElement("button");
+                    removeBtn.type = "button";
+                    removeBtn.innerText = "×";
+                    removeBtn.style.cssText = "position:absolute;top:-8px;right:-8px;background:#6b5544;color:white;border:none;border-radius:50%;width:22px;height:22px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;z-index:1;";
+
+                    removeBtn.addEventListener('click', function (ev) {
+                        ev.stopPropagation();
+                        selectedFiles = selectedFiles.filter(function (f) { return f !== file; });
+                        container.remove();
+                        photoInput.value = "";
+                        if (selectedFiles.length === 0) {
+                            uploadPlaceholder.style.display = "flex";
+                        }
+                        refreshAddMoreTile();
+                    });
+
+                    container.appendChild(img);
+                    container.appendChild(removeBtn);
+
+                    const addMoreTile = document.getElementById('addMoreTile');
+                    if (addMoreTile) {
+                        photoUploadBox.insertBefore(container, addMoreTile);
+                    } else {
+                        photoUploadBox.appendChild(container);
+                    }
+
+                    // Only refresh UI after ALL files in this batch have loaded
+                    loadedCount++;
+                    if (loadedCount === toAdd.length) {
+                        uploadPlaceholder.style.display = "none";
+                        photoInput.value = "";
+                        refreshAddMoreTile();
+                    }
+                };
+
+                reader.readAsDataURL(file);
+            });
+        });
+        const reviewText = document.getElementById('reviewText');
+        const charCount = document.getElementById('charCount');
+
+        reviewText.addEventListener('input', function () {
+            const len = reviewText.value.length;
+            charCount.textContent = len + ' / 500';
+            charCount.style.color = len >= 450 ? '#c0392b' : '#a89585';
+        });
     </script>
 }
