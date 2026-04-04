@@ -15,6 +15,9 @@ namespace DestLoungeSalesandBooking.Models
         public int BookingId { get; set; }
         public int CustomerId { get; set; }
         public bool IsReviewed { get; set; }
+
+
+
         public DateTime CreatedAt { get; set; }
     }
 

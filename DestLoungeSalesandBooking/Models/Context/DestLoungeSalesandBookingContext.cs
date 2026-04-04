@@ -14,7 +14,10 @@ namespace DestLoungeSalesandBooking.Models.Context
             Database.SetInitializer<DestLoungeSalesandBookingContext>(null);
         }
 
-        public DestLoungeSalesandBookingContext() : base("Name=db_destloungesaleandbooking") { }
+        public DestLoungeSalesandBookingContext()
+    : base("Server=127.0.0.1;Port=3306;Database=destlounge_db;Uid=root;Pwd=;")
+        {
+        }
 
         // DbSets
         public virtual DbSet<tbl_users> tbl_users { get; set; }
@@ -30,7 +33,9 @@ namespace DestLoungeSalesandBooking.Models.Context
         public DbSet<tbl_notifications> tbl_notifications { get; set; }
         public DbSet<tbl_review_requests> tbl_review_requests { get; set; }
 
-  
+        public DbSet<tbl_reviews> tbl_reviews { get; set; }
+        public DbSet<tbl_review_images> tbl_review_images { get; set; }
+
 
 
 

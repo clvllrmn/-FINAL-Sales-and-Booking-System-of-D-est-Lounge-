@@ -72,7 +72,7 @@
             <div class="nav-top">
                 <a href="@Url.Action("ProfilePage","Main")" class="nav-item">Profile</a>
                 <a href="@Url.Action("CurrentBookingPage","Main")" class="nav-item">Current booking</a>
-                <a href="@Url.Action("ReviewPage","Main")" class="nav-item">To Review</a>
+                <a href="@Url.Action("ReviewPage", "Main")" class="nav-item">To Review</a>
             </div>
             <div class="nav-bottom">
                 <a href="@Url.Action("Logout","Account")" class="nav-item nav-logout">
@@ -89,7 +89,7 @@
             <form id="reviewForm" method="POST" action="@Url.Action("SubmitReview", "Main")" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
 
-                <input type="hidden" name="BookingId" id="bookingId" value="" />
+                <input type="hidden" name="BookingId" value="@ViewBag.BookingId" />
 
                 <!-- Star Rating -->
                 <div class="rating-section">
@@ -120,7 +120,7 @@
 
                 <!-- Photo Upload -->
                 <div class="photo-upload-section">
-                    <label class="review-label">Add your image</label>
+                    <label class="review-label">Add your image (MAX: 5)</label>
                     <div class="photo-upload-box" id="photoUploadBox">
                         <input type="file" id="photoInput" name="PhotoUpload" accept="image/*" multiple style="display: none;" />
                         <div class="upload-placeholder" id="uploadPlaceholder">
@@ -136,8 +136,8 @@
 
                 <!-- Action Buttons -->
                 <div class="review-actions">
-                    <button type="button" class="btn-cancel" onclick="window.location.href='@Url.Action("CurrentBooking","Main")'">
-                        Cancel
+                    <button type="button" class="btn-cancel" onclick="window.location.href='@Url.Action("CurrentBookingPage","Main")'">
+                            Cancel
                     </button>
                     <button type="submit" class="btn-upload">
                         Upload
@@ -186,9 +186,10 @@
     photoInput.addEventListener('change', function (e) {
         const files = Array.from(e.target.files);
 
-        // Limit to 5
+        // Combine existing + new
         if (selectedFiles.length + files.length > 5) {
             alert("Maximum of 5 photos only.");
+            photoInput.value = "";
             return;
         }
 
@@ -209,14 +210,6 @@
 
                 const removeBtn = document.createElement("button");
                 removeBtn.innerText = "×";
-                removeBtn.style.position = "absolute";
-                removeBtn.style.top = "-5px";
-                removeBtn.style.right = "-5px";
-                removeBtn.style.background = "#6b5544";
-                removeBtn.style.color = "white";
-                removeBtn.style.border = "none";
-                removeBtn.style.borderRadius = "50%";
-                removeBtn.style.cursor = "pointer";
 
                 removeBtn.onclick = function () {
                     container.remove();
@@ -228,11 +221,13 @@
 
                 photoUploadBox.appendChild(container);
             };
+
             reader.readAsDataURL(file);
         });
 
         uploadPlaceholder.style.display = "none";
     });
+
 </script>
 
 <script>

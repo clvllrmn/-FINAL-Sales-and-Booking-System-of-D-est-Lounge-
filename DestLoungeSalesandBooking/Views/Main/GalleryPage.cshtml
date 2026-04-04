@@ -1076,9 +1076,22 @@
             function closeMenu() {
                 btn.classList.remove('open');
                 nav.classList.remove('open');
+
+                btn.classList.add('open');
+                nav.classList.add('open');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeMenu() {
+                btn.classList.remove('open');
+                nav.classList.remove('open');
                 overlay.classList.remove('active');
                 document.body.style.overflow = '';
             }
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            
 
             btn.addEventListener('click', function () {
                 nav.classList.contains('open') ? closeMenu() : openMenu();
@@ -1089,6 +1102,8 @@
             nav.querySelectorAll('a').forEach(function (link) {
                 link.addEventListener('click', closeMenu);
             });
-        })();
+
+            
+       }) ();
     </script>
 }

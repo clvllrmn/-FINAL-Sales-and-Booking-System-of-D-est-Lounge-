@@ -4,6 +4,7 @@ using DestLoungeSalesandBooking.Models.Context;
 using DestLoungeSalesandBooking.Models.Maps;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -37,6 +38,9 @@ namespace DestLoungeSalesandBooking.Controllers
         {
             return View();
         }
+
+        
+        
 
         [NoCache]
         public ActionResult LoginPage()
@@ -91,8 +95,9 @@ namespace DestLoungeSalesandBooking.Controllers
 
         [SessionCheck]
         [NoCache]
-        public ActionResult ReviewPage()
+        public ActionResult ReviewPage(int? bookingId)
         {
+            ViewBag.BookingId = bookingId ?? 0;
             return View();
         }
 
@@ -335,27 +340,8 @@ namespace DestLoungeSalesandBooking.Controllers
             }
         }
 
-        // ── POST: SubmitReview ──
-        [HttpPost]
-        public ActionResult SubmitReview(int? BookingId, int Rating, string ReviewText, IEnumerable<HttpPostedFileBase> PhotoUpload)
-        {
-            if (PhotoUpload != null)
-            {
-                foreach (var file in PhotoUpload)
-                {
-                    if (file != null && file.ContentLength > 0)
-                    {
-                        string path = Path.Combine(Server.MapPath("~/Uploads"), Path.GetFileName(file.FileName));
-                        file.SaveAs(path);
-                    }
-                }
-            }
-
-            if (BookingId == null)
-                return Content("BookingId is missing. Please access review from booking page.");
-
-            return RedirectToAction("ReviewPage");
-        }
+        
+        
 
         // ── Helper: SHA256 hash ──
         private string HashPassword(string password)
@@ -384,5 +370,82 @@ namespace DestLoungeSalesandBooking.Controllers
 
             return Json(new { loggedIn = true }, JsonRequestBehavior.AllowGet);
         }
+
+        // ── POST: SubmitReview ──
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult SubmitReview(int BookingId, int Rating, string ReviewText, IEnumerable<HttpPostedFileBase> PhotoUpload)
+        {
+            int userId = (int)Session["UserID"];
+
+            // 1. Save review
+            var review = new tbl_reviews
+            {
+                BookingId = BookingId,
+                CustomerId = userId,
+                Rating = Rating,
+                ReviewText = ReviewText,
+                CreatedAt = DateTime.Now
+            };
+
+            db.tbl_reviews.Add(review);
+            db.SaveChanges(); // FIRST SAVE ✅
+
+            // 2. Save images (max 5)
+            if (PhotoUpload != null)
+            {
+                foreach (var file in PhotoUpload)
+                {
+                    if (file != null && file.ContentLength > 0)
+                    {
+                        string fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+                        string path = Path.Combine(Server.MapPath("~/Uploads"), fileName);
+
+                        file.SaveAs(path);
+
+                        db.tbl_review_images.Add(new tbl_review_images
+                        {
+                            ReviewId = review.ReviewId,
+                            ImageUrl = "/Uploads/" + fileName
+                        });
+                    }
+                }
+                
+                db.SaveChanges();
+            }
+
+
+
+            // 3. Mark as reviewed
+            var req = db.tbl_review_requests.FirstOrDefault(r => r.BookingId == BookingId);
+            if (req != null)
+            {
+                req.IsReviewed = true;
+                db.SaveChanges();
+            }
+
+            return RedirectToAction("GalleryPage");
+        }
+
+        public JsonResult GetReviews()
+        {
+            var reviews = db.tbl_reviews
+                .Select(r => new
+                {
+                    r.ReviewId,
+                    r.Rating,
+                    r.ReviewText,
+                    r.CreatedAt,
+                    ImageUrl = db.tbl_review_images
+                        .Where(img => img.ReviewId == r.ReviewId)
+                        .Select(img => img.ImageUrl)
+                        .FirstOrDefault()
+                }).ToList();
+
+            return Json(reviews, JsonRequestBehavior.AllowGet);
+        }
+
+
     }
 }
