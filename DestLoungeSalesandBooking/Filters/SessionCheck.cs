@@ -22,6 +22,23 @@ namespace DestLoungeSalesandBooking.Filters
             AntiForgeryConfig.SuppressXFrameOptionsHeader = false;
             response.Cookies.Remove(AntiForgeryConfig.CookieName);
 
+            var routeValues = filterContext.RouteData.Values;
+            string controller = routeValues["controller"]?.ToString();
+            string action = routeValues["action"]?.ToString();
+
+            if (controller == "HomePageContent" && action == "GetAllContent")
+            {
+                base.OnActionExecuting(filterContext);
+                return;
+            }
+
+            // allow public read of services
+            if (controller == "Service" && action == "GetAllServices")
+            {
+                base.OnActionExecuting(filterContext);
+                return;
+            }
+
             // ── Check session ──
             if (session["UserID"] == null)
             {
@@ -59,4 +76,4 @@ namespace DestLoungeSalesandBooking.Filters
             base.OnActionExecuting(filterContext);
         }
     }
-}   
+}

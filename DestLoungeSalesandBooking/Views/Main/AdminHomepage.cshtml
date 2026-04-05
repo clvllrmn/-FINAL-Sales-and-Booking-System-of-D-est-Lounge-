@@ -141,6 +141,12 @@
                     <button class="edit-btn" ng-click="updatePolaroidImage(slot)" title="Change Photo">
                         <i class="fa-solid fa-pen"></i>
                     </button>
+
+                    <button class="delete-polaroid-btn"
+                            ng-click="deletePolaroidImage(1)"
+                            title="Delete Photo">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
                 </div>
                 <div class="polaroid-image">
                     <img ng-src="{{polaroidImages[slot]}}" alt="Nail Design {{slot}}">
@@ -456,6 +462,7 @@
         transition: background 0.2s;
     }
 
+
         .btn-cancel:hover {
             background: #ddd;
         }
@@ -652,6 +659,49 @@
         color: #c84b4b;
         font-size: 1.25rem;
     }
+    .polaroid-card {
+        position: relative;
+    }
+
+    .polaroid-actions {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        gap: 10px;
+        z-index: 20;
+    }
+
+    .edit-polaroid-btn,
+    .delete-polaroid-btn {
+        width: 42px;
+        height: 42px;
+        border: none;
+        border-radius: 50%;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .edit-polaroid-btn {
+        background: #4f8b5f;
+    }
+
+        .edit-polaroid-btn:hover {
+            background: #3f724d;
+        }
+
+    .delete-polaroid-btn {
+        background: #dc3545;
+        transform: scale(1.1);
+    }
+
+        .delete-polaroid-btn:hover {
+            background: #b52a37;
+        }
 
     /* D'est Description */
     .dest-description {

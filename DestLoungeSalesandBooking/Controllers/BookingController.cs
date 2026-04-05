@@ -251,17 +251,21 @@ namespace DestLoungeSalesandBooking.Controllers
         }
 
         [HttpPost]
-        [SessionCheck(RequireAdmin = true)]
+        [SessionCheck]
         public ActionResult Cancel(int bookingId, string reason = null)
         {
-            var booking = db.tbl_bookings.FirstOrDefault(b => b.BookingId == bookingId);
+            if (Session["UserID"] == null)
+                return Json(new { success = false, message = "Please login first." });
+
+            int userId = Convert.ToInt32(Session["UserID"]);
+
+            var booking = db.tbl_bookings.FirstOrDefault(b => b.BookingId == bookingId && b.CustomerId == userId);
             if (booking == null)
                 return Json(new { success = false, message = "Booking not found." });
 
             if (booking.Status != "Pending" && booking.Status != "Approved")
                 return Json(new { success = false, message = "Only Pending or Approved bookings can be cancelled." });
 
-            // 24-HOUR RULE: Cannot cancel within 24 hours of appointment
             DateTime bookingDateTime = booking.BookingDate.Date + booking.StartTime;
             if (bookingDateTime <= DateTime.Now.AddHours(24))
             {
@@ -400,7 +404,7 @@ namespace DestLoungeSalesandBooking.Controllers
 
         public string NailTech { get; set; }
 
-        [SessionCheck(RequireAdmin = true)]
+        [SessionCheck]
         [HttpGet]
         public ActionResult GetUserBookings()
         {
@@ -420,12 +424,13 @@ namespace DestLoungeSalesandBooking.Controllers
                     {
                         b.BookingId,
                         BookingDate = b.BookingDate.ToString("yyyy-MM-dd"),
-                        StartTime = b.StartTime.ToString(),
-                        EndTime = b.EndTime.ToString(),
+                        StartTime = DateTime.Today.Add(b.StartTime).ToString("h:mm tt"),
+                        EndTime = DateTime.Today.Add(b.EndTime).ToString("h:mm tt"),
                         b.Status,
                         b.Notes,
                         b.CreatedAt,
-                        b.NailTech
+                        b.NailTech,
+                        TotalBill = GetTotalBillFromNotes(b.Notes)
                     })
                     .ToList();
 
@@ -444,8 +449,9 @@ namespace DestLoungeSalesandBooking.Controllers
                 }, JsonRequestBehavior.AllowGet);
             }
         }
+        
 
-        [SessionCheck(RequireAdmin = true)]
+        [SessionCheck]
         public ActionResult GetNotifications(int userId)
         {
             var notifs = db.tbl_notifications
@@ -502,47 +508,102 @@ namespace DestLoungeSalesandBooking.Controllers
             }
         }
 
-        public JsonResult GetTakenSlots(DateTime date)
-        {
-            var slots = db.tbl_bookings
-                .Where(b => b.BookingDate == date && b.Status != "Cancelled")
-                .Select(b => b.StartTime)
-                .ToList();
 
-            return Json(slots, JsonRequestBehavior.AllowGet);
-        }
-
-        [SessionCheck(RequireAdmin = true)]
-        public ActionResult GetInboxItems()
+        [HttpGet]
+        public JsonResult GetTakenSlots(string date, string nailTech)
         {
-            var items = db.tbl_bookings
-                .OrderByDescending(b => b.CreatedAt)
-                .Take(50)
-                .ToList()
-                .Select(b => new
+            try
+            {
+                DateTime bookingDate;
+                var dateFormats = new[] { "yyyy-MM-dd", "MM/dd/yyyy", "dd/MM/yyyy" };
+
+                if (!DateTime.TryParseExact(date, dateFormats, CultureInfo.InvariantCulture,
+                        DateTimeStyles.None, out bookingDate))
                 {
-                    bookingId = b.BookingId,
-                    clientName = db.tbl_users
-                        .Where(u => u.userID == b.CustomerId)
-                        .Select(u => u.firstname + " " + u.lastname)
-                        .FirstOrDefault() ?? ("Customer #" + b.CustomerId),
-                    service = b.Notes != null && b.Notes.Contains("Services:")
-                        ? b.Notes.Split('|')[0].Replace("Services:", "").Trim()
-                        : "N/A",
-                    bookingDate = b.BookingDate,
-                    startTime = b.StartTime.ToString(),
-                    endTime = b.EndTime.ToString(),
-                    status = b.Status,
-                    notes = b.Notes,
-                    createdAt = b.CreatedAt
-                })
-                .ToList();
+                    if (!DateTime.TryParse(date, out bookingDate))
+                    {
+                        return Json(new
+                        {
+                            success = false,
+                            message = "Invalid date format."
+                        }, JsonRequestBehavior.AllowGet);
+                    }
+                }
 
-            return Json(items, JsonRequestBehavior.AllowGet);
+                var nextDate = bookingDate.Date.AddDays(1);
+
+                var rows = db.tbl_bookings
+                    .Where(b =>
+                        b.BookingDate >= bookingDate.Date &&
+                        b.BookingDate < nextDate &&
+                        (b.NailTech ?? "") == (nailTech ?? "") &&
+                        b.Status != "Cancelled"
+                    )
+                    .OrderBy(b => b.StartTime)
+                    .ToList();
+
+                var takenSlots = rows.Select(b => new
+                {
+                    StartTime = DateTime.Today.Add(b.StartTime).ToString("hh:mm tt"),
+                    EndTime = DateTime.Today.Add(b.EndTime).ToString("hh:mm tt")
+                }).ToList();
+
+                return Json(new
+                {
+                    success = true,
+                    takenSlots = takenSlots
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = ex.ToString()
+                }, JsonRequestBehavior.AllowGet);
+            }
+        }
+        // ── Private Helpers ────────────────────────────────────────────────────
+        private decimal GetTotalBillFromNotes(string notes)
+{
+    if (string.IsNullOrWhiteSpace(notes))
+        return 0;
+
+    try
+    {
+        string servicesPart = "";
+        var parts = notes.Split('|');
+
+        foreach (var part in parts)
+        {
+            if (part.Trim().StartsWith("Services:", StringComparison.OrdinalIgnoreCase))
+            {
+                servicesPart = part.Replace("Services:", "").Trim();
+                break;
+            }
         }
 
-        // ── Private Helpers ────────────────────────────────────────────────────
+        if (string.IsNullOrWhiteSpace(servicesPart))
+            return 0;
 
+        var serviceNames = servicesPart
+            .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => s.Trim())
+            .ToList();
+
+        var total = db.tbl_services
+            .Where(s => serviceNames.Contains(s.name))
+            .Select(s => (decimal?)s.price)
+            .ToList()
+            .Sum() ?? 0;
+
+        return total;
+    }
+    catch
+    {
+        return 0;
+    }
+}
         private bool TryParseTime(string s, out TimeSpan t)
         {
             t = default(TimeSpan);

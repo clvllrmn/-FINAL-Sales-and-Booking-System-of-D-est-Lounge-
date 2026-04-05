@@ -162,5 +162,41 @@ namespace DestLoungeSalesandBooking.Controllers
             if (disposing) db.Dispose();
             base.Dispose(disposing);
         }
+    
+    [HttpPost]
+        [ValidateAntiForgeryToken]
+        [SessionCheck(RequireAdmin = true)]
+        public JsonResult DeletePolaroidImage(int slot)
+        {
+            try
+            {
+                if (slot < 1 || slot > 3)
+                    return Json(new { success = false, message = "Invalid slot." });
+
+                string contentType = "polaroid_" + slot;
+
+                var content = db.tbl_homepage_content.FirstOrDefault(c => c.contentType == contentType);
+                if (content == null)
+                    return Json(new { success = false, message = "Photo slot not found." });
+
+                if (!string.IsNullOrWhiteSpace(content.contentValue))
+                {
+                    string physicalPath = Server.MapPath(content.contentValue);
+                    if (System.IO.File.Exists(physicalPath))
+                    {
+                        System.IO.File.Delete(physicalPath);
+                    }
+                }
+
+                content.contentValue = "";
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Photo deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
     }
-}
+    }

@@ -28,9 +28,9 @@ app.controller("DestLoungeSalesandBookingController",
         };
 
         $scope.polaroidImages = {
-            1: '/Content/Pictures/nail1.jpg',
-            2: '/Content/Pictures/nail2.jpg',
-            3: '/Content/Pictures/nail3.jpg'
+            1: '',
+            2: '',
+            3: ''
         };
 
         $scope.user = {};
@@ -240,6 +240,86 @@ app.controller("DestLoungeSalesandBookingController",
             };
 
             input.click();
+        };
+        $scope.deletedPolaroids = [];
+        $scope.showPolaroidArchive = false;
+
+        $scope.deletePolaroidImage = function (slot) {
+            if (!confirm("Delete this homepage photo?")) return;
+
+            var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            var tokenValue = tokenElement ? tokenElement.value : '';
+
+            var formData = new FormData();
+            formData.append('slot', slot);
+            formData.append('__RequestVerificationToken', tokenValue);
+
+            $http({
+                method: 'POST',
+                url: '/HomePageContent/DeletePolaroidImage',
+                data: formData,
+                headers: { 'Content-Type': undefined }
+            })
+                .then(function (response) {
+                    if (response.data.success) {
+                        $scope.polaroidImages[slot] = '';
+                        alert('Photo deleted successfully!');
+                        $scope.loadHomepageContent();
+                        $scope.loadDeletedPolaroids();
+                    } else {
+                        alert('Error: ' + response.data.message);
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error deleting polaroid image:', error);
+                    alert('Failed to delete photo.');
+                });
+        };
+
+        $scope.togglePolaroidArchive = function () {
+            $scope.showPolaroidArchive = !$scope.showPolaroidArchive;
+            if ($scope.showPolaroidArchive) {
+                $scope.loadDeletedPolaroids();
+            }
+        };
+
+        $scope.loadDeletedPolaroids = function () {
+            $http.get('/HomePageContent/GetDeletedPolaroids')
+                .then(function (response) {
+                    if (response.data.success) {
+                        $scope.deletedPolaroids = response.data.data;
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error loading deleted polaroids:', error);
+                });
+        };
+
+        $scope.restorePolaroidImage = function (archiveId) {
+            if (!confirm("Restore this photo?")) return;
+
+            var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            var tokenValue = tokenElement ? tokenElement.value : '';
+
+            $http({
+                method: 'POST',
+                url: '/HomePageContent/RestorePolaroidImage/' + archiveId,
+                data: $.param({ __RequestVerificationToken: tokenValue }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+                .then(function (response) {
+                    if (response.data.success) {
+                        alert('Photo restored successfully!');
+                        $scope.loadHomepageContent();
+                        $scope.loadDeletedPolaroids();
+                    } else {
+                        alert('Error: ' + response.data.message);
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error restoring polaroid image:', error);
+                    alert('Failed to restore photo.');
+                });
         };
 
         // ===== FAQ FUNCTIONS =====
@@ -664,20 +744,36 @@ app.controller("DestLoungeSalesandBookingController",
         if (window.location.pathname.toLowerCase().indexOf('servicepage') !== -1) {
             $scope.loadServices();
         }
+      
 
         // === BOOKING PAGE DATA ====
         $scope.nailTechs = [{ id: 1, name: "Name 1" }, { id: 2, name: "Name 2" }, { id: 3, name: "Name 3" }];
 
-        $scope.bookingServices = [
-            { name: "Manicure", price: 99, selected: false },
-            { name: "Pedicure", price: 139, selected: false },
-            { name: "Add: Branded Polish", price: 20, selected: false },
-            { name: "Pedicure Gel", price: 479, selected: false },
-            { name: "Manicure Gel", price: 379, selected: false },
-            { name: "BIAB Overlay Gel", price: 999, selected: false },
-            { name: "Soft Gel-2 (Medium)", price: 599, selected: false },
-            { name: "Soft Gel-3 (Long)", price: 699, selected: false }
-        ];
+        $scope.loadBookingServices = function () {
+            $http.get('/Service/GetAllServices')
+                .then(function (response) {
+                    if (response.data.success) {
+                        $scope.bookingServices = response.data.data.map(function (s) {
+                            return {
+                                serviceId: s.serviceId,
+                                name: s.name,
+                                price: s.price,
+                                selected: false
+                            };
+                        });
+                    } else {
+                        $scope.bookingServices = [];
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error loading booking services:', error);
+                    $scope.bookingServices = [];
+                });
+        };
+        if (window.location.pathname.toLowerCase().indexOf('bookingpage') !== -1) {
+            console.log("Booking page detected");
+            $scope.loadBookingServices();
+        }
 
         $scope.booking = {
             nailTech: "",
@@ -689,6 +785,7 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.weekdayTimes = ["09:00 AM", "11:00 AM", "01:00 PM", "03:00 PM", "05:00 PM", "07:00 PM"];
         $scope.weekendTimes = ["08:00 AM", "10:00 AM", "12:00 PM", "02:00 PM", "04:00 PM", "06:00 PM", "08:00 PM"];
         $scope.availableTimes = [];
+        $scope.takenTimes = [];
 
         var today = new Date();
         var dd = String(today.getDate()).padStart(2, '0');
@@ -706,41 +803,148 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.fullyBookedDates = [];
         $scope.dateFullyBooked = false;
 
-        $scope.checkAvailability = function () {
-            if ($scope.booking.date) {
-                var selectedDate;
-                if ($scope.booking.date instanceof Date) {
-                    selectedDate = $scope.booking.date;
-                } else {
-                    var parts = $scope.booking.date.split('-');
-                    selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
-                }
-                var selectedDateStr = $scope.booking.date;
-                if ($scope.booking.date instanceof Date) {
-                    var year = selectedDate.getFullYear();
-                    var month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-                    var day = String(selectedDate.getDate()).padStart(2, '0');
-                    selectedDateStr = year + '-' + month + '-' + day;
-                }
-                $scope.dateFullyBooked = $scope.fullyBookedDates.indexOf(selectedDateStr) !== -1;
-                if ($scope.dateFullyBooked) {
-                    $scope.booking.time = '';
-                    $scope.availableTimes = [];
-                } else {
-                    var dayOfWeek = selectedDate.getDay();
-                    if (dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6) {
-                        $scope.availableTimes = $scope.weekendTimes;
-                    } else {
-                        $scope.availableTimes = $scope.weekdayTimes;
-                    }
+        $scope.formatDateOnly = function (dateValue) {
+            if (!dateValue) return "";
 
-                    if ($scope.booking.time && $scope.availableTimes.indexOf($scope.booking.time) === -1) {
-                        $scope.booking.time = '';
-                    }
-                }
+            var d;
+            if (dateValue instanceof Date) {
+                d = dateValue;
             } else {
-                $scope.availableTimes = [];
+                d = new Date(dateValue);
             }
+
+            if (isNaN(d.getTime())) return "";
+
+            var y = d.getFullYear();
+            var m = String(d.getMonth() + 1).padStart(2, '0');
+            var day = String(d.getDate()).padStart(2, '0');
+
+            return y + '-' + m + '-' + day;
+        };
+
+        $scope.to12Hour = function (timeStr) {
+            if (!timeStr) return "";
+
+            var parts = timeStr.split(':');
+            var h = parseInt(parts[0], 10);
+            var m = parts[1] || "00";
+
+            var suffix = h >= 12 ? "PM" : "AM";
+            h = h % 12;
+            if (h === 0) h = 12;
+
+            return String(h).padStart(2, '0') + ":" + m + " " + suffix;
+        };
+
+        $scope.normalizeTime = function (time) {
+            return (time || "").trim().toUpperCase();
+        };
+
+        $scope.isTimeDisabled = function (time) {
+            var taken = $scope.takenTimes.indexOf($scope.normalizeTime(time)) !== -1;
+            var tooSoon = $scope.isPast24HourCutoff($scope.booking.date, time);
+            return taken || tooSoon;
+        };
+
+        $scope.isPast24HourCutoff = function (dateValue, timeValue) {
+            if (!dateValue || !timeValue) return false;
+
+            var selectedDate;
+            if (dateValue instanceof Date) {
+                selectedDate = new Date(dateValue);
+            } else {
+                selectedDate = new Date(dateValue);
+            }
+
+            if (isNaN(selectedDate.getTime())) return false;
+
+            var timeText = (timeValue || "").toString().trim().toUpperCase();
+            var match = timeText.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+
+            if (!match) return false;
+
+            var hour = parseInt(match[1], 10);
+            var minute = parseInt(match[2], 10);
+            var ampm = match[3];
+
+            if (ampm === "PM" && hour < 12) hour += 12;
+            if (ampm === "AM" && hour === 12) hour = 0;
+
+            selectedDate.setHours(hour, minute, 0, 0);
+
+            var cutoff = new Date();
+            cutoff.setHours(cutoff.getHours() + 24);
+
+            return selectedDate < cutoff;
+        };
+
+        $scope.checkAvailability = function () {
+            $scope.takenTimes = [];
+            $scope.dateFullyBooked = false;
+
+            if (!$scope.booking.date) {
+                $scope.availableTimes = [];
+                $scope.booking.time = '';
+                return;
+            }
+
+            var selectedDate;
+            if ($scope.booking.date instanceof Date) {
+                selectedDate = $scope.booking.date;
+            } else {
+                var parts = $scope.booking.date.split('-');
+                selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            }
+
+            var dayOfWeek = selectedDate.getDay();
+
+            if (dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6) {
+                $scope.availableTimes = angular.copy($scope.weekendTimes);
+            } else {
+                $scope.availableTimes = angular.copy($scope.weekdayTimes);
+            }
+
+            if (!$scope.booking.nailTech) {
+                if ($scope.booking.time && $scope.availableTimes.indexOf($scope.booking.time) === -1) {
+                    $scope.booking.time = '';
+                }
+                return;
+            }
+
+            var year = selectedDate.getFullYear();
+            var month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            var day = String(selectedDate.getDate()).padStart(2, '0');
+            var selectedDateStr = year + '-' + month + '-' + day;
+
+            $http.get('/Booking/GetTakenSlots', {
+                params: {
+                    date: selectedDateStr,
+                    nailTech: $scope.booking.nailTech
+                }
+            }).then(function (res) {
+                var data = res.data || {};
+
+                if (!data.success) {
+                    console.error("GetTakenSlots error:", data.message);
+                    return;
+                }
+
+                $scope.takenTimes = (data.takenSlots || []).map(function (slot) {
+                    return $scope.normalizeTime(slot.StartTime);
+                });
+
+                $scope.dateFullyBooked = $scope.availableTimes.length > 0 &&
+                    $scope.availableTimes.every(function (time) {
+                        return $scope.takenTimes.indexOf($scope.normalizeTime(time)) !== -1;
+                    });
+
+                if ($scope.booking.time && $scope.isTimeDisabled($scope.booking.time)) {
+                    $scope.booking.time = '';
+                }
+            }).catch(function (err) {
+                console.error("GetTakenSlots error:", err);
+            });
+       
         };
 
         $scope.updateSelectedServices = function () {
@@ -776,11 +980,7 @@ app.controller("DestLoungeSalesandBookingController",
         };
 
         $scope.getSelectedTechName = function () {
-            if (!$scope.booking.nailTech) return '';
-            var found = $scope.nailTechs.find(function (t) {
-                return String(t.id) === String($scope.booking.nailTech);
-            });
-            return found ? found.name : '';
+            return $scope.booking.nailTech || '';
         };
 
         $scope.submitBooking = function () {
@@ -900,6 +1100,8 @@ app.controller("DestLoungeSalesandBookingController",
                     booking.services = [];
                 }
             }
+
+          
 
             var formData = new FormData();
 
@@ -1574,16 +1776,33 @@ app.controller("DestLoungeSalesandBookingController",
                 datePart = bookingDate.split('T')[0];
             }
 
-            var timePart = startTime;
-            if (startTime.indexOf('.') !== -1) {
-                timePart = startTime.split('.')[0];
+            var d = new Date(datePart);
+            if (isNaN(d.getTime())) return false;
+
+            var timeText = (startTime || "").toString().trim().toUpperCase();
+
+            // handle formats like "09:00:00"
+            if (/^\d{2}:\d{2}:\d{2}$/.test(timeText)) {
+                var parts24 = timeText.split(':');
+                d.setHours(parseInt(parts24[0], 10), parseInt(parts24[1], 10), 0, 0);
+            }
+            // handle formats like "9:00 AM" or "09:00 AM"
+            else {
+                var match = timeText.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+                if (!match) return false;
+
+                var hour = parseInt(match[1], 10);
+                var minute = parseInt(match[2], 10);
+                var ampm = match[3];
+
+                if (ampm === "PM" && hour < 12) hour += 12;
+                if (ampm === "AM" && hour === 12) hour = 0;
+
+                d.setHours(hour, minute, 0, 0);
             }
 
-            var bookingDateTime = new Date(datePart + 'T' + timePart);
-            if (isNaN(bookingDateTime.getTime())) return false;
-
             var now = new Date();
-            var diffHours = (bookingDateTime - now) / (1000 * 60 * 60);
+            var diffHours = (d.getTime() - now.getTime()) / (1000 * 60 * 60);
 
             return diffHours > 24;
         };
@@ -1618,6 +1837,7 @@ app.controller("DestLoungeSalesandBookingController",
                             status: b.Status,
                             notes: b.Notes || "",
                             nailTech: b.NailTech || "",
+                            totalBill: b.TotalBill || 0,
                             dateObj: dateObj
                         };
                     });
@@ -1879,11 +2099,24 @@ app.directive('compareTo', function () {
 
     $scope.formatTime = function (t) {
         if (!t) return '';
-        var parts = t.toString().split(':');
+
+        var timeText = t.toString().trim();
+
+        // already 12-hour format, just normalize casing
+        if (/^\d{1,2}:\d{2}\s*(AM|PM)$/i.test(timeText)) {
+            return timeText.toUpperCase();
+        }
+
+        // 24-hour or hh:mm:ss format
+        var parts = timeText.split(':');
         var h = parseInt(parts[0], 10);
         var m = parts[1] || '00';
+
+        if (isNaN(h)) return timeText;
+
         var ampm = h >= 12 ? 'PM' : 'AM';
         h = h % 12 || 12;
+
         return h + ':' + m + ' ' + ampm;
     };
 
