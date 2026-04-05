@@ -1143,34 +1143,6 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.filteredBookings = [];
         $scope.selectedFilter = 'all';
 
-        function parseNetDate(netDateStr) {
-            if (!netDateStr) return null;
-            if (typeof netDateStr === "string") {
-                var match = /\/Date\((\d+)\)\//.exec(netDateStr);
-                if (match && match[1]) {
-                    return new Date(parseInt(match[1], 10));
-                }
-                var d = new Date(netDateStr);
-                if (!isNaN(d.getTime())) return d;
-            }
-            if (netDateStr instanceof Date) return netDateStr;
-            return null;
-        }
-
-        function pad2(n) {
-            return String(n).padStart(2, "0");
-        }
-
-        function formatDateTime(d, startTime, endTime) {
-            if (!d) return "N/A";
-            var day = pad2(d.getDate());
-            var mon = pad2(d.getMonth() + 1);
-            var yr = d.getFullYear();
-            var st = (startTime || "").substring(0, 5);
-            var et = (endTime || "").substring(0, 5);
-            return day + "/" + mon + "/" + yr + " " + st + "-" + et;
-        }
-
         function extractCancelReason(notes) {
             if (!notes) return "";
             var key = "Cancel reason:";
@@ -1184,26 +1156,45 @@ app.controller("DestLoungeSalesandBookingController",
             return $http.get("/Booking/List")
                 .then(function (resp) {
                     console.log("RAW /Booking/List response:", resp.data);
+
                     var rows = resp.data || [];
+
+                    if (rows.success === false) {
+                        console.error("Failed to load bookings:", rows.message);
+                        $scope.bookings = [];
+                        $scope.filteredBookings = [];
+                        return;
+                    }
+
                     $scope.bookings = rows.map(function (b) {
-                        var dateObj = parseNetDate(b.BookingDate);
-                        var status = (b.Status || "Pending").trim();
-                        var serviceLabel = "ServiceId #" + b.ServiceId;
-                        if (b.Notes && b.Notes.indexOf("Services:") !== -1) {
-                            var s = b.Notes.split("|")[0];
-                            serviceLabel = s.replace("Services:", "").trim();
-                        }
                         return {
-                            bookingId: b.BookingId,
-                            clientName: ((b.FirstName || "") + " " + (b.LastName || "")).trim() || ("Customer #" + b.CustomerId),
-                            service: serviceLabel,
-                            dateTime: formatDateTime(dateObj, b.StartTime, b.EndTime),
-                            contact: b.Notes ? b.Notes : "N/A",
-                            status: status,
-                            cancelReason: extractCancelReason(b.Notes),
-                            _raw: b
+                            bookingId: b.bookingId,
+                            customerId: b.customerId,
+                            serviceId: b.serviceId,
+                            bookingDate: b.bookingDate,
+                            startTime: b.startTime,
+                            endTime: b.endTime,
+                            status: (b.status || "Pending").trim(),
+                            notes: b.notes || "",
+                            createdAt: b.createdAt,
+
+                            firstName: b.firstName || "",
+                            lastName: b.lastName || "",
+                            email: b.email || "N/A",
+                            contactNumber: b.contactNumber || "N/A",
+                            address: b.address || "N/A",
+                            totalBill: b.totalBill || 0,
+                            downpayment: b.downpayment || 0,
+
+                            clientName: b.clientName || "N/A",
+                            service: b.service || "N/A",
+                            dateTime: b.dateTime || "N/A",
+                            contact: b.contact || "N/A",
+
+                            cancelReason: extractCancelReason(b.notes)
                         };
                     });
+
                     $scope.filterBookings($scope.selectedFilter);
                 })
                 .catch(function (err) {
@@ -1219,12 +1210,16 @@ app.controller("DestLoungeSalesandBookingController",
 
             function parseCardDateTime(card) {
                 if (!card || !card.dateTime || card.dateTime === "N/A") return null;
+
                 var datePart = card.dateTime.split(" ")[0];
                 var parts = datePart.split("/");
+
                 if (parts.length !== 3) return null;
-                var dd = parseInt(parts[0], 10);
-                var mm = parseInt(parts[1], 10);
+
+                var mm = parseInt(parts[0], 10);
+                var dd = parseInt(parts[1], 10);
                 var yy = parseInt(parts[2], 10);
+
                 var d = new Date(yy, mm - 1, dd);
                 d.setHours(0, 0, 0, 0);
                 return d;
@@ -1254,7 +1249,10 @@ app.controller("DestLoungeSalesandBookingController",
                 $scope.filteredBookings = $scope.bookings.filter(function (b) {
                     return b.status === 'Pending';
                 });
+            } else {
+                $scope.filteredBookings = $scope.bookings;
             }
+
             console.log("FILTERED bookings:", $scope.filteredBookings);
         };
 
@@ -1273,46 +1271,51 @@ app.controller("DestLoungeSalesandBookingController",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" }
             }).then(function (resp) {
                 if (!resp.data.success) {
-                    alert(" " + resp.data.message);
+                    alert(resp.data.message || "Failed to update booking.");
                     return;
                 }
+
                 var card = $scope.bookings.find(function (b) { return b.bookingId === bookingId; });
                 if (card) card.status = newStatus;
+
                 $scope.filterBookings($scope.selectedFilter);
                 alert(resp.data.message || "Updated.");
-                return resp.data;
             }).catch(function (err) {
-                console.error(err);
-                alert("X Update failed");
+                console.error("UpdateStatus error:", err);
+                alert("Failed to update booking.");
             });
         };
 
         $scope.cancelBooking = function (bookingId) {
-            var reason = prompt("Cancel reason (optional):") || "";
-            var payload = { bookingId: bookingId, reason: reason };
+            var reason = prompt("Reason for cancellation (optional):") || "";
+
             return $http({
                 method: "POST",
                 url: "/Booking/Cancel",
-                data: $httpParamSerializerJQLike(payload),
+                data: $httpParamSerializerJQLike({
+                    bookingId: bookingId,
+                    reason: reason
+                }),
                 headers: { "Content-Type": "application/x-www-form-urlencoded" }
             }).then(function (resp) {
-                alert(resp.data.message || "Cancelled!");
-                $scope.loadUserBookings();
+                if (!resp.data.success) {
+                    alert(resp.data.message || "Failed to cancel booking.");
+                    return;
+                }
+
                 var card = $scope.bookings.find(function (b) { return b.bookingId === bookingId; });
                 if (card) {
                     card.status = "Cancelled";
                     card.cancelReason = reason;
-                    if (reason) card.contact = (card.contact || "") + " | Cancel reason: " + reason;
                 }
+
                 $scope.filterBookings($scope.selectedFilter);
-                alert(resp.data.message || "Cancelled.");
-                return resp.data;
+                alert(resp.data.message || "Booking cancelled.");
             }).catch(function (err) {
-                console.error(err);
-                alert("Cancel failed");
+                console.error("Cancel error:", err);
+                alert("Failed to cancel booking.");
             });
         };
-
         // ===== SALES ANALYTICS =====
         $scope.salesRange = "week";
         $scope.sales = { totalRevenue: 0, totalBookings: 0, points: [], range: "week" };
@@ -1942,11 +1945,18 @@ app.controller("DestLoungeSalesandBookingController",
             });
         };
 
+
+
         // ===== PAYMENT SETTINGS =====
         $scope.payment = {};
         $scope.paymentInfo = {};
 
         $scope.savePayment = function () {
+
+            if (!$scope.paymentSettings.gcashNumber || !/^\d{11}$/.test($scope.paymentSettings.gcashNumber)) {
+                alert("GCash number must be exactly 11 digits.");
+                return;
+            }
             var file = document.getElementById("qrUpload").files[0];
 
             var formData = new FormData();

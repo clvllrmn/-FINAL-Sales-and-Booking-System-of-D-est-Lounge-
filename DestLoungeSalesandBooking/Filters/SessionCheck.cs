@@ -26,14 +26,20 @@ namespace DestLoungeSalesandBooking.Filters
             string controller = routeValues["controller"]?.ToString();
             string action = routeValues["action"]?.ToString();
 
-            if (controller == "HomePageContent" && action == "GetAllContent")
+
+            // allow public read of services
+            if (controller == "Service" && action == "GetAllServices")
             {
                 base.OnActionExecuting(filterContext);
                 return;
             }
 
-            // allow public read of services
-            if (controller == "Service" && action == "GetAllServices")
+            if (controller == "HomePageContent" && action == "GetAllContent")
+            {
+                base.OnActionExecuting(filterContext);
+                return;
+            }
+            if (controller == "FAQ" && action == "GetAllFAQs")
             {
                 base.OnActionExecuting(filterContext);
                 return;

@@ -134,37 +134,107 @@ namespace DestLoungeSalesandBooking.Controllers
                 bookingId = booking.BookingId
             });
         }
-
+        [HttpGet]
         [SessionCheck(RequireAdmin = true)]
-        public ActionResult List()
+        public JsonResult List()
         {
-            var items = db.tbl_bookings
-                .OrderByDescending(b => b.CreatedAt)
-                .Take(50)
-                .ToList()
-                .Select(b => new
-                {
-                    b.BookingId,
-                    b.CustomerId,
-                    b.ServiceId,
-                    BookingDate = b.BookingDate,
-                    StartTime = b.StartTime.ToString(),
-                    EndTime = b.EndTime.ToString(),
-                    b.Status,
-                    b.Notes,
-                    b.CreatedAt,
-                    FirstName = db.tbl_users
-                        .Where(u => u.userID == b.CustomerId)
-                        .Select(u => u.firstname)
-                        .FirstOrDefault(),
-                    LastName = db.tbl_users
-                        .Where(u => u.userID == b.CustomerId)
-                        .Select(u => u.lastname)
-                        .FirstOrDefault()
-                })
-                .ToList();
+            try
+            {
+                var bookings = db.tbl_bookings
+                    .OrderByDescending(b => b.CreatedAt)
+                    .ToList()
+                    .Select(b =>
+                    {
+                        var user = db.tbl_users.FirstOrDefault(u => u.userID == b.CustomerId);
 
-            return Json(items, JsonRequestBehavior.AllowGet);
+                        string notes = b.Notes ?? "";
+
+                        decimal downpayment = 0;
+                        decimal totalBill = 0;
+
+                        if (!string.IsNullOrWhiteSpace(notes))
+                        {
+                            var parts = notes.Split('|').Select(x => x.Trim()).ToList();
+
+                            foreach (var part in parts)
+                            {
+                                if (part.StartsWith("Downpayment:", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    var val = part.Replace("Downpayment:", "").Trim();
+                                    decimal.TryParse(val, out downpayment);
+                                }
+                            }
+
+                            // current system is storing the bill amount in the notes under Downpayment
+                            totalBill = downpayment;
+                        }
+
+                        string serviceLabel = "N/A";
+                        if (!string.IsNullOrWhiteSpace(notes))
+                        {
+                            var parts = notes.Split('|').Select(x => x.Trim()).ToList();
+                            foreach (var part in parts)
+                            {
+                                if (part.StartsWith("Services:", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    serviceLabel = part.Replace("Services:", "").Trim();
+                                    break;
+                                }
+                            }
+                        }
+
+                        string clientName = "Customer #" + b.CustomerId;
+                        if (user != null)
+                        {
+                            clientName = ((user.firstname ?? "") + " " + (user.lastname ?? "")).Trim();
+                        }
+
+                        string startTime = b.StartTime.ToString(@"hh\:mm");
+                        string endTime = b.EndTime.ToString(@"hh\:mm");
+                        string dateTime = b.BookingDate.ToString("MM/dd/yyyy") + " " + startTime + "-" + endTime;
+
+                        string contactText =
+                            "Services: " + serviceLabel +
+                            " | Contact: " + (user != null ? (user.coNum ?? "N/A") : "N/A") +
+                            " | Email: " + (user != null ? (user.email ?? "N/A") : "N/A") +
+                            " | Address: " + (user != null ? (user.address ?? "N/A") : "N/A") +
+                            " | Downpayment: " + downpayment.ToString("0.##") +
+                            " | Total Bill: " + totalBill.ToString("0.##");
+
+                        return new
+                        {
+                            bookingId = b.BookingId,
+                            customerId = b.CustomerId,
+                            serviceId = b.ServiceId,
+                            bookingDate = b.BookingDate.ToString("yyyy-MM-dd"),
+                            startTime = startTime,
+                            endTime = endTime,
+                            status = b.Status,
+                            notes = notes,
+                            createdAt = b.CreatedAt,
+                            firstName = user != null ? user.firstname : "",
+                            lastName = user != null ? user.lastname : "",
+                            email = user != null ? user.email : "",
+                            contactNumber = user != null ? user.coNum : "",
+                            address = user != null ? user.address : "",
+                            totalBill = totalBill,
+                            downpayment = downpayment,
+
+                            // fields expected by your current admin page
+                            clientName = clientName,
+                            service = serviceLabel,
+                            dateTime = dateTime,
+                            contact = contactText
+                        };
+                    })
+                    .ToList();
+
+                return Json(bookings, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
         }
 
         [HttpPost]
