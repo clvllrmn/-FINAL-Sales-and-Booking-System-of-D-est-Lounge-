@@ -185,10 +185,15 @@
                     <span class="flag-badge" ng-show="review.flagged"><i class="fa-solid fa-flag"></i> Flagged</span>
                 </div>
                 <p class="rac-text">&ldquo;{{review.reviewText}}&rdquo;</p>
+                <div class="rac-images" ng-if="review.images && review.images.length > 0">
+                    <img ng-repeat="img in review.images"
+                         ng-src="{{img}}"
+                         class="rac-image" />
+                </div>
                 <div class="rac-actions">
                     <button class="admin-btn admin-btn-flag" ng-show="!review.flagged" ng-click="flagReview(review)"><i class="fa-solid fa-flag"></i> Flag</button>
                     <button class="admin-btn admin-btn-unflag" ng-show="review.flagged" ng-click="unflagReview(review)"><i class="fa-solid fa-flag-checkered"></i> Unflag</button>
-                    <button class="admin-btn admin-btn-archive" ng-click="archiveReview(review)"><i class="fa-solid fa-box-archive"></i> Archive</button>
+                    <button class="admin-btn admin-btn-archive" ng-click="archiveReview(review.reviewId)"><i class="fa-solid fa-box-archive"></i> Archive</button>
                 </div>
             </div>
             <div class="empty-state" ng-show="(reviews | filter:reviewSearchFilter).length === 0">
@@ -1490,6 +1495,20 @@
             bottom: 1rem;
             right: 1rem;
             left: 1rem;
+        }
+        .rac-images {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .rac-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #ddd;
         }
     }
 </style>

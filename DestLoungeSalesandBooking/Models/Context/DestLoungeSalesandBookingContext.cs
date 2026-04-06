@@ -36,7 +36,11 @@ namespace DestLoungeSalesandBooking.Models.Context
         public DbSet<tbl_reviews> tbl_reviews { get; set; }
         public DbSet<tbl_review_images> tbl_review_images { get; set; }
 
-       
+        public DbSet<tbl_admin_notifications> tbl_admin_notifications { get; set; }
+
+        public System.Data.Entity.DbSet<tbl_payment_settings> tbl_payment_settings { get; set; }
+
+
 
 
 

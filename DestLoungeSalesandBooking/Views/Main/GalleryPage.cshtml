@@ -32,9 +32,33 @@
                         <i class="fa-regular fa-user"></i> LOGIN
                     </a>
                 }
-                <a href="#">
-                    <i class="fa-solid fa-bell"></i> Notifications
-                </a>
+
+                <div ng-controller="DestLoungeSalesandBookingController"
+                     ng-init="loadNotifications()"
+                     style="position:relative;">
+
+                    <a href="" ng-click="toggleNotif(); $event.preventDefault()">
+                        <i class="fa-solid fa-bell"></i> Notifications
+                        <span ng-if="notifications.length > 0">({{notifications.length}})</span>
+                    </a>
+
+                    <div ng-show="showNotif"
+                         style="position:absolute; right:0; top:30px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999;">
+                        <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
+                            Notifications
+                        </div>
+
+                        <div ng-if="!notifications.length" style="padding:10px;">
+                            No notifications
+                        </div>
+
+                        <div ng-repeat="n in notifications"
+                             style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
+                             ng-click="goToBooking()">
+                            {{n.Message || n.message}}
+                        </div>
+                    </div>
+                </div>
             </div>
         </nav>
 
@@ -51,9 +75,39 @@
                     <i class="fa-regular fa-user"></i> LOGIN
                 </a>
             }
-            <a href="#" class="bell-icon" title="Notifications">
-                <i class="fa-solid fa-bell"></i>
-            </a>
+
+            <div ng-controller="DestLoungeSalesandBookingController"
+                 ng-init="loadNotifications()"
+                 style="position:relative; margin-left:15px;">
+
+                <button type="button"
+                        ng-click="toggleNotif($event)"
+                        style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037; z-index:9999;">
+                    <i class="fa-solid fa-bell"></i>
+
+                    <span ng-if="notifications.length > 0"
+                          style="position:absolute; top:-8px; right:-10px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:11px;">
+                        {{notifications.length}}
+                    </span>
+                </button>
+
+                <div ng-show="showNotif"
+                     style="position:absolute; right:0; top:35px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999;">
+                    <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
+                        Notifications
+                    </div>
+
+                    <div ng-if="!notifications.length" style="padding:10px;">
+                        No notifications
+                    </div>
+
+                    <div ng-repeat="n in notifications"
+                         style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
+                         ng-click="goToBooking()">
+                        {{n.Message || n.message}}
+                    </div>
+                </div>
+            </div>
         </div>
 
         <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
@@ -65,7 +119,6 @@
 
     <div class="nav-overlay" id="navOverlay"></div>
 </header>
-
 <div class="gallery-page-container"
      ng-controller="DestLoungeSalesandBookingController"
      ng-init="setTab('gallery')">
@@ -146,6 +199,12 @@
                     <span class="review-date">{{review.date | date:'MMMM d, yyyy'}}</span>
                 </div>
                 <p class="review-text">&ldquo;{{review.reviewText}}&rdquo;</p>
+                <div class="review-images-wrap" ng-if="review.images && review.images.length > 0">
+                    <img ng-repeat="img in review.images"
+                         ng-src="{{img}}"
+                         alt="Review Photo"
+                         class="review-image" />
+                </div>
                 <div class="review-footer">
                     <span class="review-service"><i class="fa-solid fa-spa"></i> {{review.serviceAvailed}}</span>
                 </div>
@@ -731,6 +790,22 @@
             font-size: 0.9rem;
             font-weight: 500;
         }
+
+    .review-images-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .review-image {
+        width: 90px;
+        height: 90px;
+        border-radius: 12px;
+        object-fit: cover;
+        display: block;
+        border: 1px solid #e7dfd6;
+    }
 
     /* =============================================
        DESKTOP (above 1024px)

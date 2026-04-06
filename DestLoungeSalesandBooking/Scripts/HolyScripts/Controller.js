@@ -51,7 +51,6 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.loadReviews = function () {
             $http.get('/Main/GetReviews')
                 .then(function (res) {
-
                     console.log("REVIEWS DATA:", res.data);
 
                     $scope.reviews = res.data.map(function (r) {
@@ -59,10 +58,12 @@ app.controller("DestLoungeSalesandBookingController",
                             rating: r.Rating,
                             reviewText: r.ReviewText,
                             serviceAvailed: r.ServiceAvailed || "Service",
-                            date: new Date(parseInt(r.CreatedAt.substr(6)))
+                            date: new Date(parseInt(r.CreatedAt.substr(6))),
+                            images: r.Images || []
                         };
                     });
 
+                    $scope.reviewsTotalPages = Math.ceil($scope.reviews.length / $scope.reviewsPerPage);
                     $scope.updatePagedReviews();
                 })
                 .catch(function (err) {
@@ -1185,6 +1186,7 @@ app.controller("DestLoungeSalesandBookingController",
                             address: b.address || "N/A",
                             totalBill: b.totalBill || 0,
                             downpayment: b.downpayment || 0,
+                            receiptPath: b.receiptPath || "",
 
                             clientName: b.clientName || "N/A",
                             service: b.service || "N/A",
@@ -1291,7 +1293,7 @@ app.controller("DestLoungeSalesandBookingController",
 
             return $http({
                 method: "POST",
-                url: "/Booking/Cancel",
+                url: "/Booking/AdminCancel",
                 data: $httpParamSerializerJQLike({
                     bookingId: bookingId,
                     reason: reason
@@ -1307,12 +1309,18 @@ app.controller("DestLoungeSalesandBookingController",
                 if (card) {
                     card.status = "Cancelled";
                     card.cancelReason = reason;
+                    if (reason) {
+                        if (!card.notes) card.notes = "";
+                        if (card.notes.indexOf("Cancel reason:") === -1) {
+                            card.notes += (card.notes ? " | " : "") + "Cancel reason: " + reason;
+                        }
+                    }
                 }
 
                 $scope.filterBookings($scope.selectedFilter);
                 alert(resp.data.message || "Booking cancelled.");
             }).catch(function (err) {
-                console.error("Cancel error:", err);
+                console.error("AdminCancel error:", err);
                 alert("Failed to cancel booking.");
             });
         };
@@ -1475,10 +1483,28 @@ app.controller("DestLoungeSalesandBookingController",
         };
 
         $scope.saveContact = function () {
-            if (!$scope.formData.label || !$scope.formData.value) return;
+            if (!$scope.formData.infoType || !$scope.formData.label || !$scope.formData.value) {
+                alert("Please complete all fields.");
+                return;
+            }
+
+            $scope.formData.label = ($scope.formData.label || "").trim();
+            $scope.formData.value = ($scope.formData.value || "").trim();
+
+            if ($scope.formData.infoType === "phone") {
+                var digitsOnly = $scope.formData.value.replace(/\D/g, "");
+
+                if (digitsOnly.length !== 11) {
+                    alert("Contact number must be exactly 11 digits.");
+                    return;
+                }
+
+                $scope.formData.value = digitsOnly;
+            }
 
             var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
             var tokenValue = tokenElement ? tokenElement.value : "";
+
             var payload = {
                 infoType: $scope.formData.infoType,
                 label: $scope.formData.label,
@@ -1489,18 +1515,25 @@ app.controller("DestLoungeSalesandBookingController",
 
             if ($scope.editingIndex !== null) {
                 var contactID = $scope.contactInfo[$scope.editingIndex].contactID;
+
                 $http({
                     method: 'POST',
                     url: '/Contact/UpdateContact/' + contactID,
                     data: $httpParamSerializerJQLike(payload),
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
                 }).then(function (response) {
+                    console.log("UpdateContact response:", response.data);
+
                     if (response.data.success) {
                         $scope.loadContactInfo();
                         $scope.closeModal();
                     } else {
-                        alert('Error: ' + response.data.message);
+                        alert("Error: " + response.data.message);
                     }
+                }).catch(function (error) {
+                    console.error("UpdateContact error:", error);
+                    console.error("UpdateContact error data:", error.data);
+                    alert("Error: " + ((error.data && error.data.message) ? error.data.message : "Failed to update contact info."));
                 });
             } else {
                 $http({
@@ -1509,16 +1542,21 @@ app.controller("DestLoungeSalesandBookingController",
                     data: $httpParamSerializerJQLike(payload),
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
                 }).then(function (response) {
+                    console.log("CreateContact response:", response.data);
+
                     if (response.data.success) {
                         $scope.loadContactInfo();
                         $scope.closeModal();
                     } else {
-                        alert('Error: ' + response.data.message);
+                        alert("Error: " + response.data.message);
                     }
+                }).catch(function (error) {
+                    console.error("CreateContact error:", error);
+                    console.error("CreateContact error data:", error.data);
+                    alert("Error: " + ((error.data && error.data.message) ? error.data.message : "Failed to create contact info."));
                 });
             }
         };
-
         $scope.deleteContact = function (index) {
             var contact = $scope.contactInfo[index];
             if (confirm('Are you sure you want to delete this contact info?')) {
@@ -1724,6 +1762,16 @@ app.controller("DestLoungeSalesandBookingController",
                 }
             }
         };
+        $scope.editContact = function (contact, index) {
+            $scope.editingIndex = index;
+            $scope.formData = {
+                infoType: contact.infoType,
+                label: contact.label,
+                value: contact.value,
+                icon: contact.icon
+            };
+            $scope.showContactModal = true;
+        };
 
         $scope.openEditModal = function (contentType, currentValue, label) {
             _currentContentType = contentType;
@@ -1808,6 +1856,29 @@ app.controller("DestLoungeSalesandBookingController",
             var diffHours = (d.getTime() - now.getTime()) / (1000 * 60 * 60);
 
             return diffHours > 24;
+        };
+        $scope.formatTime = function (time) {
+            if (!time) return "";
+
+            time = time.toString().trim();
+
+            // already has AM/PM
+            if (/am|pm/i.test(time)) {
+                return time.replace(/\s+/g, " ").trim();
+            }
+
+            // handles 24-hour time like 11:00 or 13:00:00
+            var parts = time.split(":");
+            var hours = parseInt(parts[0], 10);
+            var minutes = parts[1];
+
+            if (isNaN(hours) || minutes === undefined) return time;
+
+            var ampm = hours >= 12 ? "PM" : "AM";
+            hours = hours % 12;
+            if (hours === 0) hours = 12;
+
+            return hours + ":" + minutes + " " + ampm;
         };
 
         $scope.loadUserBookings = function () {
@@ -1909,7 +1980,7 @@ app.controller("DestLoungeSalesandBookingController",
             }
         };
 
-        if (window.location.pathname.toLowerCase().indexOf("profile") !== -1) {
+        if (window.loggedInUserId) {
             $scope.loadNotifications();
         }
 
@@ -1951,31 +2022,60 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.payment = {};
         $scope.paymentInfo = {};
 
-        $scope.savePayment = function () {
+        $scope.payment = {
+            gcash: "",
+            bank: ""
+        };
 
-            if (!$scope.paymentSettings.gcashNumber || !/^\d{11}$/.test($scope.paymentSettings.gcashNumber)) {
+        $scope.savePayment = function () {
+            var gcash = ($scope.payment.gcash || "").trim();
+            var bank = ($scope.payment.bank || "").trim();
+
+            console.log("GCash entered:", gcash, "Length:", gcash.length);
+
+            if (!/^\d{11}$/.test(gcash)) {
                 alert("GCash number must be exactly 11 digits.");
                 return;
             }
-            var file = document.getElementById("qrUpload").files[0];
+
+            var fileInput = document.getElementById("qrUpload");
+            var file = fileInput && fileInput.files.length > 0 ? fileInput.files[0] : null;
 
             var formData = new FormData();
-            formData.append("gcash", $scope.payment.gcash);
-            formData.append("bank", $scope.payment.bank);
-            formData.append("qr", file);
+            formData.append("gcash", gcash);
+            formData.append("bank", bank);
+
+            if (file) {
+                formData.append("qr", file);
+            }
 
             $http.post("/Admin/SavePayment", formData, {
-                headers: { "Content-Type": undefined }
-            }).then(function () {
-                alert("Saved!");
+                headers: { "Content-Type": undefined },
+                transformRequest: angular.identity
+            }).then(function (res) {
+                console.log("SavePayment response:", res.data);
+                alert(res.data.message || "Saved!");
+            }).catch(function (err) {
+                console.error("SavePayment error:", err);
+                alert("Failed to save payment settings.");
             });
         };
 
         $scope.loadPaymentInfo = function () {
-            $http.get("/Admin/GetPaymentInfo")
+            $http.get("/Booking/GetPaymentInfo")
                 .then(function (res) {
+                    console.log("Payment info response:", res.data);
                     $scope.paymentInfo = res.data;
+                })
+                .catch(function (err) {
+                    console.error("Error loading payment info:", err);
+                    $scope.paymentInfo = {
+                        gcash: "",
+                        bank: "",
+                        qr: ""
+                    };
                 });
+        
         };
 
         // CALL ON PAGE LOAD
@@ -1990,37 +2090,77 @@ app.controller("DestLoungeSalesandBookingController",
                 $scope.loadReviews(); // 🔥 load only when clicked
             }
         };
-
         $http.get('/Main/GetReviews').then(function (res) {
             console.log("REVIEWS DATA:", res.data);
 
-            $scope.reviews = res.data.map(function (r) {
+            $scope.reviews = (res.data || []).map(function (r) {
                 return {
+                    reviewId: r.ReviewId,
                     rating: r.Rating,
                     reviewText: r.ReviewText,
-                    date: new Date(parseInt(r.CreatedAt.substr(6))), // ✅ FIX
-                    imageUrl: r.ImageUrl
+                    serviceAvailed: r.ServiceAvailed || "Service",
+                    date: new Date(parseInt(r.CreatedAt.substr(6))),
+                    images: r.Images || [],
+                    imageUrl: (r.Images && r.Images.length > 0) ? r.Images[0] : "",
+                    flagged: r.Flagged || false
                 };
             });
 
             $scope.reviewsPage = 1;
             $scope.reviewsPerPage = 6;
+
             $scope.reviewsTotalPages = Math.ceil($scope.reviews.length / $scope.reviewsPerPage);
             $scope.updatePagedReviews();
-
-            $scope.pagedGallery = [];
-
-            $scope.reviews.forEach(function (r) {
-                if (r.imageUrl) {
-                    $scope.pagedGallery.push({
-                        imageUrl: r.imageUrl,
-                        caption: r.reviewText
-                    });
-                }
-            });
-            $scope.updatePagedReviews();
+        }).catch(function (err) {
+            console.error("Error loading admin reviews:", err);
         });
+        $scope.archiveReview = function (reviewId) {
+            if (!confirm("Archive this review?")) return;
 
+            $http({
+                method: 'POST',
+                url: '/Main/ArchiveReview',
+                data: $httpParamSerializerJQLike({ reviewId: reviewId }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }).then(function (res) {
+                if (res.data.success) {
+                    $scope.reviews = $scope.reviews.filter(function (r) {
+                        return r.reviewId !== reviewId;
+                    });
+
+                    $scope.loadArchivedReviews();
+                    $scope.updatePagedReviews();
+                } else {
+                    alert("Archive failed.");
+                }
+            }).catch(function (err) {
+                console.error("archiveReview error:", err);
+                alert("Archive failed.");
+            });
+        };
+
+        $scope.archivedReviews = [];
+
+        $scope.loadArchivedReviews = function () {
+            $http.get('/Main/GetArchivedReviews')
+                .then(function (res) {
+                    $scope.archivedReviews = (res.data || []).map(function (r) {
+                        return {
+                            reviewId: r.ReviewId,
+                            rating: r.Rating,
+                            reviewText: r.ReviewText,
+                            serviceAvailed: r.ServiceAvailed || "Service",
+                            date: new Date(parseInt(r.CreatedAt.substr(6))),
+                            images: r.Images || [],
+                            imageUrl: (r.Images && r.Images.length > 0) ? r.Images[0] : "",
+                            flagged: r.Flagged || false
+                        };
+                    });
+                })
+                .catch(function (err) {
+                    console.error("loadArchivedReviews error:", err);
+                });
+        };
         $scope.reviewsPage = 1;
         $scope.reviewsPerPage = 6;
 
@@ -2196,5 +2336,75 @@ app.directive('compareTo', function () {
         var diffHours = (bookingDateTime - now) / (1000 * 60 * 60);
         return diffHours > 24;
     };
+    $scope.notifications = [];
+    $scope.showNotif = false;
+
+    $scope.toggleNotif = function ($event) {
+        if ($event) $event.preventDefault();
+        $scope.showNotif = !$scope.showNotif;
+    };
+
+    $scope.loadNotifications = function () {
+        if (!window.loggedInUserId) return;
+
+        $http.get('/Booking/GetNotifications?userId=' + window.loggedInUserId)
+            .then(function (res) {
+                $scope.notifications = res.data || [];
+            }, function () {
+                $scope.notifications = [];
+            });
+    };
+    // 🔔 NOTIFICATIONS
+    $scope.notifications = [];
+    $scope.showNotif = false;
+
+    $scope.toggleNotif = function ($event) {
+        console.log("Bell clicked"); // debug
+
+        if ($event) $event.preventDefault();
+        $scope.showNotif = !$scope.showNotif;
+    };
+
+    $scope.loadNotifications = function () {
+        if (!window.loggedInUserId) {
+            console.log("No user ID");
+            return;
+        }
+
+        console.log("Loading notifications for:", window.loggedInUserId);
+
+        $http.get('/Booking/GetNotifications?userId=' + window.loggedInUserId)
+            .then(function (res) {
+                console.log("Notifications:", res.data);
+                $scope.notifications = res.data || [];
+            })
+            .catch(function (err) {
+                console.error("Notification error:", err);
+                $scope.notifications = [];
+            });
+    };
+
+
+
+    // ===== OTP FUNCTIONS =====
     
+
+    $scope.verifyOtp = function () {
+        var otp = ($scope.resetPassword && $scope.resetPassword.otp)
+            ? $scope.resetPassword.otp.trim()
+            : "";
+
+        if (!otp) {
+            alert("Please enter the OTP.");
+            return;
+        }
+
+        if (!/^\d{6}$/.test(otp)) {
+            alert("OTP must be 6 digits.");
+            return;
+        }
+
+        $scope.forgotStep = 3;
+    };
+
 });

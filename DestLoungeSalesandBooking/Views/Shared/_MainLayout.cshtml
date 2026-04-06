@@ -59,8 +59,10 @@
 
     </div>
 
-
-    @RenderSection("scripts", required: false)                 
+    <script>
+    window.loggedInUserId = @(Session["UserID"] != null ? Session["UserID"].ToString() : "null");
+    </script>
+    @RenderSection("scripts", required: false)
 
 
 </body>

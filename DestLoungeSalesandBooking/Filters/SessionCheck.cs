@@ -45,6 +45,12 @@ namespace DestLoungeSalesandBooking.Filters
                 return;
             }
 
+            if (controller == "Contact" && action == "GetAllContact")
+            {
+                base.OnActionExecuting(filterContext);
+                return;
+            }
+
             // ── Check session ──
             if (session["UserID"] == null)
             {

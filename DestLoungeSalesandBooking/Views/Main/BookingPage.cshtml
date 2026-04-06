@@ -32,9 +32,33 @@
                         <i class="fa-regular fa-user"></i> LOGIN
                     </a>
                 }
-                <a href="#">
+            <div class="notification-wrapper"
+                 ng-controller="DestLoungeSalesandBookingController"
+                 ng-init="loadNotifications()"
+                 style="position:relative;">
+
+                <a href="" ng-click="toggleNotif(); $event.preventDefault()">
                     <i class="fa-solid fa-bell"></i> Notifications
+                    <span ng-if="notifications.length > 0">({{notifications.length}})</span>
                 </a>
+
+                <div ng-show="showNotif"
+                     style="position:absolute; right:0; top:30px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.2); z-index:9999;">
+                    <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
+                        Notifications
+                    </div>
+
+                    <div ng-if="!notifications.length" style="padding:10px; color:gray;">
+                        No notifications yet.
+                    </div>
+
+                    <div ng-repeat="n in notifications"
+                         style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
+                         ng-click="goToBooking()">
+                        {{n.Message || n.message}}
+                    </div>
+                </div>
+            </div>
             </div>
         </nav>
 
@@ -51,9 +75,33 @@
                     <i class="fa-regular fa-user"></i> LOGIN
                 </a>
             }
-            <a href="#" class="bell-icon" title="Notifications">
-                <i class="fa-solid fa-bell"></i>
+        <div class="notification-wrapper"
+             ng-controller="DestLoungeSalesandBookingController"
+             ng-init="loadNotifications()"
+             style="position:relative;">
+
+            <a href="" ng-click="toggleNotif(); $event.preventDefault()">
+                <i class="fa-solid fa-bell"></i> Notifications
+                <span ng-if="notifications.length > 0">({{notifications.length}})</span>
             </a>
+
+            <div ng-show="showNotif"
+                 style="position:absolute; right:0; top:30px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.2); z-index:9999;">
+                <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
+                    Notifications
+                </div>
+
+                <div ng-if="!notifications.length" style="padding:10px; color:gray;">
+                    No notifications yet.
+                </div>
+
+                <div ng-repeat="n in notifications"
+                     style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
+                     ng-click="goToBooking()">
+                    {{n.Message || n.message}}
+                </div>
+            </div>
+        </div>
         </div>
 
         <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
@@ -180,6 +228,7 @@
                 </div>
             </div>
         </div>
+
         <button type="button" class="book-now-btn" ng-click="submitBooking()" ng-disabled="!isBookingValid()">
             Book Now
         </button>

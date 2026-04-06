@@ -462,7 +462,7 @@ namespace DestLoungeSalesandBooking.Controllers
             }
         
     }
-    [HttpPost]
+        [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult SendForgotPasswordOtp(string email)
         {
@@ -474,8 +474,9 @@ namespace DestLoungeSalesandBooking.Controllers
                     return RedirectToAction("ForgotPasswordPage", "Main");
                 }
 
-                var user = db.tbl_users.FirstOrDefault(u => u.email.ToLower() == email.ToLower().Trim());
+                email = email.Trim();
 
+                var user = db.tbl_users.FirstOrDefault(u => u.email == email);
                 if (user == null)
                 {
                     TempData["ErrorMessage"] = "Email not found.";
@@ -485,21 +486,26 @@ namespace DestLoungeSalesandBooking.Controllers
                 var otp = new Random().Next(100000, 999999).ToString();
 
                 Session["ForgotPasswordOTP"] = otp;
-                Session["ForgotPasswordEmail"] = user.email;
-                Session["ForgotPasswordOTPExpiry"] = DateTime.Now.AddMinutes(5);
+                Session["ForgotPasswordEmail"] = email;
+                Session["ForgotPasswordOTPExpiry"] = DateTime.Now.AddMinutes(5); // ✅ FIXED
 
+                // SEND EMAIL
                 SendOtpEmail(user.email, user.firstname, otp);
 
                 TempData["SuccessMessage"] = "OTP has been sent to your email.";
+                TempData["ShowOtpStep"] = true;
+                TempData["ResetEmail"] = email;
+
                 return RedirectToAction("ForgotPasswordPage", "Main");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("SendForgotPasswordOtp Error: " + ex.ToString());
-                TempData["ErrorMessage"] = "Failed to send OTP.";
+                TempData["ErrorMessage"] = ex.Message;
                 return RedirectToAction("ForgotPasswordPage", "Main");
             }
+
         }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]

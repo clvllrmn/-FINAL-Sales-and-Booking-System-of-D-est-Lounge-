@@ -118,7 +118,26 @@
                         <p>{{booking.notes || 'N/A'}}</p>
                     </div>
                 </div>
+                <div class="booking-divider" ng-if="booking.receiptPath"></div>
 
+                <div class="booking-info-row" ng-if="booking.receiptPath">
+                    <div class="info-icon">
+                        <i class="fa-solid fa-image"></i>
+                    </div>
+                    <div class="info-content">
+                        <h3>Receipt:</h3>
+
+                        <a href="{{booking.receiptPath}}" target="_blank" rel="noopener noreferrer">
+                            View Full Image
+                        </a>s
+
+                        <div style="margin-top:10px;">
+                            <img ng-src="{{booking.receiptPath}}"
+                                 alt="Receipt"
+                                 style="max-width:200px; border-radius:10px; border:1px solid #ccc;" />
+                        </div>
+                    </div>
+                </div>
                 <div class="booking-actions">
                     <div ng-if="booking.status === 'Pending'">
                         <button class="approve-btn" ng-click="updateBookingStatus(booking.bookingId, 'Approved')">Approve</button>

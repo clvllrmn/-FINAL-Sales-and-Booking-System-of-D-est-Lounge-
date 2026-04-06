@@ -14,7 +14,6 @@ namespace DestLoungeSalesandBooking.Controllers
     {
         private DestLoungeSalesandBookingContext db = new DestLoungeSalesandBookingContext();
 
-        // GET: /Contact/GetAllContact - Returns all active contacts
         [HttpGet]
         public JsonResult GetAllContact()
         {
@@ -37,12 +36,10 @@ namespace DestLoungeSalesandBooking.Controllers
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("GetAllContact Error: " + ex.Message);
                 return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
 
-        // GET: /Contact/GetDeletedContacts - Returns all soft-deleted contacts
         [HttpGet]
         public JsonResult GetDeletedContacts()
         {
@@ -65,30 +62,51 @@ namespace DestLoungeSalesandBooking.Controllers
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("GetDeletedContacts Error: " + ex.Message);
                 return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
-
-        // POST: /Contact/CreateContact
         [HttpPost]
         [ValidateAntiForgeryToken]
         public JsonResult CreateContact(string infoType, string label, string value, string icon)
         {
             try
             {
-                // ── Only label and value are truly required ──────────────────
+                infoType = (infoType ?? "other").Trim().ToLower();
+                label = (label ?? "").Trim();
+                value = (value ?? "").Trim();
+                icon = (icon ?? "").Trim();
+
                 if (string.IsNullOrWhiteSpace(label) || string.IsNullOrWhiteSpace(value))
                 {
                     return Json(new { success = false, message = "Label and Value are required." });
                 }
 
+                if (infoType == "phone")
+                {
+                    value = new string(value.Where(char.IsDigit).ToArray());
+
+                    if (value.Length != 11)
+                    {
+                        return Json(new { success = false, message = "Contact number must be exactly 11 digits." });
+                    }
+                }
+
+                var existingType = db.tbl_contact.FirstOrDefault(c => c.infoType == infoType && c.isActive);
+                if (existingType != null)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "A contact for this type already exists. Please edit the existing one instead."
+                    });
+                }
+
                 var newContact = new tbl_contact
                 {
-                    infoType = (infoType ?? "other").Trim(),
-                    label = label.Trim(),
-                    value = value.Trim(),
-                    icon = (icon ?? "").Trim(),
+                    infoType = infoType,
+                    label = label,
+                    value = value,
+                    icon = icon,
                     createdAt = DateTime.Now,
                     updatedAt = DateTime.Now,
                     isActive = true
@@ -97,25 +115,48 @@ namespace DestLoungeSalesandBooking.Controllers
                 db.tbl_contact.Add(newContact);
                 db.SaveChanges();
 
-                return Json(new { success = true, message = "Contact info created successfully.", contactID = newContact.contactID });
+                return Json(new
+                {
+                    success = true,
+                    message = "Contact info created successfully.",
+                    contactID = newContact.contactID
+                });
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("CreateContact Error: " + ex.Message);
-                return Json(new { success = false, message = ex.Message });
+                var realError = ex.InnerException != null
+                    ? (ex.InnerException.InnerException != null
+                        ? ex.InnerException.InnerException.Message
+                        : ex.InnerException.Message)
+                    : ex.Message;
+
+                return Json(new { success = false, message = realError });
             }
         }
-
-        // POST: /Contact/UpdateContact/1
         [HttpPost]
         [ValidateAntiForgeryToken]
         public JsonResult UpdateContact(int id, string infoType, string label, string value, string icon)
         {
             try
             {
+                infoType = (infoType ?? "other").Trim().ToLower();
+                label = (label ?? "").Trim();
+                value = (value ?? "").Trim();
+                icon = (icon ?? "").Trim();
+
                 if (string.IsNullOrWhiteSpace(label) || string.IsNullOrWhiteSpace(value))
                 {
                     return Json(new { success = false, message = "Label and Value are required." });
+                }
+
+                if (infoType == "phone")
+                {
+                    value = new string(value.Where(char.IsDigit).ToArray());
+
+                    if (value.Length != 11)
+                    {
+                        return Json(new { success = false, message = "Contact number must be exactly 11 digits." });
+                    }
                 }
 
                 var contact = db.tbl_contact.FirstOrDefault(c => c.contactID == id);
@@ -125,10 +166,10 @@ namespace DestLoungeSalesandBooking.Controllers
                     return Json(new { success = false, message = "Contact info not found." });
                 }
 
-                contact.infoType = (infoType ?? "other").Trim();
-                contact.label = label.Trim();
-                contact.value = value.Trim();
-                contact.icon = (icon ?? "").Trim();
+                contact.infoType = infoType;
+                contact.label = label;
+                contact.value = value;
+                contact.icon = icon;
                 contact.updatedAt = DateTime.Now;
 
                 db.SaveChanges();
@@ -137,12 +178,17 @@ namespace DestLoungeSalesandBooking.Controllers
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("UpdateContact Error: " + ex.Message);
-                return Json(new { success = false, message = ex.Message });
+                var realError = ex.InnerException != null
+                    ? (ex.InnerException.InnerException != null
+                        ? ex.InnerException.InnerException.Message
+                        : ex.InnerException.Message)
+                    : ex.Message;
+
+                System.Diagnostics.Debug.WriteLine("UpdateContact Error: " + realError);
+                return Json(new { success = false, message = realError });
             }
         }
 
-        // POST: /Contact/DeleteContact/1 - Soft delete
         [HttpPost]
         [ValidateAntiForgeryToken]
         public JsonResult DeleteContact(int id)
@@ -164,12 +210,10 @@ namespace DestLoungeSalesandBooking.Controllers
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("DeleteContact Error: " + ex.Message);
                 return Json(new { success = false, message = ex.Message });
             }
         }
 
-        // POST: /Contact/RestoreContact/1 - Restore soft-deleted contact
         [HttpPost]
         [ValidateAntiForgeryToken]
         public JsonResult RestoreContact(int id)
@@ -191,12 +235,10 @@ namespace DestLoungeSalesandBooking.Controllers
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("RestoreContact Error: " + ex.Message);
                 return Json(new { success = false, message = ex.Message });
             }
         }
 
-        // POST: /Contact/PermanentDeleteContact/1 - Hard delete
         [HttpPost]
         [ValidateAntiForgeryToken]
         public JsonResult PermanentDeleteContact(int id)
@@ -217,7 +259,6 @@ namespace DestLoungeSalesandBooking.Controllers
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("PermanentDeleteContact Error: " + ex.Message);
                 return Json(new { success = false, message = ex.Message });
             }
         }

@@ -149,8 +149,9 @@ namespace DestLoungeSalesandBooking.Controllers
 
                         string notes = b.Notes ?? "";
 
-                        decimal downpayment = 0;
-                        decimal totalBill = 0;
+                        decimal totalBill = GetTotalBillFromNotes(notes);
+                        decimal downpayment = Math.Round(totalBill * 0.40m, 2);
+                        string receiptPath = "";
 
                         if (!string.IsNullOrWhiteSpace(notes))
                         {
@@ -158,15 +159,12 @@ namespace DestLoungeSalesandBooking.Controllers
 
                             foreach (var part in parts)
                             {
-                                if (part.StartsWith("Downpayment:", StringComparison.OrdinalIgnoreCase))
+                                if (part.StartsWith("Receipt:", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    var val = part.Replace("Downpayment:", "").Trim();
-                                    decimal.TryParse(val, out downpayment);
+                                    receiptPath = part.Replace("Receipt:", "").Trim();
+                                    break;
                                 }
                             }
-
-                            // current system is storing the bill amount in the notes under Downpayment
-                            totalBill = downpayment;
                         }
 
                         string serviceLabel = "N/A";
@@ -219,8 +217,8 @@ namespace DestLoungeSalesandBooking.Controllers
                             address = user != null ? user.address : "",
                             totalBill = totalBill,
                             downpayment = downpayment,
+                            receiptPath = receiptPath,
 
-                            // fields expected by your current admin page
                             clientName = clientName,
                             service = serviceLabel,
                             dateTime = dateTime,
@@ -311,6 +309,8 @@ namespace DestLoungeSalesandBooking.Controllers
                 );
 
                 CreateReviewRequest(booking.CustomerId, booking.BookingId);
+
+                SendCompletedBookingEmail(booking);
             }
 
             return Json(new
@@ -359,12 +359,91 @@ namespace DestLoungeSalesandBooking.Controllers
 
             db.SaveChanges();
 
+            CreateAdminNotification("Booking #" + booking.BookingId +
+    " was CANCELLED by Customer #" + booking.CustomerId);
+
             CreateNotification(
                 booking.CustomerId,
                 $"Your booking #{booking.BookingId} has been CANCELLED ❌"
             );
 
             return Json(new { success = true, message = $"Booking #{bookingId} cancelled successfully." });
+        }
+
+        [HttpGet]
+        [SessionCheck(RequireAdmin = true)]
+        public ActionResult GetAdminNotifications()
+        {
+            var notifs = db.tbl_admin_notifications
+                .OrderByDescending(n => n.CreatedAt)
+                .Select(n => new
+                {
+                    n.AdminNotificationId,
+                    n.Message,
+                    n.CreatedAt,
+                    n.IsRead
+                })
+                .ToList();
+
+            return Json(notifs, JsonRequestBehavior.AllowGet);
+        }
+        [HttpGet]
+        [SessionCheck(RequireAdmin = true)]
+        public ActionResult GetInboxItems()
+        {
+            try
+            {
+                var items = db.tbl_bookings
+                    .OrderByDescending(b => b.CreatedAt)
+                    .ToList()
+                    .Select(b =>
+                    {
+                        var user = db.tbl_users.FirstOrDefault(u => u.userID == b.CustomerId);
+
+                        string notes = b.Notes ?? "";
+                        string serviceLabel = "N/A";
+
+                        if (!string.IsNullOrWhiteSpace(notes))
+                        {
+                            var parts = notes.Split('|').Select(x => x.Trim()).ToList();
+
+                            foreach (var part in parts)
+                            {
+                                if (part.StartsWith("Services:", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    serviceLabel = part.Replace("Services:", "").Trim();
+                                    break;
+                                }
+                            }
+                        }
+
+                        string clientName = "Customer #" + b.CustomerId;
+                        if (user != null)
+                        {
+                            clientName = ((user.firstname ?? "") + " " + (user.lastname ?? "")).Trim();
+                        }
+
+                        return new
+                        {
+                            bookingId = b.BookingId,
+                            bookingDate = b.BookingDate,
+                            startTime = b.StartTime.ToString(),
+                            endTime = b.EndTime.ToString(),
+                            status = b.Status,
+                            notes = b.Notes,
+                            clientName = clientName,
+                            service = serviceLabel
+                        };
+                    })
+                    .Where(x => x.status == "Pending" || x.status == "Cancelled")
+                    .ToList();
+
+                return Json(items, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
         }
 
         [HttpPost]
@@ -463,6 +542,10 @@ namespace DestLoungeSalesandBooking.Controllers
                 db.tbl_bookings.Add(booking);
                 db.SaveChanges();
 
+
+                CreateAdminNotification("New booking from Customer #" + booking.CustomerId +
+    " on " + booking.BookingDate.ToString("MMMM dd, yyyy") +
+    " at " + DateTime.Today.Add(booking.StartTime).ToString("h:mm tt"));
                 return Json(new { success = true, message = "Booking successful!" });
             }
             catch (Exception ex)
@@ -471,7 +554,20 @@ namespace DestLoungeSalesandBooking.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+        private void CreateAdminNotification(string message)
+        {
+            var notif = new tbl_admin_notifications
+            {
+                Message = message,
+                CreatedAt = DateTime.Now,
+                IsRead = false
+            };
 
+            db.tbl_admin_notifications.Add(notif);
+            db.SaveChanges();
+
+
+        }
         public string NailTech { get; set; }
 
         [SessionCheck]
@@ -634,6 +730,110 @@ namespace DestLoungeSalesandBooking.Controllers
             }
         }
         // ── Private Helpers ────────────────────────────────────────────────────
+        private void SendCompletedBookingEmail(tbl_bookings booking)
+        {
+            try
+            {
+                var user = db.tbl_users.FirstOrDefault(u => u.userID == booking.CustomerId);
+                if (user == null || string.IsNullOrEmpty(user.email))
+                    return;
+
+                string subject = "D'est Lounge Booking Completed";
+
+                string body = $@"
+Hello {user.firstname},
+
+Your booking has been marked as COMPLETED. ✅
+
+Booking ID: {booking.BookingId}
+Date: {booking.BookingDate:MMMM dd, yyyy}
+Time: {DateTime.Today.Add(booking.StartTime):h:mm tt} - {DateTime.Today.Add(booking.EndTime):h:mm tt}
+
+We hope you enjoyed your appointment at D'est Lounge.
+Please leave a review to share your experience. ⭐
+
+Thank you for choosing D'est Lounge!";
+
+                var smtpHost = ConfigurationManager.AppSettings["SmtpHost"];
+                var smtpPort = int.Parse(ConfigurationManager.AppSettings["SmtpPort"]);
+                var smtpEmail = ConfigurationManager.AppSettings["SmtpEmail"];
+                var smtpPass = ConfigurationManager.AppSettings["SmtpPass"];
+                var fromName = ConfigurationManager.AppSettings["SmtpFromName"];
+
+                var client = new SmtpClient(smtpHost, smtpPort)
+                {
+                    Credentials = new NetworkCredential(smtpEmail, smtpPass),
+                    EnableSsl = true
+                };
+
+                var mail = new MailMessage
+                {
+                    From = new MailAddress(smtpEmail, fromName),
+                    Subject = subject,
+                    Body = body,
+                    IsBodyHtml = false
+                };
+
+                mail.To.Add(user.email);
+                client.Send(mail);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("COMPLETED EMAIL ERROR: " + ex.Message);
+            }
+        }
+        private void SendCancellationEmail(tbl_bookings booking, string reason = null)
+        {
+            try
+            {
+                var user = db.tbl_users.FirstOrDefault(u => u.userID == booking.CustomerId);
+                if (user == null || string.IsNullOrEmpty(user.email))
+                    return;
+
+                string subject = "D'est Lounge Booking Cancellation";
+
+                string body = $@"
+Hello {user.firstname},
+
+We regret to inform you that your booking has been CANCELLED.
+
+Booking ID: {booking.BookingId}
+Date: {booking.BookingDate:MMMM dd, yyyy}
+Time: {DateTime.Today.Add(booking.StartTime):h:mm tt} - {DateTime.Today.Add(booking.EndTime):h:mm tt}
+{(string.IsNullOrWhiteSpace(reason) ? "" : "Reason: " + reason)}
+
+If you have any questions, please contact D'est Lounge.
+
+Thank you.";
+
+                var smtpHost = ConfigurationManager.AppSettings["SmtpHost"];
+                var smtpPort = int.Parse(ConfigurationManager.AppSettings["SmtpPort"]);
+                var smtpEmail = ConfigurationManager.AppSettings["SmtpEmail"];
+                var smtpPass = ConfigurationManager.AppSettings["SmtpPass"];
+                var fromName = ConfigurationManager.AppSettings["SmtpFromName"];
+
+                var client = new SmtpClient(smtpHost, smtpPort)
+                {
+                    Credentials = new NetworkCredential(smtpEmail, smtpPass),
+                    EnableSsl = true
+                };
+
+                var mail = new MailMessage
+                {
+                    From = new MailAddress(smtpEmail, fromName),
+                    Subject = subject,
+                    Body = body,
+                    IsBodyHtml = false
+                };
+
+                mail.To.Add(user.email);
+                client.Send(mail);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("CANCELLATION EMAIL ERROR: " + ex.Message);
+            }
+        }
         private decimal GetTotalBillFromNotes(string notes)
 {
     if (string.IsNullOrWhiteSpace(notes))
@@ -761,6 +961,92 @@ namespace DestLoungeSalesandBooking.Controllers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine("EMAIL ERROR: " + ex.Message);
+            }
+        }
+
+        [HttpGet]
+        [SessionCheck]
+        public JsonResult GetPaymentInfo()
+        {
+            try
+            {
+                var payment = db.tbl_payment_settings
+                    .OrderByDescending(x => x.PaymentSettingId)
+                    .FirstOrDefault();
+
+                if (payment == null)
+                {
+                    return Json(new
+                    {
+                        gcash = "",
+                        bank = "",
+                        qr = ""
+                    }, JsonRequestBehavior.AllowGet);
+                }
+
+                return Json(new
+                {
+                    gcash = payment.GCash ?? "",
+                    bank = payment.Bank ?? "",
+                    qr = payment.QRCodePath ?? ""
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    gcash = "",
+                    bank = "",
+                    qr = "",
+                    message = ex.Message
+                }, JsonRequestBehavior.AllowGet);
+            }
+        }
+        [HttpPost]
+        [SessionCheck(RequireAdmin = true)]
+        public ActionResult AdminCancel(int bookingId, string reason = null)
+        {
+            try
+            {
+                var booking = db.tbl_bookings.FirstOrDefault(b => b.BookingId == bookingId);
+                if (booking == null)
+                    return Json(new { success = false, message = "Booking not found." });
+
+                if (booking.Status != "Pending" && booking.Status != "Approved")
+                    return Json(new { success = false, message = "Only Pending or Approved bookings can be cancelled." });
+
+                booking.Status = "Cancelled";
+
+                if (!string.IsNullOrWhiteSpace(reason))
+                {
+                    var note = $"Cancel reason: {reason}";
+                    if (string.IsNullOrWhiteSpace(booking.Notes))
+                        booking.Notes = note;
+                    else if (!booking.Notes.Contains("Cancel reason:"))
+                        booking.Notes += " | " + note;
+                }
+
+                db.SaveChanges();
+
+                CreateAdminNotification("Booking #" + booking.BookingId + " was CANCELLED by admin.");
+
+                CreateNotification(
+                    booking.CustomerId,
+                    $"Your booking #{booking.BookingId} has been CANCELLED ❌" +
+                    (!string.IsNullOrWhiteSpace(reason) ? $" Reason: {reason}" : "")
+                );
+
+                SendCancellationEmail(booking, reason);
+
+                return Json(new
+                {
+                    success = true,
+                    message = $"Booking #{bookingId} cancelled successfully."
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
             }
         }
     }

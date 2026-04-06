@@ -59,16 +59,20 @@
                         <div class="card-icon">
                             <i ng-class="contact.icon"></i>
                         </div>
-                        <div class="card-content">
-                            <h3>{{ contact.label }}</h3>
-                            <p ng-if="contact.infoType === 'phone'">
-                                <a href="tel:{{ contact.value }}">{{ contact.value }}</a>
-                            </p>
-                            <p ng-if="contact.infoType === 'email'">
-                                <a href="mailto:{{ contact.value }}">{{ contact.value }}</a>
-                            </p>
-                            <div ng-if="contact.infoType !== 'phone' && contact.infoType !== 'email'" ng-bind-html="contact.value"></div>
-                        </div>
+                     <div class="card-content">
+    <h3>{{ contact.label }}</h3>
+
+    <p ng-if="contact.infoType === 'phone'">
+        <a href="tel:{{ contact.value }}">{{ contact.value }}</a>
+    </p>
+
+    <p ng-if="contact.infoType === 'email'">
+        <a href="mailto:{{ contact.value }}">{{ contact.value }}</a>
+    </p>
+
+    <div ng-if="contact.infoType !== 'phone' && contact.infoType !== 'email'"
+         ng-bind="contact.value"></div>
+</div>
                         <div class="card-actions">
                             <button class="btn-edit" ng-click="editContact($index)" title="Edit">
                                 <i class="fa-solid fa-pen"></i>
@@ -161,19 +165,30 @@
                 <div class="field-group">
                     <label class="field-label">What type of contact is this?</label>
                     <div class="type-picker">
-                        <div class="type-option" ng-class="{'type-option-active': formData.infoType === 'phone'}" ng-click="setContactType('phone')">
+                        <div class="type-option"
+                             ng-class="{'type-option-active': formData.infoType === 'phone', 'type-option-disabled': editingIndex !== null}"
+                             ng-click="editingIndex === null ? setContactType('phone') : null">
                             <i class="fa-solid fa-phone type-icon"></i>
                             <span>Phone</span>
                         </div>
-                        <div class="type-option" ng-class="{'type-option-active': formData.infoType === 'email'}" ng-click="setContactType('email')">
+
+                        <div class="type-option"
+                             ng-class="{'type-option-active': formData.infoType === 'email', 'type-option-disabled': editingIndex !== null}"
+                             ng-click="editingIndex === null ? setContactType('email') : null">
                             <i class="fa-solid fa-envelope type-icon"></i>
                             <span>Email</span>
                         </div>
-                        <div class="type-option" ng-class="{'type-option-active': formData.infoType === 'address'}" ng-click="setContactType('address')">
+
+                        <div class="type-option"
+                             ng-class="{'type-option-active': formData.infoType === 'address', 'type-option-disabled': editingIndex !== null}"
+                             ng-click="editingIndex === null ? setContactType('address') : null">
                             <i class="fa-solid fa-location-dot type-icon"></i>
                             <span>Address</span>
                         </div>
-                        <div class="type-option" ng-class="{'type-option-active': formData.infoType === 'hours'}" ng-click="setContactType('hours')">
+
+                        <div class="type-option"
+                             ng-class="{'type-option-active': formData.infoType === 'hours', 'type-option-disabled': editingIndex !== null}"
+                             ng-click="editingIndex === null ? setContactType('hours') : null">
                             <i class="fa-solid fa-clock type-icon"></i>
                             <span>Hours</span>
                         </div>
@@ -185,8 +200,12 @@
                     <span class="field-hint">Shown as the card title</span>
                 </div>
                 <div class="field-group">
-                    <label class="field-label">Contact Details</label>
-                    <input class="field-input" type="text" ng-model="formData.value" placeholder="{{ contactPlaceholder }}" />
+                    <label class="field-label">Contact Details</label><input type="text"
+       ng-model="formData.value"
+       ng-keypress="formData.infoType === 'phone' && numbersOnly($event)"
+       ng-attr-maxlength="{{formData.infoType === 'phone' ? 11 : undefined}}"
+       placeholder="{{contactPlaceholder}}"
+       class="form-control" />
                     <span class="field-hint">{{ contactHint }}</span>
                 </div>
                 <div class="modal-preview" ng-if="formData.label || formData.value">
@@ -750,6 +769,10 @@
             flex-direction: column;
             align-items: center;
             gap: 5px;
+        }
+        .type-option-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
             .type-option span {

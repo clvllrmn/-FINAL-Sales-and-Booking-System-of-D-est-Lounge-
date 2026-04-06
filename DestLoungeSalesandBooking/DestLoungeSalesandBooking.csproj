@@ -207,10 +207,12 @@
     <Compile Include="Models\Maps\tbl_faqs_Map.cs" />
     <Compile Include="Models\Maps\tbl_bookings_Map.cs" />
     <Compile Include="Models\Maps\tbl_services_Map.cs" />
+    <Compile Include="Models\tbl_admin_notifications.cs" />
     <Compile Include="Models\tbl_bookings.cs" />
     <Compile Include="Models\tbl_homepage_content.cs" />
     <Compile Include="Models\tbl_contact.cs" />
     <Compile Include="Models\tbl_notifications.cs" />
+    <Compile Include="Models\tbl_payment_settings.cs" />
     <Compile Include="Models\tbl_reviews.cs" />
     <Compile Include="Models\tbl_review_images.cs" />
     <Compile Include="Models\tbl_review_requests.cs" />
@@ -1076,13 +1078,16 @@
     <Content Include="Views\Main\AdminGalleryPage.cshtml" />
     <Content Include="Views\Main\PaymentPage.cshtml" />
     <Content Include="Views\Main\AdminPaymentSetting.cshtml" />
+    <Content Include="Views\Shared\View.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Uploads\" />
     <Folder Include="Views\GoogleSignInRequest\" />
     <Folder Include="Views\Reminder\" />
+    <Folder Include="Views\tbl_admin_notifications\" />
     <Folder Include="Views\tbl_homepage_content_archive\" />
+    <Folder Include="Views\tbl_payment_settings\" />
     <Folder Include="Views\tbl_services\" />
     <Folder Include="Views\tbl_services_Map\" />
   </ItemGroup>

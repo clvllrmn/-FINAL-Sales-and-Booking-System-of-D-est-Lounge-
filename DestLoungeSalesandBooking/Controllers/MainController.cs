@@ -39,8 +39,8 @@ namespace DestLoungeSalesandBooking.Controllers
             return View();
         }
 
-        
-        
+
+
 
         [NoCache]
         public ActionResult LoginPage()
@@ -97,7 +97,42 @@ namespace DestLoungeSalesandBooking.Controllers
         [NoCache]
         public ActionResult ReviewPage(int? bookingId)
         {
-            ViewBag.BookingId = bookingId ?? 0;
+            if (Session["UserID"] == null)
+                return RedirectToAction("LoginPage", "Main");
+
+            int userId = (int)Session["UserID"];
+
+            if (!bookingId.HasValue || bookingId.Value <= 0)
+            {
+                TempData["ErrorMessage"] = "Please select a completed booking first.";
+                return RedirectToAction("CurrentBookingPage", "Main");
+            }
+
+            var booking = db.tbl_bookings.FirstOrDefault(b =>
+                b.BookingId == bookingId.Value &&
+                b.CustomerId == userId);
+
+            if (booking == null)
+            {
+                TempData["ErrorMessage"] = "Booking not found.";
+                return RedirectToAction("CurrentBookingPage", "Main");
+            }
+
+            if (booking.Status != "Completed")
+            {
+                TempData["ErrorMessage"] = "You can only review completed bookings.";
+                return RedirectToAction("CurrentBookingPage", "Main");
+            }
+
+            var alreadyReviewed = db.tbl_reviews.Any(r => r.BookingId == booking.BookingId && r.CustomerId == userId);
+
+            if (alreadyReviewed)
+            {
+                TempData["ErrorMessage"] = "You already submitted a review for this booking.";
+                return RedirectToAction("CurrentBookingPage", "Main");
+            }
+
+            ViewBag.BookingId = booking.BookingId;
             return View();
         }
 
@@ -340,8 +375,8 @@ namespace DestLoungeSalesandBooking.Controllers
             }
         }
 
-        
-        
+
+
 
         // ── Helper: SHA256 hash ──
         private string HashPassword(string password)
@@ -375,11 +410,37 @@ namespace DestLoungeSalesandBooking.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [SessionCheck]
         public ActionResult SubmitReview(int BookingId, int Rating, string ReviewText, IEnumerable<HttpPostedFileBase> PhotoUpload)
         {
+            if (Session["UserID"] == null)
+                return RedirectToAction("LoginPage", "Main");
+
             int userId = (int)Session["UserID"];
 
-            // 1. Save review
+            var booking = db.tbl_bookings.FirstOrDefault(b =>
+                b.BookingId == BookingId &&
+                b.CustomerId == userId);
+
+            if (booking == null)
+            {
+                TempData["ErrorMessage"] = "Booking not found.";
+                return RedirectToAction("CurrentBookingPage", "Main");
+            }
+
+            if (booking.Status != "Completed")
+            {
+                TempData["ErrorMessage"] = "Only completed bookings can be reviewed.";
+                return RedirectToAction("CurrentBookingPage", "Main");
+            }
+
+            var alreadyReviewed = db.tbl_reviews.Any(r => r.BookingId == BookingId && r.CustomerId == userId);
+            if (alreadyReviewed)
+            {
+                TempData["ErrorMessage"] = "You already submitted a review for this booking.";
+                return RedirectToAction("CurrentBookingPage", "Main");
+            }
+
             var review = new tbl_reviews
             {
                 BookingId = BookingId,
@@ -390,9 +451,8 @@ namespace DestLoungeSalesandBooking.Controllers
             };
 
             db.tbl_reviews.Add(review);
-            db.SaveChanges(); // FIRST SAVE ✅
+            db.SaveChanges();
 
-            // 2. Save images (max 5)
             if (PhotoUpload != null)
             {
                 foreach (var file in PhotoUpload)
@@ -411,13 +471,10 @@ namespace DestLoungeSalesandBooking.Controllers
                         });
                     }
                 }
-                
+
                 db.SaveChanges();
             }
 
-
-
-            // 3. Mark as reviewed
             var req = db.tbl_review_requests.FirstOrDefault(r => r.BookingId == BookingId);
             if (req != null)
             {
@@ -425,27 +482,68 @@ namespace DestLoungeSalesandBooking.Controllers
                 db.SaveChanges();
             }
 
+            TempData["SuccessMessage"] = "Review submitted successfully.";
             return RedirectToAction("GalleryPage");
         }
 
         public JsonResult GetReviews()
         {
             var reviews = db.tbl_reviews
+                .Where(r => !r.IsArchived)
+                .ToList()
                 .Select(r => new
                 {
                     r.ReviewId,
                     r.Rating,
                     r.ReviewText,
                     r.CreatedAt,
-                    ImageUrl = db.tbl_review_images
+                   
+                    Images = db.tbl_review_images
                         .Where(img => img.ReviewId == r.ReviewId)
                         .Select(img => img.ImageUrl)
-                        .FirstOrDefault()
+                        .ToList()
                 }).ToList();
 
             return Json(reviews, JsonRequestBehavior.AllowGet);
         }
+        [HttpPost]
+        [SessionCheck(RequireAdmin = true)]
+        public ActionResult ArchiveReview(int reviewId)
+        {
+            var review = db.tbl_reviews.FirstOrDefault(r => r.ReviewId == reviewId);
+
+            if (review == null)
+                return Json(new { success = false });
+
+            review.IsArchived = true;
+            review.ArchivedAt = DateTime.Now;
+
+            db.SaveChanges();
+
+            return Json(new { success = true });
+        }
+        [HttpGet]
+        [SessionCheck(RequireAdmin = true)]
+        public JsonResult GetArchivedReviews()
+        {
+            var reviews = db.tbl_reviews
+                .Where(r => r.IsArchived)
+                .ToList()
+                .Select(r => new
+                {
+                    r.ReviewId,
+                    r.Rating,
+                    r.ReviewText,
+                    r.CreatedAt,
+                    Images = db.tbl_review_images
+                        .Where(img => img.ReviewId == r.ReviewId)
+                        .Select(img => img.ImageUrl)
+                        .ToList()
+                }).ToList();
+
+            return Json(reviews, JsonRequestBehavior.AllowGet);
+        }
+    }
 
 
     }
-}

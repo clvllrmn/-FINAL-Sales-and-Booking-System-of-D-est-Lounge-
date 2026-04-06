@@ -1,0 +1,123 @@
+﻿@{
+    var userFirstName = Session["UserFirstName"] as string;
+    var isLoggedIn = Session["UserID"] != null;
+}
+
+<header>
+    <div class="header-container">
+        <div class="logo">
+            <a href="@Url.Action("Homepage","Main")">
+                <img src="~/Content/Pictures/DestLogo.png" alt="D'est Lounge">
+            </a>
+        </div>
+
+        <nav class="main-nav" id="mainNav">
+            <a href="@Url.Action("Homepage","Main")">HOME</a>
+            <a href="@Url.Action("ServicePage","Main")">SERVICES</a>
+            <a href="@Url.Action("GalleryPage","Main")">GALLERY</a>
+            <a href="@Url.Action("ContactPage","Main")">CONTACT</a>
+            <a href="@Url.Action("FAQsPage","Main")">FAQs</a>
+
+            <div class="mobile-nav-actions">
+                @if (isLoggedIn)
+                {
+                    <a href="@Url.Action("ProfilePage","Main")">
+                        <i class="fa-solid fa-circle-user"></i> Welcome, @userFirstName!
+                    </a>
+                }
+                else
+                {
+                    <a href="@Url.Action("LoginPage","Main")">
+                        <i class="fa-regular fa-user"></i> LOGIN
+                    </a>
+                }
+
+                <div class="notification-wrapper"
+                     ng-controller="DestLoungeSalesandBookingController"
+                     ng-init="loadNotifications()"
+                     style="position:relative;">
+
+                    <a href="" ng-click="toggleNotif(); $event.preventDefault()">
+                        <i class="fa-solid fa-bell"></i> Notifications
+                        <span ng-if="notifications.length > 0">({{notifications.length}})</span>
+                    </a>
+
+                    <div ng-show="showNotif"
+                         style="position:absolute; right:0; top:30px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.2); z-index:9999;">
+                        <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
+                            Notifications
+                        </div>
+
+                        <div ng-if="!notifications.length" style="padding:10px; color:gray;">
+                            No notifications yet.
+                        </div>
+
+                        <div ng-repeat="n in notifications"
+                             style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
+                             ng-click="goToBooking()">
+                            {{n.Message || n.message}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="header-actions desktop-only">
+            @if (isLoggedIn)
+            {
+                <a href="@Url.Action("ProfilePage","Main")" class="welcome-text">
+                    <i class="fa-solid fa-circle-user"></i> Welcome, @userFirstName!
+                </a>
+            }
+            else
+            {
+                <a href="@Url.Action("LoginPage","Main")" class="login-link">
+                    <i class="fa-regular fa-user"></i> LOGIN
+                </a>
+            }
+
+            <div class="notification-wrapper"
+                 ng-controller="DestLoungeSalesandBookingController"
+                 ng-init="loadNotifications()"
+                 style="position:relative;">
+
+                <button type="button"
+                        class="bell-icon"
+                        ng-click="toggleNotif()"
+                        style="background:none; border:none; cursor:pointer; position:relative;">
+                    <i class="fa-solid fa-bell"></i>
+
+                    <span ng-if="notifications.length > 0"
+                          style="position:absolute; top:-8px; right:-10px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:11px;">
+                        {{notifications.length}}
+                    </span>
+                </button>
+
+                <div ng-show="showNotif"
+                     style="position:absolute; right:0; top:35px; width:280px; background:white; border:1px solid #ccc; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.2); z-index:9999;">
+                    <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
+                        Notifications
+                    </div>
+
+                    <div ng-if="!notifications.length" style="padding:10px; color:gray;">
+                        No notifications yet.
+                    </div>
+
+                    <div ng-repeat="n in notifications"
+                         style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
+                         ng-click="goToBooking()">
+                        {{n.Message || n.message}}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </div>
+
+    <div class="nav-overlay" id="navOverlay"></div>
+</header>

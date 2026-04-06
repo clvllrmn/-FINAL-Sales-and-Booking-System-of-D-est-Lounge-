@@ -1,7 +1,11 @@
 ﻿using DestLoungeSalesandBooking.Filters;
+using DestLoungeSalesandBooking.Models;
+using DestLoungeSalesandBooking.Models.Context;
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
+using System.Web;
 using System.Web.Mvc;
 
 namespace DestLoungeSalesandBooking.Controllers
@@ -9,8 +13,11 @@ namespace DestLoungeSalesandBooking.Controllers
     [SessionCheck(RequireAdmin = true)]
     public class AdminController : Controller
     {
+        private readonly DestLoungeSalesandBookingContext db = new DestLoungeSalesandBookingContext();
+
         [HttpPost]
-        public ActionResult SavePayment(string gcash, string bank)
+        [SessionCheck(RequireAdmin = true)]
+        public ActionResult SavePayment(string gcash, string bank, HttpPostedFileBase qr)
         {
             try
             {
@@ -19,65 +26,83 @@ namespace DestLoungeSalesandBooking.Controllers
 
                 if (string.IsNullOrWhiteSpace(gcash))
                 {
-                    return Json(new { success = false, message = "GCash number is required." });
+                    return Json(new { success = false, message = "GCash is required." });
                 }
 
-                if (!Regex.IsMatch(gcash, @"^09\d{9}$"))
+                if (!System.Text.RegularExpressions.Regex.IsMatch(gcash, @"^\d{11}$"))
                 {
-                    return Json(new { success = false, message = "GCash number must be 11 digits and start with 09." });
+                    return Json(new { success = false, message = "GCash must be exactly 11 digits." });
                 }
 
-                string filePath = Server.MapPath("~/App_Data/payment.txt");
-                System.IO.File.WriteAllText(filePath, $"GCash:{gcash}\nBank:{bank}");
+                string qrPath = null;
 
-                return Json(new { success = true, message = "Payment settings saved successfully." });
+                if (qr != null && qr.ContentLength > 0)
+                {
+                    var ext = Path.GetExtension(qr.FileName).ToLower();
+
+                    if (ext != ".png" && ext != ".jpg" && ext != ".jpeg")
+                    {
+                        return Json(new { success = false, message = "Only PNG, JPG, and JPEG are allowed." });
+                    }
+
+                    var folder = Server.MapPath("~/Uploads/PaymentQR");
+                    if (!Directory.Exists(folder))
+                    {
+                        Directory.CreateDirectory(folder);
+                    }
+
+                    var fileName = Guid.NewGuid().ToString() + ext;
+                    var fullPath = Path.Combine(folder, fileName);
+
+                    qr.SaveAs(fullPath);
+
+                    qrPath = "/Uploads/PaymentQR/" + fileName;
+                }
+
+                var payment = db.tbl_payment_settings.FirstOrDefault();
+
+                if (payment == null)
+                {
+                    payment = new tbl_payment_settings
+                    {
+                        GCash = gcash,
+                        Bank = bank,
+                        QRCodePath = qrPath,
+                        CreatedAt = DateTime.Now,
+                        UpdatedAt = DateTime.Now
+                    };
+
+                    db.tbl_payment_settings.Add(payment);
+                }
+                else
+                {
+                    payment.GCash = gcash;
+                    payment.Bank = bank;
+
+                    if (!string.IsNullOrWhiteSpace(qrPath))
+                    {
+                        payment.QRCodePath = qrPath;
+                    }
+
+                    payment.UpdatedAt = DateTime.Now;
+                }
+
+                db.SaveChanges();
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Payment settings saved successfully.",
+                    qr = payment.QRCodePath
+                });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message });
-            }
-        }
-
-        [HttpGet]
-        public ActionResult GetPaymentInfo()
-        {
-            try
-            {
-                string filePath = Server.MapPath("~/App_Data/payment.txt");
-
-                string gcash = "";
-                string bank = "";
-
-                if (System.IO.File.Exists(filePath))
-                {
-                    var lines = System.IO.File.ReadAllLines(filePath);
-
-                    foreach (var line in lines)
-                    {
-                        if (line.StartsWith("GCash:", StringComparison.OrdinalIgnoreCase))
-                        {
-                            gcash = line.Substring("GCash:".Length).Trim();
-                        }
-                        else if (line.StartsWith("Bank:", StringComparison.OrdinalIgnoreCase))
-                        {
-                            bank = line.Substring("Bank:".Length).Trim();
-                        }
-                    }
-                }
-
                 return Json(new
                 {
-                    gcash = gcash,
-                    bank = bank
-                }, JsonRequestBehavior.AllowGet);
-            }
-            catch
-            {
-                return Json(new
-                {
-                    gcash = "",
-                    bank = ""
-                }, JsonRequestBehavior.AllowGet);
+                    success = false,
+                    message = ex.Message
+                });
             }
         }
     }

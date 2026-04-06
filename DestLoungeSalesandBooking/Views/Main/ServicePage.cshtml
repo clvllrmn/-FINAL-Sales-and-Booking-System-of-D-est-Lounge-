@@ -4,7 +4,8 @@
     var isLoggedIn = Session["UserID"] != null;
 }
 
-<header>
+<header ng-controller="DestLoungeSalesandBookingController"
+        ng-init="loadNotifications()">
     <div class="header-container">
         <div class="logo">
             <a href="@Url.Action("Homepage","Main")">
@@ -32,9 +33,33 @@
                         <i class="fa-regular fa-user"></i> LOGIN
                     </a>
                 }
-                <a href="#">
-                    <i class="fa-solid fa-bell"></i> Notifications
-                </a>
+                <button type="button"
+                        ng-click="toggleNotif($event)"
+                        style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037; z-index:9999;">
+                    <i class="fa-solid fa-bell"></i>
+
+                    <span ng-if="notifications.length > 0"
+                          style="position:absolute; top:-8px; right:-10px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:11px;">
+                        {{notifications.length}}
+                    </span>
+                </button>
+
+                <div ng-show="showNotif"
+                     style="position:absolute; right:0; top:35px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999;">
+                    <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
+                        Notifications
+                    </div>
+
+                    <div ng-if="!notifications.length" style="padding:10px;">
+                        No notifications
+                    </div>
+
+                    <div ng-repeat="n in notifications"
+                         style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
+                         ng-click="goToBooking()">
+                        {{n.Message || n.message}}
+                    </div>
+                </div>
             </div>
         </nav>
 
@@ -51,9 +76,33 @@
                     <i class="fa-regular fa-user"></i> LOGIN
                 </a>
             }
-            <a href="#" class="bell-icon" title="Notifications">
+            <button type="button"
+                    ng-click="toggleNotif($event)"
+                    style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037; z-index:9999;">
                 <i class="fa-solid fa-bell"></i>
-            </a>
+
+                <span ng-if="notifications.length > 0"
+                      style="position:absolute; top:-8px; right:-10px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:11px;">
+                    {{notifications.length}}
+                </span>
+            </button>
+
+            <div ng-show="showNotif"
+                 style="position:absolute; right:0; top:35px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999;">
+                <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
+                    Notifications
+                </div>
+
+                <div ng-if="!notifications.length" style="padding:10px;">
+                    No notifications
+                </div>
+
+                <div ng-repeat="n in notifications"
+                     style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
+                     ng-click="goToBooking()">
+                    {{n.Message || n.message}}
+                </div>
+            </div>
         </div>
 
         <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">

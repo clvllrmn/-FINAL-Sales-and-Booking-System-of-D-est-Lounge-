@@ -19,5 +19,7 @@ namespace DestLoungeSalesandBooking.Models
 
         [Column("createdAt")]
         public DateTime? CreatedAt { get; set; }
+        public bool IsArchived { get; set; }
+        public DateTime? ArchivedAt { get; set; }
     }
 }
