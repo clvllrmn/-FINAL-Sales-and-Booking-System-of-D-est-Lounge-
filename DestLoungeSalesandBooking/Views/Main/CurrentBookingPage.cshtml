@@ -285,17 +285,19 @@
         background-color: #f5f0eb;
     }
 
+    /* To this */
     .sidebar {
         width: 280px;
         background-color: #d4c4b5;
-        min-height: 100%;
+        display: flex; /* ← add this */
+        flex-direction: column; /* ← add this */
     }
 
     .profile-nav {
         display: flex;
         flex-direction: column;
         padding-top: 40px;
-        min-height: calc(90vh - 100px);
+        flex: 1; /* ← replaces the min-height calc */
         justify-content: space-between;
     }
 

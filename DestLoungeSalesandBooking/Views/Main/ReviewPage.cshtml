@@ -62,7 +62,6 @@
             <span></span>
         </button>
     </div>
-
     <div class="nav-overlay" id="navOverlay"></div>
 </header>
 
@@ -88,10 +87,8 @@
 
             <form id="reviewForm" method="POST" action="@Url.Action("SubmitReview", "Main")" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
-
                 <input type="hidden" name="BookingId" value="@ViewBag.BookingId" />
 
-                <!-- Star Rating -->
                 <div class="rating-section">
                     <p class="rating-label">Rate your experience</p>
                     <div class="star-rating">
@@ -108,43 +105,27 @@
                     </div>
                 </div>
 
-                <!-- Review Text -->
                 <div class="review-text-section">
                     <label class="review-label">Share your thoughts</label>
-                    <textarea name="ReviewText"
-                              id="reviewText"
-                              class="review-textarea"
-                              placeholder="Tell us about your experience..."
-                              rows="5"
-                              maxlength="500"></textarea>
-                    <p id="charCount" style="font-size:13px;color:#a89585;text-align:right;margin:4px 0 0 0;">0 / 500</p>
+                    <textarea name="ReviewText" id="reviewText" class="review-textarea"
+                              placeholder="Tell us about your experience..." rows="5" maxlength="500"></textarea>
                 </div>
 
-                <!-- Photo Upload -->
                 <div class="photo-upload-section">
                     <p id="photoCount" style="font-size:13px;color:#a89585;margin:6px 0 0 4px;">0 / 5 photos added</p>
                     <label class="review-label">Add your image (MAX: 5)</label>
                     <div class="photo-upload-box" id="photoUploadBox">
-                        <input type="file" id="photoInput" name="PhotoUpload" accept="image/*" multiple style="display: none;" />
+                        <input type="file" id="photoInput" name="PhotoUpload" accept="image/*" multiple style="display:none;" />
                         <div class="upload-placeholder" id="uploadPlaceholder">
                             <i class="fa-solid fa-camera camera-icon"></i>
                             <p class="upload-text">Add photo</p>
                         </div>
-                        <div class="photo-preview" id="photoPreview" style="display: none;">
-                            <img id="previewImage" src="" alt="Preview" />
-                            <button type="button" class="remove-photo" id="removePhoto">×</button>
-                        </div>
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
                 <div class="review-actions">
-                    <button type="button" class="btn-cancel" onclick="window.location.href='@Url.Action("CurrentBookingPage","Main")'">
-                            Cancel
-                    </button>
-                    <button type="submit" class="btn-upload">
-                        Upload
-                    </button>
+                    <button type="button" class="btn-cancel" onclick="window.location.href='@Url.Action("CurrentBookingPage","Main")'">Cancel</button>
+                    <button type="submit" class="btn-upload">Upload</button>
                 </div>
             </form>
         </div>
@@ -156,90 +137,17 @@
         <h2 class="footer-title">Follow our Socials!</h2>
         <div class="social-links">
             <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank">
-                <i class="fa-brands fa-tiktok"></i>
-                <span>destlounge</span>
+                <i class="fa-brands fa-tiktok"></i><span>destlounge</span>
             </a>
             <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
-                <i class="fa-brands fa-facebook"></i>
-                <span>D'est Lounge</span>
+                <i class="fa-brands fa-facebook"></i><span>D'est Lounge</span>
             </a>
             <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
-                <i class="fa-brands fa-instagram"></i>
-                <span>destlounge</span>
+                <i class="fa-brands fa-instagram"></i><span>destlounge</span>
             </a>
         </div>
     </div>
 </footer>
-
-<script>
-    // Photo upload preview
-    const photoInput = document.getElementById('photoInput');
-    const photoUploadBox = document.getElementById('photoUploadBox');
-    const uploadPlaceholder = document.getElementById('uploadPlaceholder');
-    const photoPreview = document.getElementById('photoPreview');
-    const previewImage = document.getElementById('previewImage');
-    const removePhoto = document.getElementById('removePhoto');
-
-    let selectedFiles = [];
-
-    photoUploadBox.addEventListener('click', function () {
-        photoInput.click();
-    });
-
-    photoInput.addEventListener('change', function (e) {
-        const files = Array.from(e.target.files);
-
-        // Combine existing + new
-        if (selectedFiles.length + files.length > 5) {
-            alert("Maximum of 5 photos only.");
-            photoInput.value = "";
-            return;
-        }
-
-        files.forEach(file => {
-            selectedFiles.push(file);
-
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const container = document.createElement("div");
-                container.style.position = "relative";
-                container.style.display = "inline-block";
-                container.style.margin = "5px";
-
-                const img = document.createElement("img");
-                img.src = e.target.result;
-                img.style.width = "100px";
-                img.style.borderRadius = "10px";
-
-                const removeBtn = document.createElement("button");
-                removeBtn.innerText = "×";
-
-                removeBtn.onclick = function () {
-                    container.remove();
-                    selectedFiles = selectedFiles.filter(f => f !== file);
-                };
-
-                container.appendChild(img);
-                container.appendChild(removeBtn);
-
-                photoUploadBox.appendChild(container);
-            };
-
-            reader.readAsDataURL(file);
-        });
-
-        uploadPlaceholder.style.display = "none";
-    });
-
-</script>
-
-<script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const bookingId = urlParams.get("bookingId");
-    if (bookingId) {
-        document.getElementById("bookingId").value = bookingId;
-    }
-</script>
 
 <style>
     /* ── Hamburger ── */
@@ -281,7 +189,6 @@
             transform: translateY(-8px) rotate(-45deg);
         }
 
-    /* ── Nav Overlay ── */
     .nav-overlay {
         display: none;
         position: fixed;
@@ -302,21 +209,59 @@
         display: none;
     }
 
-    /* ── Profile Layout ── */
+    /* ── Welcome Text Fix ── */
+    .welcome-text {
+        color: #5d4037;
+        text-decoration: none;
+        font-size: 1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: color 0.3s ease;
+    }
+
+        .welcome-text:hover {
+            color: #6b4423;
+        }
+
+        .welcome-text i {
+            font-size: 1.1rem;
+        }
+
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+    }
+
+    .bell-icon {
+        color: #5d4037;
+        font-size: 1.2rem;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+        .bell-icon:hover {
+            color: #6b4423;
+        }
+
+    /* ── Layout ── */
     .profile-container {
         display: flex;
-        min-height: calc(100vh - 200px);
+        min-height: 100vh; /* ← was calc(100vh - 200px) */
         background-color: #f5f0eb;
         align-items: stretch;
     }
 
+    /* ── Sidebar + Logout Fix ── */
     .sidebar {
         width: 280px;
         flex-shrink: 0;
         background-color: #d4c4b5;
-        padding: 0;
         display: flex;
         flex-direction: column;
+        align-self: stretch; /* ← stretches to match the container height */
     }
 
     .profile-nav {
@@ -325,6 +270,7 @@
         padding-top: 40px;
         flex: 1;
         justify-content: space-between;
+        height: 100%; /* ← fills the full sidebar */
     }
 
         .profile-nav .nav-item {
@@ -338,14 +284,9 @@
             display: block;
         }
 
-            .profile-nav .nav-item:hover {
-                background-color: #c9b5a3;
-                border-left-color: #6b5544;
-            }
-
+            .profile-nav .nav-item:hover,
             .profile-nav .nav-item.active {
                 background-color: #c9b5a3;
-                font-weight: 600;
                 border-left-color: #6b5544;
             }
 
@@ -368,7 +309,7 @@
         padding: 50px 60px;
         max-width: 600px;
         width: 100%;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
 
     .review-service-name {
@@ -376,7 +317,6 @@
         font-size: 32px;
         font-weight: 600;
         margin-bottom: 30px;
-        text-align: left;
     }
 
     .rating-section {
@@ -450,6 +390,7 @@
             color: #a89585;
         }
 
+    /* ── Photo Upload ── */
     .photo-upload-section {
         margin-bottom: 35px;
     }
@@ -458,15 +399,14 @@
         background-color: #f8f4ef;
         border-radius: 15px;
         padding: 20px;
-        cursor: default;
-        transition: background-color 0.3s ease;
         min-height: 150px;
         display: flex;
         flex-wrap: wrap;
         align-items: center;
         justify-content: flex-start;
-        gap: 5px;
-        position: relative; /* ADD THIS */
+        gap: 8px;
+        position: relative;
+        transition: background-color 0.3s ease;
     }
 
         .photo-upload-box:hover {
@@ -479,8 +419,8 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        position: absolute; /* ADD THIS */
-        inset: 0; /* ADD THIS — fills the whole box */
+        position: absolute;
+        inset: 0;
         border-radius: 15px;
     }
 
@@ -496,43 +436,7 @@
         margin: 0;
     }
 
-    .photo-preview {
-        position: relative;
-        width: 100%;
-        max-width: 300px;
-        margin: 0 auto;
-    }
-
-        .photo-preview img {
-            width: 100%;
-            height: auto;
-            border-radius: 10px;
-            display: block;
-        }
-
-    .remove-photo {
-        position: absolute;
-        top: -10px;
-        right: -10px;
-        background-color: #6b5544;
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        font-size: 20px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        line-height: 1;
-        transition: background-color 0.3s ease;
-    }
-
-        .remove-photo:hover {
-            background-color: #5a4635;
-        }
-
+    /* ── Actions ── */
     .review-actions {
         display: flex;
         gap: 20px;
@@ -555,7 +459,7 @@
         .btn-cancel:hover, .btn-upload:hover {
             background-color: #5a4635;
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
     /* ── Footer ── */
@@ -566,10 +470,6 @@
         border-right: none;
         padding: 2.5rem 3rem;
         text-align: center;
-    }
-
-    .footer-container {
-        margin: 0 auto;
     }
 
     .footer-title {
@@ -610,9 +510,7 @@
             font-weight: 500;
         }
 
-    /* =============================================
-       DESKTOP (above 1024px)
-    ============================================= */
+    /* ── Desktop ── */
     @@media (min-width: 1025px) {
         .hamburger-btn {
             display: none !important;
@@ -632,13 +530,9 @@
 
         .main-nav {
             position: static !important;
-            top: auto !important;
-            right: auto !important;
-            left: auto !important;
             width: auto !important;
             height: auto !important;
             background: none !important;
-            background-color: transparent !important;
             box-shadow: none !important;
             padding: 0 !important;
             margin-left: 3rem !important;
@@ -646,12 +540,9 @@
             display: flex !important;
             flex-direction: row !important;
             align-items: center !important;
-            justify-content: flex-start !important;
             gap: 2.5rem !important;
-            overflow: visible !important;
             transform: none !important;
             transition: none !important;
-            z-index: auto !important;
         }
 
             .main-nav a {
@@ -661,7 +552,6 @@
                 font-size: 1.3rem !important;
                 font-weight: 600 !important;
                 color: #5d4037 !important;
-                letter-spacing: 0.5px !important;
                 display: inline !important;
             }
 
@@ -672,9 +562,7 @@
                 }
     }
 
-    /* =============================================
-       TABLET + MOBILE (max-width: 1024px)
-    ============================================= */
+    /* ── Tablet/Mobile ── */
     @@media (max-width: 1024px) {
         .hamburger-btn {
             display: flex;
@@ -699,16 +587,12 @@
             z-index: 1000 !important;
             display: flex !important;
             flex-direction: column !important;
-            align-items: flex-start !important;
-            justify-content: flex-start !important;
             padding: 5rem 2rem 2rem 2rem !important;
             gap: 0 !important;
             box-shadow: -4px 0 20px rgba(0,0,0,0.15) !important;
             transform: translateX(100%) !important;
             transition: transform 0.35s cubic-bezier(0.4,0,0.2,1) !important;
             overflow-y: auto !important;
-            overflow-x: hidden !important;
-            margin: 0 !important;
         }
 
             .main-nav.open {
@@ -722,16 +606,10 @@
                 font-weight: 600 !important;
                 color: #5d4037 !important;
                 border-bottom: 1px solid #e0d5c8 !important;
-                letter-spacing: 0.05em !important;
                 display: block !important;
                 text-decoration: none !important;
                 background: none !important;
             }
-
-                .main-nav a.nav-active {
-                    color: #6b4423 !important;
-                    border-bottom: 1px solid #e0d5c8 !important;
-                }
 
         .mobile-nav-actions {
             display: flex !important;
@@ -740,7 +618,6 @@
             margin-top: 1.5rem;
             padding-top: 1.5rem;
             border-top: 2px solid #d4c4b0;
-            gap: 0;
         }
 
             .mobile-nav-actions a {
@@ -760,7 +637,7 @@
                 .mobile-nav-actions a:last-child {
                     border-bottom: none !important;
                 }
-        /* Profile sidebar becomes top tab bar */
+
         .profile-container {
             flex-direction: column;
         }
@@ -768,6 +645,8 @@
         .sidebar {
             width: 100%;
             min-height: unset;
+            position: static;
+            height: auto;
         }
 
         .profile-nav {
@@ -804,13 +683,7 @@
             border-bottom: 4px solid transparent;
         }
 
-            .profile-nav .nav-item:hover {
-                background-color: #c9b5a3;
-                border-left-color: transparent;
-                border-bottom-color: #6b5544;
-            }
-
-            .profile-nav .nav-item.active {
+            .profile-nav .nav-item:hover, .profile-nav .nav-item.active {
                 background-color: #c9b5a3;
                 border-left-color: transparent;
                 border-bottom-color: #6b5544;
@@ -821,32 +694,16 @@
         }
 
         .review-card {
-            padding: 2rem 2rem;
+            padding: 2rem;
             border-radius: 20px;
             max-width: 100%;
-        }
-
-        .review-service-name {
-            font-size: 26px;
-            margin-bottom: 25px;
         }
 
         .star-rating label {
             font-size: 42px;
         }
-
-        .photo-upload-box {
-            padding: 30px;
-        }
-
-        .camera-icon {
-            font-size: 50px;
-        }
     }
 
-    /* =============================================
-       MOBILE (max-width: 768px)
-    ============================================= */
     @@media (max-width: 768px) {
         .profile-nav .nav-item {
             padding: 14px 16px;
@@ -874,19 +731,6 @@
                 font-size: 38px;
             }
 
-        .review-label {
-            font-size: 16px;
-        }
-
-        .photo-upload-box {
-            padding: 25px;
-            min-height: 120px;
-        }
-
-        .camera-icon {
-            font-size: 44px;
-        }
-
         .review-actions {
             flex-direction: column;
             gap: 12px;
@@ -910,19 +754,8 @@
         .social-links {
             gap: 1.5rem;
         }
-
-        .social-item i {
-            font-size: 1.25rem;
-        }
-
-        .social-item span {
-            font-size: 0.8rem;
-        }
     }
 
-    /* =============================================
-       SMALL MOBILE (max-width: 400px)
-    ============================================= */
     @@media (max-width: 400px) {
         .profile-nav .nav-item {
             padding: 12px 13px;
@@ -946,23 +779,6 @@
             font-size: 32px;
         }
 
-        .star-rating {
-            gap: 4px;
-        }
-
-        .review-label {
-            font-size: 15px;
-        }
-
-        .photo-upload-box {
-            padding: 20px;
-            min-height: 100px;
-        }
-
-        .camera-icon {
-            font-size: 38px;
-        }
-
         .btn-cancel, .btn-upload {
             padding: 12px 25px;
             font-size: 15px;
@@ -972,39 +788,22 @@
 
 @section scripts {
     <script>
+        // ── Hamburger ──
         (function () {
             var btn = document.getElementById('hamburgerBtn');
             var nav = document.getElementById('mainNav');
             var overlay = document.getElementById('navOverlay');
-
-            function openMenu() {
-                btn.classList.add('open');
-                nav.classList.add('open');
-                overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-
-            function closeMenu() {
-                btn.classList.remove('open');
-                nav.classList.remove('open');
-                overlay.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-
-            btn.addEventListener('click', function () {
-                nav.classList.contains('open') ? closeMenu() : openMenu();
-            });
-
+            function openMenu() { btn.classList.add('open'); nav.classList.add('open'); overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
+            function closeMenu() { btn.classList.remove('open'); nav.classList.remove('open'); overlay.classList.remove('active'); document.body.style.overflow = ''; }
+            btn.addEventListener('click', function () { nav.classList.contains('open') ? closeMenu() : openMenu(); });
             overlay.addEventListener('click', closeMenu);
-
-            nav.querySelectorAll('a').forEach(function (link) {
-                link.addEventListener('click', closeMenu);
-            });
+            nav.querySelectorAll('a').forEach(function (link) { link.addEventListener('click', closeMenu); });
         })();
+
+        // ── Photo Upload ──
         const photoInput = document.getElementById('photoInput');
         const photoUploadBox = document.getElementById('photoUploadBox');
         const uploadPlaceholder = document.getElementById('uploadPlaceholder');
-
         let selectedFiles = [];
 
         function updateCounter() {
@@ -1019,13 +818,10 @@
                 const tile = document.createElement("div");
                 tile.id = "addMoreTile";
                 tile.style.cssText = "width:90px;height:90px;border-radius:10px;border:2px dashed #6b5544;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:#6b5544;font-size:12px;font-weight:600;gap:4px;flex-shrink:0;transition:background 0.2s;";
-                tile.innerHTML = '<span style="font-size:24px;line-height:1;">+</span><span>Add more</span>';
+                tile.innerHTML = '<span style="font-size:28px;line-height:1;font-weight:300;">+</span><span>Add more</span>';
                 tile.addEventListener('mouseenter', function () { tile.style.background = '#f0e8dd'; });
                 tile.addEventListener('mouseleave', function () { tile.style.background = 'transparent'; });
-                tile.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    photoInput.click();
-                });
+                tile.addEventListener('click', function (e) { e.stopPropagation(); photoInput.click(); });
                 photoUploadBox.appendChild(tile);
             }
             updateCounter();
@@ -1038,47 +834,36 @@
 
         photoInput.addEventListener('change', function (e) {
             const files = Array.from(e.target.files);
-
-            if (selectedFiles.length >= 5) {
-                alert("You've already added 5 photos.");
-                photoInput.value = "";
-                return;
-            }
-
+            if (selectedFiles.length >= 5) { alert("You've already added 5 photos."); photoInput.value = ""; return; }
             const remaining = 5 - selectedFiles.length;
             const toAdd = files.slice(0, remaining);
-
-            if (files.length > remaining) {
-                alert("Maximum of 5 photos. Only the first " + remaining + " were added.");
-            }
+            if (files.length > remaining) alert("Maximum of 5 photos. Only the first " + remaining + " were added.");
 
             let loadedCount = 0;
-
             toAdd.forEach(function (file) {
                 selectedFiles.push(file);
-
                 const reader = new FileReader();
                 reader.onload = function (ev) {
                     const container = document.createElement("div");
-                    container.style.cssText = "position:relative;display:inline-flex;margin:0;flex-shrink:0;";
+                    container.style.cssText = "position:relative;display:inline-flex;margin:4px;flex-shrink:0;overflow:visible;";
 
                     const img = document.createElement("img");
                     img.src = ev.target.result;
                     img.style.cssText = "width:90px;height:90px;object-fit:cover;border-radius:10px;display:block;";
 
+                    // ── Remove button (X icon, NOT +) ──
                     const removeBtn = document.createElement("button");
                     removeBtn.type = "button";
-                    removeBtn.innerText = "×";
-                    removeBtn.style.cssText = "position:absolute;top:-8px;right:-8px;background:#6b5544;color:white;border:none;border-radius:50%;width:22px;height:22px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;z-index:1;";
-
+                    removeBtn.innerHTML = '<i class="fa-solid fa-xmark" style="font-size:11px;"></i>';
+                    removeBtn.style.cssText = "position:absolute;top:-8px;right:-8px;background:#a04040;color:white;border:2px solid white;border-radius:50%;width:22px;height:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:background 0.2s;padding:0;";
+                    removeBtn.addEventListener('mouseenter', function () { removeBtn.style.background = '#7a2020'; });
+                    removeBtn.addEventListener('mouseleave', function () { removeBtn.style.background = '#a04040'; });
                     removeBtn.addEventListener('click', function (ev) {
                         ev.stopPropagation();
                         selectedFiles = selectedFiles.filter(function (f) { return f !== file; });
                         container.remove();
                         photoInput.value = "";
-                        if (selectedFiles.length === 0) {
-                            uploadPlaceholder.style.display = "flex";
-                        }
+                        if (selectedFiles.length === 0) uploadPlaceholder.style.display = "flex";
                         refreshAddMoreTile();
                     });
 
@@ -1086,13 +871,9 @@
                     container.appendChild(removeBtn);
 
                     const addMoreTile = document.getElementById('addMoreTile');
-                    if (addMoreTile) {
-                        photoUploadBox.insertBefore(container, addMoreTile);
-                    } else {
-                        photoUploadBox.appendChild(container);
-                    }
+                    if (addMoreTile) photoUploadBox.insertBefore(container, addMoreTile);
+                    else photoUploadBox.appendChild(container);
 
-                    // Only refresh UI after ALL files in this batch have loaded
                     loadedCount++;
                     if (loadedCount === toAdd.length) {
                         uploadPlaceholder.style.display = "none";
@@ -1100,17 +881,8 @@
                         refreshAddMoreTile();
                     }
                 };
-
                 reader.readAsDataURL(file);
             });
-        });
-        const reviewText = document.getElementById('reviewText');
-        const charCount = document.getElementById('charCount');
-
-        reviewText.addEventListener('input', function () {
-            const len = reviewText.value.length;
-            charCount.textContent = len + ' / 500';
-            charCount.style.color = len >= 450 ? '#c0392b' : '#a89585';
         });
     </script>
 }

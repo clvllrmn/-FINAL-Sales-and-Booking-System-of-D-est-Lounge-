@@ -13,7 +13,8 @@
                 <button class="modal-close" onclick="closeEditModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
-                <textarea id="modalInput" class="modal-input" rows="4"></textarea>
+                <textarea id="modalInput" class="modal-input" rows="4" oninput="checkCharLimit()"></textarea>
+                <div id="charCounter" style="text-align:right; font-size:0.8rem; color:#888; margin-top:0.3rem;"></div>
             </div>
             <div class="modal-footer">
                 <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
@@ -143,13 +144,11 @@
                             title="Change Photo">
                         <i class="fa-solid fa-pen"></i>
                     </button>
-
                     <button class="delete-polaroid-btn"
                             ng-click="deletePolaroidImage(slot)"
                             title="Delete Photo">
                         <i class="fa-solid fa-trash"></i>
                     </button>
-         
                 </div>
                 <div class="polaroid-image">
                     <img ng-src="{{polaroidImages[slot]}}" alt="Nail Design {{slot}}">
@@ -465,7 +464,6 @@
         transition: background 0.2s;
     }
 
-
         .btn-cancel:hover {
             background: #ddd;
         }
@@ -585,7 +583,7 @@
         padding: 1.25rem;
         padding-bottom: 0.9375rem;
         box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.15);
-        width: 17rem; /* was 13.75rem */
+        width: 17rem;
         position: relative;
         transform: rotate(-2deg);
         transition: transform 0.3s;
@@ -642,7 +640,7 @@
 
     .polaroid-image {
         width: 100%;
-        height: 17rem; /* was 13.75rem */
+        height: 17rem;
         overflow: hidden;
         margin-bottom: 0.9375rem;
         border: 0.0625rem solid #e0e0e0;
@@ -659,9 +657,6 @@
         padding: 0.3125rem 0;
         color: #c84b4b;
         font-size: 1.25rem;
-    }
-    .polaroid-card {
-        position: relative;
     }
 
     .polaroid-actions {
@@ -697,7 +692,6 @@
 
     .delete-polaroid-btn {
         background: #dc3545;
-        
     }
 
         .delete-polaroid-btn:hover {
@@ -1085,7 +1079,7 @@
         }
 
         .polaroid-card {
-            width: 14rem; /* was 11rem */
+            width: 14rem;
         }
 
         .dest-description {
@@ -1127,10 +1121,38 @@
 
 <script>
     var _currentContentType = null;
+    var _charLimit = null;
+
+    function checkCharLimit() {
+        var input = document.getElementById('modalInput');
+        var counter = document.getElementById('charCounter');
+        if (_charLimit) {
+            var remaining = _charLimit - input.value.length;
+            counter.textContent = remaining + ' characters remaining';
+            counter.style.color = remaining < 20 ? '#c84b4b' : '#888';
+            if (input.value.length > _charLimit) {
+                input.value = input.value.substring(0, _charLimit);
+            }
+        } else {
+            counter.textContent = '';
+        }
+    }
+
+    function openEditModal(contentType, currentValue, title) {
+        _currentContentType = contentType;
+        _charLimit = (contentType === 'dest_text') ? 500 : null;
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalInput').value = currentValue;
+        document.getElementById('editModal').style.display = 'flex';
+        document.getElementById('charCounter').textContent = '';
+        checkCharLimit();
+    }
 
     function closeEditModal() {
         document.getElementById('editModal').style.display = 'none';
         _currentContentType = null;
+        _charLimit = null;
+        document.getElementById('charCounter').textContent = '';
     }
 
     function saveEdit() {
