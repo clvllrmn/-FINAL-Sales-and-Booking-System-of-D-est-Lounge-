@@ -1,4 +1,4 @@
-﻿var app = angular.module("DestLoungeSalesandBooking", []); // ✅ add this
+﻿var app = angular.module("DestLoungeSalesandBooking"); // ✅ add this
 console.log("CONTROLLER FILE LOADED, app:", app);
 var _currentContentType = null;
 
@@ -2382,16 +2382,17 @@ app.directive('compareTo', function () {
                 console.error("Notification error:", err);
                 $scope.notifications = [];
             });
+
     };
-
-
-
-    // ===== OTP FUNCTIONS =====
-    
-
     $scope.verifyOtp = function () {
+        console.log("VERIFY OTP CLICKED");
+
         var otp = ($scope.resetPassword && $scope.resetPassword.otp)
             ? $scope.resetPassword.otp.trim()
+            : "";
+
+        var email = ($scope.resetPassword && $scope.resetPassword.email)
+            ? $scope.resetPassword.email.trim()
             : "";
 
         if (!otp) {
@@ -2404,7 +2405,43 @@ app.directive('compareTo', function () {
             return;
         }
 
-        $scope.forgotStep = 3;
+        if (!email) {
+            alert("Missing email. Please request OTP again.");
+            return;
+        }
+
+        var step2Box = document.querySelector('.login-box[ng-show="forgotStep === 2"]');
+        var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+        var tokenValue = tokenElement ? tokenElement.value : "";
+
+        $http({
+            method: 'POST',
+            url: '/Account/VerifyForgotPasswordOtp',
+            data: $httpParamSerializerJQLike({
+                email: email,
+                otp: otp,
+                __RequestVerificationToken: tokenValue
+            }),
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            }
+        }).then(function (response) {
+            console.log("Verify OTP response:", response.data);
+
+            if (response.data && response.data.success === true) {
+                $scope.forgotStep = 3;
+            } else {
+                alert(response.data.message || "Invalid OTP.");
+            }
+        }).catch(function (error) {
+            console.error("VerifyForgotPasswordOtp error:", error);
+
+            if (error.status === 400) {
+                alert("Invalid request or anti-forgery token issue.");
+            } else {
+                alert("Failed to verify OTP.");
+            }
+        });
     };
 
 });

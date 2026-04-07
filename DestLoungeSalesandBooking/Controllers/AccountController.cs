@@ -460,8 +460,8 @@ namespace DestLoungeSalesandBooking.Controllers
                 System.Diagnostics.Debug.WriteLine("GoogleSignIn Error: " + ex.ToString());
                 return Json(new { success = false, message = "Google sign-in failed." });
             }
-        
-    }
+
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult SendForgotPasswordOtp(string email)
@@ -487,9 +487,8 @@ namespace DestLoungeSalesandBooking.Controllers
 
                 Session["ForgotPasswordOTP"] = otp;
                 Session["ForgotPasswordEmail"] = email;
-                Session["ForgotPasswordOTPExpiry"] = DateTime.Now.AddMinutes(5); // ✅ FIXED
+                Session["ForgotPasswordOTPExpiry"] = DateTime.Now.AddMinutes(5);
 
-                // SEND EMAIL
                 SendOtpEmail(user.email, user.firstname, otp);
 
                 TempData["SuccessMessage"] = "OTP has been sent to your email.";
@@ -504,6 +503,50 @@ namespace DestLoungeSalesandBooking.Controllers
                 return RedirectToAction("ForgotPasswordPage", "Main");
             }
 
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult VerifyForgotPasswordOtp(string email, string otp)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(otp))
+                {
+                    return Json(new { success = false, message = "Email and OTP are required." });
+                }
+
+                if (Session["ForgotPasswordOTP"] == null ||
+                    Session["ForgotPasswordEmail"] == null ||
+                    Session["ForgotPasswordOTPExpiry"] == null)
+                {
+                    return Json(new { success = false, message = "OTP session expired. Please request a new OTP." });
+                }
+
+                var savedOtp = Session["ForgotPasswordOTP"].ToString();
+                var savedEmail = Session["ForgotPasswordEmail"].ToString();
+                var expiry = (DateTime)Session["ForgotPasswordOTPExpiry"];
+
+                if (DateTime.Now > expiry)
+                {
+                    Session.Remove("ForgotPasswordOTP");
+                    Session.Remove("ForgotPasswordEmail");
+                    Session.Remove("ForgotPasswordOTPExpiry");
+
+                    return Json(new { success = false, message = "OTP expired. Please request a new one." });
+                }
+
+                if (savedEmail.ToLower().Trim() != email.ToLower().Trim() || savedOtp != otp.Trim())
+                {
+                    return Json(new { success = false, message = "Invalid OTP." });
+                }
+
+                return Json(new { success = true, message = "OTP verified successfully." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
 
