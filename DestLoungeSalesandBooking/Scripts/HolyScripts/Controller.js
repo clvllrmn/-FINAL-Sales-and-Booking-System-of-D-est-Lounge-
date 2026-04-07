@@ -736,6 +736,29 @@ app.controller("DestLoungeSalesandBookingController",
                 });
         };
 
+        $scope.permanentDeleteService = function (serviceId) {
+            if (!confirm('Permanently delete this service? This CANNOT be undone.')) return;
+
+            var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            var tokenValue = tokenElement ? tokenElement.value : '';
+
+            $http({
+                method: 'POST',
+                url: '/Service/PermanentDeleteService/' + serviceId,
+                data: $httpParamSerializerJQLike({ __RequestVerificationToken: tokenValue }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }).then(function (response) {
+                if (response.data.success) {
+                    alert('Service permanently deleted.');
+                    $scope.loadDeletedServices();
+                } else {
+                    alert('Error: ' + response.data.message);
+                }
+            }).catch(function (error) {
+                console.error('Error permanently deleting service:', error);
+                alert('Error permanently deleting service.');
+            });
+        };
         // ===== AUTO-LOAD on admin service page =====
         if (window.location.pathname.toLowerCase().indexOf('adminservicepage') !== -1) {
             $scope.loadServices();

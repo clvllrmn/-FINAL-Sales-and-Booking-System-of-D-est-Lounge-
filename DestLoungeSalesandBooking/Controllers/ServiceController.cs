@@ -220,6 +220,37 @@ namespace DestLoungeSalesandBooking.Controllers
             }
         }
 
+        // POST /Service/PermanentDeleteService/{id}
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult PermanentDeleteService(int id)
+        {
+            try
+            {
+                var service = db.tbl_services.Find(id);
+                if (service == null)
+                    return Json(new { success = false, message = "Service not found." });
+
+                // Also delete the image file if it exists
+                var folder = Server.MapPath("~/Content/ServiceImages/");
+                if (Directory.Exists(folder))
+                {
+                    foreach (var file in Directory.GetFiles(folder, id + ".*"))
+                        System.IO.File.Delete(file);
+                }
+
+                db.tbl_services.Remove(service);
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Service permanently deleted." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+
         // ---- helpers ----
         private void SaveServiceImage(HttpPostedFileBase file, int serviceId)
         {
