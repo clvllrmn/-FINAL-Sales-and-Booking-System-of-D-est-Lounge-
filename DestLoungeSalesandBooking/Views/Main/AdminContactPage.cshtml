@@ -59,20 +59,18 @@
                         <div class="card-icon">
                             <i ng-class="contact.icon"></i>
                         </div>
-                     <div class="card-content">
-    <h3>{{ contact.label }}</h3>
-
-    <p ng-if="contact.infoType === 'phone'">
-        <a href="tel:{{ contact.value }}">{{ contact.value }}</a>
-    </p>
-
-    <p ng-if="contact.infoType === 'email'">
-        <a href="mailto:{{ contact.value }}">{{ contact.value }}</a>
-    </p>
-
-    <div ng-if="contact.infoType !== 'phone' && contact.infoType !== 'email'"
-         ng-bind="contact.value"></div>
-</div>
+                        <div class="card-content">
+                            <h3>{{ contact.label }}</h3>
+                            <p ng-if="contact.infoType === 'phone'">
+                                <a href="tel:{{ contact.rawValue }}">{{ contact.rawValue }}</a>
+                            </p>
+                            <p ng-if="contact.infoType === 'email'">
+                                <a href="mailto:{{ contact.rawValue }}">{{ contact.rawValue }}</a>
+                            </p>
+                            <div ng-if="contact.infoType !== 'phone' && contact.infoType !== 'email'"
+                                 ng-bind="contact.rawValue">
+                            </div>
+                        </div>
                         <div class="card-actions">
                             <button class="btn-edit" ng-click="editContact($index)" title="Edit">
                                 <i class="fa-solid fa-pen"></i>

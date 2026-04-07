@@ -3,7 +3,7 @@ console.log("CONTROLLER FILE LOADED, app:", app);
 var _currentContentType = null;
 
 app.controller("DestLoungeSalesandBookingController",
-    function ($scope, $window, $http, $httpParamSerializerJQLike) {  // ✅ Fixed: Added missing $scope, removed undefined service
+    function ($scope, $window, $http, $sce,$httpParamSerializerJQLike) {  // ✅ Fixed: Added missing $scope, removed undefined service
 
         console.log("CONTROLLER REGISTERED");
 
@@ -1395,18 +1395,23 @@ app.controller("DestLoungeSalesandBookingController",
         }
 
         // ===== CONTACT DATA =====
-        $scope.contactInfo = [];
-
         $scope.loadContactInfo = function () {
-            $http.get('/Contact/GetAllContact')
+            var isAdmin = window.location.pathname.toLowerCase().indexOf('admin') !== -1;
+            var url = isAdmin ? '/Contact/GetAllContact' : '/PublicContact/GetAllContact';
+
+            $http.get(url)
                 .then(function (response) {
                     if (response.data.success) {
                         $scope.contactInfo = response.data.data.map(function (contact) {
+                            var rawVal = contact.value || '';
                             return {
                                 contactID: contact.contactID,
                                 infoType: contact.infoType,
                                 label: contact.label,
-                                value: contact.value,
+                                rawValue: rawVal,
+                                value: isAdmin
+                                    ? rawVal
+                                    : $sce.trustAsHtml(rawVal.replace(/\n/g, '<br>')),
                                 icon: contact.icon
                             };
                         });
@@ -1456,14 +1461,28 @@ app.controller("DestLoungeSalesandBookingController",
             $scope.showModal = true;
         };
 
+        $scope.testClick = function (index) {
+            console.log("TEST CLICK index:", index);
+            console.log("contactInfo:", $scope.contactInfo);
+            console.log("contact at index:", $scope.contactInfo[index]);
+        };
         // Update editContact to also set placeholder/hint
+        // ✅ CORRECT
         $scope.editContact = function (index) {
             var c = $scope.contactInfo[index];
-            $scope.formData = { infoType: c.infoType, icon: c.icon, label: c.label, value: c.value };
+            if (!c) return;
+
+            $scope.formData = {
+                infoType: String(c.infoType || ''),
+                icon: String(c.icon || ''),
+                label: String(c.label || ''),
+                value: String(c.rawValue || '')
+            };
+
             $scope.contactPlaceholder = placeholderMap[c.infoType] || 'Enter details...';
             $scope.contactHint = hintMap[c.infoType] || '';
             $scope.editingIndex = index;
-            $scope.showModal = true;
+            $scope.showModal = true;  // ← correct variable name
         };
 
         $scope.showModal = false;
@@ -1762,16 +1781,7 @@ app.controller("DestLoungeSalesandBookingController",
                 }
             }
         };
-        $scope.editContact = function (contact, index) {
-            $scope.editingIndex = index;
-            $scope.formData = {
-                infoType: contact.infoType,
-                label: contact.label,
-                value: contact.value,
-                icon: contact.icon
-            };
-            $scope.showContactModal = true;
-        };
+      
 
         $scope.openEditModal = function (contentType, currentValue, label) {
             _currentContentType = contentType;

@@ -183,6 +183,7 @@
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Controllers\PublicController.cs" />
     <Compile Include="Controllers\AdminController.cs" />
     <Compile Include="Controllers\HomepagecontentController.cs" />
     <Compile Include="Controllers\ContactController.cs" />
@@ -202,6 +203,7 @@
     <Compile Include="Models\Context\DestLoungeSalesandBookingContext.cs" />
     <Compile Include="Models\GoogleSignInRequest.cs" />
     <Compile Include="Models\Maps\tblUsersMap.cs" />
+    <Compile Include="Models\Maps\tbl_gallery_Map.cs" />
     <Compile Include="Models\Maps\tbl_contact_Map.cs" />
     <Compile Include="Models\Maps\tbl_homepage_content_Map.cs" />
     <Compile Include="Models\Maps\tbl_faqs_Map.cs" />
@@ -209,6 +211,7 @@
     <Compile Include="Models\Maps\tbl_services_Map.cs" />
     <Compile Include="Models\tbl_admin_notifications.cs" />
     <Compile Include="Models\tbl_bookings.cs" />
+    <Compile Include="Models\tbl_gallery.cs" />
     <Compile Include="Models\tbl_homepage_content.cs" />
     <Compile Include="Models\tbl_contact.cs" />
     <Compile Include="Models\tbl_notifications.cs" />

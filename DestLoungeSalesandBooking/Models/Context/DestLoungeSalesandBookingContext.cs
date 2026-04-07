@@ -38,6 +38,7 @@ namespace DestLoungeSalesandBooking.Models.Context
 
         public DbSet<tbl_admin_notifications> tbl_admin_notifications { get; set; }
 
+        public DbSet<tbl_gallery> tbl_gallery { get; set; }
         public System.Data.Entity.DbSet<tbl_payment_settings> tbl_payment_settings { get; set; }
 
 
@@ -54,6 +55,7 @@ namespace DestLoungeSalesandBooking.Models.Context
             modelBuilder.Configurations.Add(new tbl_contact_Map());  
             modelBuilder.Configurations.Add(new tbl_homepage_content_Map());
             modelBuilder.Configurations.Add(new tbl_services_Map());
+            modelBuilder.Configurations.Add(new tbl_gallery_Map());
 
 
             base.OnModelCreating(modelBuilder);

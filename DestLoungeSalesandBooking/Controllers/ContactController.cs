@@ -133,6 +133,8 @@ namespace DestLoungeSalesandBooking.Controllers
                 return Json(new { success = false, message = realError });
             }
         }
+
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public JsonResult UpdateContact(int id, string infoType, string label, string value, string icon)
@@ -220,18 +222,40 @@ namespace DestLoungeSalesandBooking.Controllers
         {
             try
             {
-                var contact = db.tbl_contact.FirstOrDefault(c => c.contactID == id && !c.isActive);
+                var contact = db.tbl_contact
+                    .FirstOrDefault(c => c.contactID == id && !c.isActive);
 
                 if (contact == null)
-                {
-                    return Json(new { success = false, message = "Contact not found or already active." });
-                }
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Contact not found or already active."
+                    });
+
+                // Check if an active contact of the same type already exists
+                bool typeConflict = db.tbl_contact
+                    .Any(c => c.infoType == contact.infoType
+                           && c.isActive
+                           && c.contactID != id);
+
+                if (typeConflict)
+                    return Json(new
+                    {
+                        success = false,
+                        message = "An active contact of type '"
+                                                + contact.infoType
+                                                + "' already exists. Delete or edit it first."
+                    });
 
                 contact.isActive = true;
                 contact.updatedAt = DateTime.Now;
                 db.SaveChanges();
 
-                return Json(new { success = true, message = "Contact info restored successfully." });
+                return Json(new
+                {
+                    success = true,
+                    message = "Contact info restored successfully."
+                });
             }
             catch (Exception ex)
             {

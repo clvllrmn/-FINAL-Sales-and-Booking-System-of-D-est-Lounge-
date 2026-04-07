@@ -50,15 +50,18 @@
                     </button>
 
                     <div ng-show="showNotif"
-                         style="position:absolute; right:0; top:35px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999;">
-
+                         style="position:absolute; right:0; top:35px; width:260px;
+            background:white; border:1px solid #ccc; border-radius:10px; z-index:99999;">
                         <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
                             Notifications
                         </div>
-                        </div>
-
                         <div ng-if="!notifications.length" style="padding:10px;">
                             No notifications
+                        </div>
+                        <div ng-repeat="n in notifications"
+                             style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
+                             ng-click="goToBooking()">
+                            {{n.Message || n.message}}
                         </div>
                     </div>
 </nav>
@@ -152,7 +155,7 @@
                         <a href="mailto:{{ contact.value }}">{{ contact.value }}</a>
                     </p>
                     <div ng-if="contact.infoType !== 'phone' && contact.infoType !== 'email'"
-                         ng-bind-html="contact.value"></div>
+                          ng-bind-html="contact.value"></div>
                 </div>
             </div>
         </div>
