@@ -45,9 +45,15 @@ namespace DestLoungeSalesandBooking.Models.Maps
                 .HasColumnName("createdAt")
                 .IsRequired();
 
+            Property(t => t.description)
+    .HasColumnName("description")
+    .IsOptional()
+    .HasMaxLength(1000);
+
             Property(t => t.updatedAt)
                 .HasColumnName("updatedAt")
                 .IsRequired();
+
         }
     }
 }

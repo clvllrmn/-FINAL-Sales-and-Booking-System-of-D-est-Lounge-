@@ -193,6 +193,7 @@
     <Compile Include="Controllers\MainController.cs" />
     <Compile Include="Controllers\ReminderController.cs" />
     <Compile Include="Controllers\SalesController.cs" />
+    <Compile Include="Controllers\GalleryController.cs" />
     <Compile Include="Controllers\ServiceController.cs" />
     <Compile Include="Filters\NoCacheAttribute.cs" />
     <Compile Include="Filters\SessionCheck.cs" />

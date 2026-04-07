@@ -2026,7 +2026,218 @@ app.controller("DestLoungeSalesandBookingController",
             });
         };
 
+        // ── GALLERY (admin tab) ──────────────────────────────────────────────────
+        $scope.galleryPhotos = [];
+        $scope.adminTab = 'gallery';   // default tab on admin page
 
+        $scope.newPhoto = { file: null, caption: '', description: '', previewUrl: '' };
+
+        // Called by the <input type="file"> onchange handler
+        $scope.onFileSelected = function (input) {
+            var file = input.files[0];
+            if (!file) return;
+
+            var allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+            if (!allowed.includes(file.type)) {
+                alert('Only JPG, PNG, WEBP, or GIF images are allowed.');
+                input.value = '';
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File exceeds the 5 MB limit.');
+                input.value = '';
+                return;
+            }
+
+            $scope.newPhoto.file = file;
+            $scope.newPhoto.previewUrl = URL.createObjectURL(file);
+            $scope.$apply();
+        };
+
+        // Load all active gallery photos from the DB
+        $scope.loadGalleryPhotos = function () {
+            $http.get('/Gallery/GetGalleryPhotos')
+                .then(function (res) {
+                    if (res.data.success) {
+                        $scope.galleryPhotos = res.data.data.map(function (p) {
+                            return {
+                                galleryId: p.galleryId,
+                                caption: p.caption,
+                                description: p.description,
+                                imageUrl: p.imageUrl,
+                                editing: false,
+                                editCaption: p.caption
+                            };
+                        });
+                    }
+                })
+                .catch(function (err) { console.error('loadGalleryPhotos error:', err); });
+        };
+
+        // Upload a new photo
+        $scope.uploadPhoto = function () {
+            if (!$scope.newPhoto.file || !$scope.newPhoto.caption) return;
+
+            var token = (document.querySelector('input[name="__RequestVerificationToken"]') || {}).value || '';
+            var fd = new FormData();
+            fd.append('caption', $scope.newPhoto.caption.trim());
+            fd.append('description', $scope.newPhoto.description || '');
+            fd.append('imageFile', $scope.newPhoto.file);
+            fd.append('__RequestVerificationToken', token);
+
+            $http.post('/Gallery/UploadPhoto', fd, {
+                transformRequest: angular.identity,
+                headers: { 'Content-Type': undefined }
+            }).then(function (res) {
+                if (res.data.success) {
+                    $scope.galleryPhotos.unshift({
+                        galleryId: res.data.galleryId,
+                        caption: res.data.caption,
+                        description: $scope.newPhoto.description || '', 
+                        imageUrl: res.data.imageUrl,
+                        editing: false,
+                        editCaption: res.data.caption
+                    });
+                    $scope.newPhoto = { file: null, caption: '', previewUrl: '' };
+                    document.getElementById('photoFileInput').value = '';
+                    $scope.showToast('Photo added successfully!', 'toast-success');
+                } else {
+                    $scope.showToast(res.data.message, 'toast-error');
+                }
+            }).catch(function () { $scope.showToast('Upload failed.', 'toast-error'); });
+        };
+
+        // Edit modal
+        $scope.editModal = { show: false, photo: {}, caption: '', description: '' };
+
+        $scope.startEditPhoto = function (photo) {
+            $scope.editModal = {
+                show: true,
+                photo: photo,
+                caption: photo.caption,
+                description: photo.description || ''
+            };
+        };
+
+        $scope.cancelEditPhoto = function () {
+            $scope.editModal.show = false;
+        };
+
+        $scope.saveEditPhoto = function (photo) {
+            var token = (document.querySelector('input[name="__RequestVerificationToken"]') || {}).value || '';
+
+            $http({
+                method: 'POST',
+                url: '/Gallery/UpdateCaption',
+                data: $httpParamSerializerJQLike({
+                    galleryId: photo.galleryId,
+                    caption: $scope.editModal.caption,
+                    description: $scope.editModal.description,
+                    __RequestVerificationToken: token
+                }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }).then(function (res) {
+                if (res.data.success) {
+                    photo.caption = $scope.editModal.caption;
+                    photo.description = $scope.editModal.description;
+                    $scope.editModal.show = false;
+                    $scope.showToast('Photo updated.', 'toast-success');
+                } else {
+                    $scope.showToast(res.data.message, 'toast-error');
+                }
+            });
+        };
+
+        // Delete modal
+        $scope.deleteModal = { show: false, photo: {} };
+
+        $scope.confirmDeletePhoto = function (photo) {
+            $scope.deleteModal = { show: true, photo: photo };
+        };
+
+        $scope.deletePhoto = function () {
+            var photo = $scope.deleteModal.photo;
+            var token = (document.querySelector('input[name="__RequestVerificationToken"]') || {}).value || '';
+
+            $http({
+                method: 'POST',
+                url: '/Gallery/DeletePhoto',
+                data: $httpParamSerializerJQLike({
+                    galleryId: photo.galleryId,
+                    __RequestVerificationToken: token
+                }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }).then(function (res) {
+                if (res.data.success) {
+                    $scope.galleryPhotos = $scope.galleryPhotos.filter(function (p) {
+                        return p.galleryId !== photo.galleryId;
+                    });
+                    $scope.deleteModal.show = false;
+                    $scope.showToast('Photo deleted.', 'toast-success');
+                } else {
+                    $scope.showToast(res.data.message, 'toast-error');
+                }
+            });
+        };
+
+        // Toast helper
+        $scope.toast = { show: false, message: '', type: '' };
+
+        $scope.showToast = function (message, type) {
+            $scope.toast = { show: true, message: message, type: type || 'toast-success' };
+            setTimeout(function () {
+                $scope.$apply(function () { $scope.toast.show = false; });
+            }, 3000);
+        };
+
+        // ── PUBLIC gallery page pagination ───────────────────────────────────────
+        $scope.galleryPhotosAll = [];
+        $scope.pagedGallery = [];
+        $scope.galleryPage = 1;
+        $scope.galleryPerPage = 9;
+        $scope.galleryTotalPages = 1;
+
+        $scope.loadPublicGallery = function () {
+            $http.get('/Gallery/GetGalleryPhotos')
+                .then(function (res) {
+                    if (res.data.success) {
+                        $scope.galleryPhotosAll = res.data.data;
+                        $scope.galleryTotalPages = Math.ceil(
+                            $scope.galleryPhotosAll.length / $scope.galleryPerPage);
+                        $scope.updatePagedGallery();
+                    }
+                });
+        };
+
+        $scope.updatePagedGallery = function () {
+            var start = ($scope.galleryPage - 1) * $scope.galleryPerPage;
+            $scope.pagedGallery = $scope.galleryPhotosAll.slice(start, start + $scope.galleryPerPage);
+        };
+
+        $scope.galleryNext = function () {
+            if ($scope.galleryPage < $scope.galleryTotalPages) {
+                $scope.galleryPage++;
+                $scope.updatePagedGallery();
+            }
+        };
+
+        $scope.galleryPrev = function () {
+            if ($scope.galleryPage > 1) {
+                $scope.galleryPage--;
+                $scope.updatePagedGallery();
+            }
+        };
+
+        // ── Auto-load based on current page ─────────────────────────────────────
+        var path = window.location.pathname.toLowerCase();
+
+        if (path.indexOf('admingallerypage') !== -1) {
+            $scope.loadGalleryPhotos();
+        }
+
+        if (path.indexOf('gallerypage') !== -1 && path.indexOf('admin') === -1) {
+            $scope.loadPublicGallery();
+        }
 
         // ===== PAYMENT SETTINGS =====
         $scope.payment = {};

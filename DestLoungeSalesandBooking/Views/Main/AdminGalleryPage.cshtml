@@ -65,6 +65,7 @@
 
 <div class="main-content" ng-controller="DestLoungeSalesandBookingController">
 
+    @Html.AntiForgeryToken()
     <!-- Hero -->
     <div class="gallery-hero">
         <div class="hero-left">
@@ -104,12 +105,18 @@
                     <p>Click to select a photo</p>
                     <span>JPG, PNG, WEBP supported</span>
                     <input type="file" id="photoFileInput" accept="image/*"
-                           onchange="angular.element(this).scope().onFileSelected(this)" style="display:none">
+                           onchange="angularFileChange(this)" style="display:none">
                 </div>
                 <div class="upload-fields">
                     <div class="field-group">
                         <label>Caption</label>
                         <input type="text" class="admin-input" ng-model="newPhoto.caption" placeholder="e.g. Gel Manicure - Nude Pink">
+                    </div>
+                    <div class="field-group">
+                        <label>Description</label>
+                        <textarea class="admin-input" ng-model="newPhoto.description"
+                                  placeholder="e.g. A soft nude pink gel manicure with a glossy finish..."
+                                  rows="3" style="resize:vertical;"></textarea>
                     </div>
                     <div class="upload-preview-wrap" ng-show="newPhoto.previewUrl">
                         <img ng-src="{{newPhoto.previewUrl}}" class="upload-preview-img" alt="Preview">
@@ -140,8 +147,12 @@
                 <!-- Inline edit overlay -->
                 <div class="inline-edit-overlay" ng-show="photo.editing" ng-click="$event.stopPropagation()">
                     <input type="text" class="admin-input" ng-model="photo.editCaption" placeholder="Caption">
+                    <textarea class="admin-input" ng-model="photo.editDescription"
+                              placeholder="Description" rows="2" style="resize:none; margin-top:0.5rem;"></textarea>
                     <div class="inline-edit-actions">
-                        <button class="admin-btn admin-btn-primary" ng-click="saveEditPhoto(photo)"><i class="fa-solid fa-check"></i> Save</button>
+                        <button class="admin-btn admin-btn-primary" ng-click="saveEditPhoto(photo)">
+                            <i class="fa-solid fa-check"></i> Save
+                        </button>
                         <button class="admin-btn admin-btn-secondary" ng-click="cancelEditPhoto(photo)">Cancel</button>
                     </div>
                 </div>
@@ -223,6 +234,50 @@
             <div class="empty-state" ng-show="archivedReviews.length === 0">
                 <i class="fa-solid fa-box-archive"></i>
                 <p>No archived reviews.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT MODAL -->
+    <div class="modal-overlay" ng-show="editModal.show">
+        <div class="modal-card" style="max-width:500px;" ng-click="$event.stopPropagation()">
+            <div class="modal-icon" style="font-size:2rem; color:#6b4423;">
+                <i class="fa-solid fa-pen"></i>
+            </div>
+            <h3 style="margin-bottom:1.5rem;">Edit Photo Details</h3>
+
+            <!-- Preview -->
+            <div style="margin-bottom:1.2rem; border-radius:10px; overflow:hidden; border:2px solid #d4c4b0; max-height:180px;">
+                <img ng-src="{{editModal.photo.imageUrl}}"
+                     style="width:100%; max-height:180px; object-fit:cover; display:block;">
+            </div>
+
+            <!-- Caption -->
+            <div class="field-group" style="margin-bottom:1rem; text-align:left;">
+                <label>Caption</label>
+                <input type="text" class="admin-input"
+                       ng-model="editModal.caption"
+                       placeholder="e.g. Gel Manicure - Nude Pink">
+            </div>
+
+            <!-- Description — shows current value clearly -->
+            <div class="field-group" style="text-align:left;">
+                <label>Description</label>
+                <textarea class="admin-input"
+                          ng-model="editModal.description"
+                          placeholder="No description yet..."
+                          rows="4"
+                          style="resize:vertical;"></textarea>
+                <span style="font-size:0.78rem; color:#a08060; font-style:italic; margin-top:0.3rem; display:block;">
+                    Current: {{editModal.photo.description || 'None'}}
+                </span>
+            </div>
+
+            <div class="modal-actions" style="margin-top:1.8rem;">
+                <button class="admin-btn admin-btn-secondary" ng-click="editModal.show = false">Cancel</button>
+                <button class="admin-btn admin-btn-primary" ng-click="saveEditPhoto(editModal.photo)">
+                    <i class="fa-solid fa-check"></i> Save Changes
+                </button>
             </div>
         </div>
     </div>
@@ -1520,5 +1575,14 @@
         var overlay = document.getElementById('mobileOverlay');
         drawer.classList.toggle('open');
         overlay.classList.toggle('open');
+    }
+
+    function angularFileChange(input) {
+        var scope = angular.element(document.querySelector('[ng-controller]')).scope();
+        if (scope && scope.onFileSelected) {
+            scope.$apply(function () {
+                scope.onFileSelected(input);
+            });
+        }
     }
 </script>

@@ -9,6 +9,7 @@ namespace DestLoungeSalesandBooking.Models
     {
         public int galleryId { get; set; }
         public string caption { get; set; }
+        public string description { get; set; }
         public string imageUrl { get; set; }
         public string fileName { get; set; }
         public long fileSizeBytes { get; set; }

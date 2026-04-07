@@ -231,6 +231,7 @@
             <button class="lightbox-close" ng-click="closeLightbox()"><i class="fa-solid fa-xmark"></i></button>
             <img ng-src="{{lightboxPhoto.imageUrl}}" alt="{{lightboxPhoto.caption}}" class="lightbox-img">
             <p class="lightbox-caption">{{lightboxPhoto.caption}}</p>
+            <p class="lightbox-description" ng-if="lightboxPhoto.description">{{lightboxPhoto.description}}</p>
         </div>
     </div>
 
@@ -475,6 +476,16 @@
         font-size: 0.9rem;
         color: #8b6f47;
         font-weight: 500;
+    }
+
+    .lightbox-description {
+        text-align: center;
+        padding: 0 1rem 1rem;
+        font-size: 0.88rem;
+        color: #8b6f47;
+        font-style: italic;
+        margin: 0;
+        line-height: 1.6;
     }
 
     .reviews-filter-bar {
