@@ -2076,6 +2076,37 @@ app.controller("DestLoungeSalesandBookingController",
                 event.preventDefault();
             }
         };
+        $scope.verifyOtp = function () {
+            if (!$scope.resetPassword.otp || $scope.resetPassword.otp.length !== 6) {
+                alert("Please enter the 6-digit OTP.");
+                return;
+            }
+
+            var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            var tokenValue = tokenElement ? tokenElement.value : "";
+
+            $http({
+                method: 'POST',
+                url: '/Account/VerifyForgotPasswordOtp',
+                data: $httpParamSerializerJQLike({
+                    email: $scope.resetPassword.email,
+                    otp: $scope.resetPassword.otp,
+                    __RequestVerificationToken: tokenValue
+                }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+                .then(function (response) {
+                    if (response.data.success) {
+                        $scope.forgotStep = 3;
+                    } else {
+                        alert(response.data.message || "Invalid OTP.");
+                    }
+                })
+                .catch(function (err) {
+                    console.error("VerifyOtp error:", err);
+                    alert("Something went wrong. Please try again.");
+                });
+        };
 
         $scope.goToReview = function (bookingId) {
             window.location.href = "/Main/ReviewPage?bookingId=" + bookingId;
@@ -2561,218 +2592,6 @@ app.directive('compareTo', function () {
                 ngModel.$validate();
             });
         }
-    };
-    // ===== USER BOOKINGS =====
-    $scope.bookingsLoading = false;
-    $scope.currentBookings = [];
-    $scope.bookingHistory = [];
-
-    $scope.formatBookingDate = function (raw) {
-        if (!raw) return '';
-        var d = new Date(raw);
-        if (isNaN(d)) return raw;
-        return d.toLocaleDateString('en-PH', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    };
-
-    $scope.formatTime = function (t) {
-        if (!t) return '';
-
-        var timeText = t.toString().trim();
-
-        // already 12-hour format, just normalize casing
-        if (/^\d{1,2}:\d{2}\s*(AM|PM)$/i.test(timeText)) {
-            return timeText.toUpperCase();
-        }
-
-        // 24-hour or hh:mm:ss format
-        var parts = timeText.split(':');
-        var h = parseInt(parts[0], 10);
-        var m = parts[1] || '00';
-
-        if (isNaN(h)) return timeText;
-
-        var ampm = h >= 12 ? 'PM' : 'AM';
-        h = h % 12 || 12;
-
-        return h + ':' + m + ' ' + ampm;
-    };
-
-    $scope.extractServices = function (notes) {
-        if (!notes) return 'N/A';
-        var match = notes.match(/Services:\s*([^|]+)/i);
-        return match ? match[1].trim() : 'N/A';
-    };
-
-    $scope.extractDownpayment = function (notes) {
-        if (!notes) return 'N/A';
-        var match = notes.match(/Downpayment:\s*([^|]+)/i);
-        return match ? match[1].trim() : 'N/A';
-    };
-
-    $scope.canCancelBookingByValues = function (bookingDate, startTime) {
-        var bookingDateTime = new Date(bookingDate + "T" + startTime);
-        var now = new Date();
-        var diffHours = (bookingDateTime - now) / (1000 * 60 * 60);
-        return diffHours > 24;
-    };
-
-    $scope.bookingsLoading = false;
-    $scope.currentBookings = [];
-    $scope.bookingHistory = [];
-
-    $scope.formatBookingDate = function (raw) {
-        if (!raw) return '';
-        var d = new Date(raw);
-        if (isNaN(d)) return raw;
-        return d.toLocaleDateString('en-PH', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    };
-
-    $scope.formatTime = function (t) {
-        if (!t) return '';
-        var parts = t.toString().split(':');
-        var h = parseInt(parts[0], 10);
-        var m = parts[1] || '00';
-        var ampm = h >= 12 ? 'PM' : 'AM';
-        h = h % 12 || 12;
-        return h + ':' + m + ' ' + ampm;
-    };
-
-    $scope.extractServices = function (notes) {
-        if (!notes) return 'N/A';
-        var match = notes.match(/Services:\s*([^|]+)/i);
-        return match ? match[1].trim() : 'N/A';
-    };
-
-    $scope.extractDownpayment = function (notes) {
-        if (!notes) return 'N/A';
-        var match = notes.match(/Downpayment:\s*([^|]+)/i);
-        return match ? match[1].trim() : 'N/A';
-    };
-
-    $scope.canCancelBookingByValues = function (bookingDate, startTime) {
-        if (!bookingDate || !startTime) return false;
-
-        var bookingDateTime = new Date(bookingDate + "T" + startTime);
-        if (isNaN(bookingDateTime.getTime())) return false;
-
-        var now = new Date();
-        var diffHours = (bookingDateTime - now) / (1000 * 60 * 60);
-        return diffHours > 24;
-    };
-    $scope.notifications = [];
-    $scope.showNotif = false;
-
-    $scope.toggleNotif = function ($event) {
-        if ($event) $event.preventDefault();
-        $scope.showNotif = !$scope.showNotif;
-    };
-
-    $scope.loadNotifications = function () {
-        if (!window.loggedInUserId) return;
-
-        $http.get('/Booking/GetNotifications?userId=' + window.loggedInUserId)
-            .then(function (res) {
-                $scope.notifications = res.data || [];
-            }, function () {
-                $scope.notifications = [];
-            });
-    };
-    // 🔔 NOTIFICATIONS
-    $scope.notifications = [];
-    $scope.showNotif = false;
-
-    $scope.toggleNotif = function ($event) {
-        console.log("Bell clicked"); // debug
-
-        if ($event) $event.preventDefault();
-        $scope.showNotif = !$scope.showNotif;
-    };
-
-    $scope.loadNotifications = function () {
-        if (!window.loggedInUserId) {
-            console.log("No user ID");
-            return;
-        }
-
-        console.log("Loading notifications for:", window.loggedInUserId);
-
-        $http.get('/Booking/GetNotifications?userId=' + window.loggedInUserId)
-            .then(function (res) {
-                console.log("Notifications:", res.data);
-                $scope.notifications = res.data || [];
-            })
-            .catch(function (err) {
-                console.error("Notification error:", err);
-                $scope.notifications = [];
-            });
-
-    };
-    $scope.verifyOtp = function () {
-        console.log("VERIFY OTP CLICKED");
-
-        var otp = ($scope.resetPassword && $scope.resetPassword.otp)
-            ? $scope.resetPassword.otp.trim()
-            : "";
-
-        var email = ($scope.resetPassword && $scope.resetPassword.email)
-            ? $scope.resetPassword.email.trim()
-            : "";
-
-        if (!otp) {
-            alert("Please enter the OTP.");
-            return;
-        }
-
-        if (!/^\d{6}$/.test(otp)) {
-            alert("OTP must be 6 digits.");
-            return;
-        }
-
-        if (!email) {
-            alert("Missing email. Please request OTP again.");
-            return;
-        }
-
-        var step2Box = document.querySelector('.login-box[ng-show="forgotStep === 2"]');
-        var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
-        var tokenValue = tokenElement ? tokenElement.value : "";
-
-        $http({
-            method: 'POST',
-            url: '/Account/VerifyForgotPasswordOtp',
-            data: $httpParamSerializerJQLike({
-                email: email,
-                otp: otp,
-                __RequestVerificationToken: tokenValue
-            }),
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-            }
-        }).then(function (response) {
-            console.log("Verify OTP response:", response.data);
-
-            if (response.data && response.data.success === true) {
-                $scope.forgotStep = 3;
-            } else {
-                alert(response.data.message || "Invalid OTP.");
-            }
-        }).catch(function (error) {
-            console.error("VerifyForgotPasswordOtp error:", error);
-
-            if (error.status === 400) {
-                alert("Invalid request or anti-forgery token issue.");
-            } else {
-                alert("Failed to verify OTP.");
-            }
-        });
     };
    
 

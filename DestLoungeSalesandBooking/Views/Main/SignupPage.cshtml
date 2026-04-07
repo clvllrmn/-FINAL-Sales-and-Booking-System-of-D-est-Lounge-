@@ -46,26 +46,23 @@
 </header>
 
 <div class="signup-container" ng-controller="DestLoungeSalesandBookingController">
-    <div class="signup-box">
 
+    <!-- STEP 1: Signup Form -->
+    <div class="signup-box" ng-show="signupStep === 1 || !signupStep">
         <h1 class="signup-title">Sign Up</h1>
 
         @if (TempData["SuccessMessage"] != null)
         {
-            <div class="alert alert-success">
-                @TempData["SuccessMessage"]
-            </div>
+            <div class="alert alert-success">@TempData["SuccessMessage"]</div>
         }
         @if (TempData["ErrorMessage"] != null)
         {
-            <div class="alert alert-error">
-                @TempData["ErrorMessage"]
-            </div>
+            <div class="alert alert-error">@TempData["ErrorMessage"]</div>
         }
 
         <form name="registerForm"
               method="post"
-              action="@Url.Action("SignupPage","Main")"
+              action="@Url.Action("SendSignupOtp","Account")"
               novalidate>
 
             @Html.AntiForgeryToken()
@@ -113,7 +110,7 @@
                        ng-keydown="focusNext($event, 'ADDRESS')" required>
                 <span class="error-message"
                       ng-show="registerForm.CONTACT.$dirty && registerForm.CONTACT.$invalid">
-                    Must be 11 digits and start with 09 (e.g. 09XXXXXXXXX)
+                    Must be 11 digits and start with 09
                 </span>
             </div>
 
@@ -146,7 +143,6 @@
                        id="CONFIRMPASSWORD" name="CONFIRMPASSWORD" class="form-input"
                        placeholder="Confirm Password" ng-model="user.confirmPassword"
                        compare-to="user.password"
-                       ng-keydown="submitOnEnter($event)"
                        maxlength="255" required>
                 <i class="fa-solid toggle-password"
                    ng-class="showPassword ? 'fa-eye-slash' : 'fa-eye'"
@@ -182,7 +178,6 @@
                  data-ux_mode="popup"
                  data-callback="handleGoogleCredential">
             </div>
-
             <div style="display: flex; justify-content: center; margin-top: 1rem;">
                 <div class="g_id_signin"
                      data-type="standard"
@@ -193,11 +188,54 @@
                      data-logo_alignment="left">
                 </div>
             </div>
-
         </form>
     </div>
 
-    <!-- TERMS MODAL -->
+    <!-- STEP 2: OTP Verification -->
+    <div class="signup-box" ng-show="signupStep === 2">
+        <h1 class="signup-title">Verify Email</h1>
+        <p class="signup-otp-text">
+            We sent a 6-digit code to <strong>@(TempData["SignupEmail"] ?? "your email")</strong>.<br>
+            Please enter it below to complete your registration.
+        </p>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-error">@TempData["ErrorMessage"]</div>
+        }
+
+        <form method="post" action="@Url.Action("VerifySignupOtp","Account")">
+            @Html.AntiForgeryToken()
+            <div class="form-group">
+                <input type="text"
+                       name="otp"
+                       class="form-input otp-input"
+                       placeholder="Enter 6-digit OTP"
+                       ng-model="signupOtp"
+                       maxlength="6"
+                       inputmode="numeric"
+                       ng-keypress="numbersOnly($event)"
+                       autocomplete="one-time-code"
+                       required>
+            </div>
+
+            <button type="submit" class="signup-button">
+                Verify & Create Account
+            </button>
+        </form>
+
+        <div class="login-links" style="margin-top: 1.2rem;">
+            <a href="@Url.Action("SignupPage","Main")" class="already-account">
+                ← Go back and re-enter details
+            </a>
+        </div>
+    </div>
+
+    <!-- TERMS MODAL (unchanged) -->
     <div class="modal-overlay" ng-show="showTerms" ng-click="closeTerms()">
         <div class="terms-modal" ng-click="$event.stopPropagation()">
             <h2>Acceptance of Terms</h2>
@@ -221,14 +259,11 @@
                 <p>The Owner is responsible for the custodial role over all system content and administration of services. The Owner has the right to delete any user-generated review posted in the system.</p>
                 <h4>5. Service Operation</h4>
                 <h4>5.1 Prohibited Conduct</h4>
-                <p>You agree not to use the services to post or transmit any content that is false, misleading, unlawful, harmful, threatening, abusive, defamatory, or objectionable; impersonate any person or entity; violate any applicable law; or interfere with or disrupt the service.</p>
+                <p>You agree not to use the services to post or transmit any content that is false, misleading, unlawful, harmful, threatening, abusive, defamatory, or objectionable.</p>
                 <h4>5.2 Booking and Scheduling Rules</h4>
                 <p>Customers can book only available time slots as defined by the System Admin.</p>
                 <p>A non-refundable down payment equivalent to 40% of the estimated service cost is required to secure and confirm any booking.</p>
                 <p>Customers may reschedule or cancel a booking up to 24 hours before their scheduled time.</p>
-                <p>The system must prevent double-booking of time slots.</p>
-                <p>A booking may only be marked as "Done" by the Owner.</p>
-                <p>Only bookings marked "Done" will allow customers to submit reviews.</p>
                 <h4>6. Termination</h4>
                 <p>We may terminate or suspend your access to the service immediately, without prior notice or liability, for any reason, including if you breach these Terms.</p>
             </div>
@@ -237,6 +272,20 @@
             </div>
         </div>
     </div>
+
+    @if (TempData["SignupShowOtpStep"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var scope = angular.element(
+                    document.querySelector('[ng-controller]')
+                ).scope();
+                scope.$apply(function () {
+                    scope.signupStep = 2;
+                });
+            });
+        </script>
+    }
 </div>
 
 <footer>
@@ -654,6 +703,19 @@
             font-weight: 500;
         }
 
+    .signup-otp-text {
+        color: #5d4037;
+        font-size: 0.95rem;
+        margin-bottom: 1.8rem;
+        line-height: 1.6;
+        text-align: center;
+    }
+
+    .otp-input {
+        text-align: center;
+        font-size: 1.4rem;
+        letter-spacing: 0.5rem;
+    }
     /* =============================================
        DESKTOP (above 1024px)
     ============================================= */

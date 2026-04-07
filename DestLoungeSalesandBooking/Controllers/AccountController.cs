@@ -507,6 +507,161 @@ namespace DestLoungeSalesandBooking.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public ActionResult SendSignupOtp(string FNAME, string LNAME, string EMAIL,
+    string CONTACT, string ADDRESS, string PASSWORD, string CONFIRMPASSWORD)
+        {
+            try
+            {
+                // Basic validations
+                if (string.IsNullOrWhiteSpace(FNAME) || string.IsNullOrWhiteSpace(LNAME) ||
+                    string.IsNullOrWhiteSpace(EMAIL) || string.IsNullOrWhiteSpace(CONTACT) ||
+                    string.IsNullOrWhiteSpace(ADDRESS) || string.IsNullOrWhiteSpace(PASSWORD))
+                {
+                    TempData["ErrorMessage"] = "All fields are required.";
+                    return RedirectToAction("SignupPage", "Main");
+                }
+
+                if (PASSWORD != CONFIRMPASSWORD)
+                {
+                    TempData["ErrorMessage"] = "Passwords do not match.";
+                    return RedirectToAction("SignupPage", "Main");
+                }
+
+                if (!System.Text.RegularExpressions.Regex.IsMatch(CONTACT, @"^\d{11}$"))
+                {
+                    TempData["ErrorMessage"] = "Contact number must be exactly 11 digits.";
+                    return RedirectToAction("SignupPage", "Main");
+                }
+
+                bool hasLower = PASSWORD.Any(char.IsLower);
+                bool hasUpper = PASSWORD.Any(char.IsUpper);
+                bool hasDigit = PASSWORD.Any(char.IsDigit);
+                bool hasSpecial = PASSWORD.Any(c => "@$!%*?&#".Contains(c));
+                bool isLongEnough = PASSWORD.Length >= 8;
+
+                if (!hasLower || !hasUpper || !hasDigit || !hasSpecial || !isLongEnough)
+                {
+                    TempData["ErrorMessage"] = "Password requirements not met.";
+                    return RedirectToAction("SignupPage", "Main");
+                }
+
+                var existingUser = db.tbl_users.FirstOrDefault(u => u.email.ToLower() == EMAIL.ToLower().Trim());
+                if (existingUser != null)
+                {
+                    TempData["ErrorMessage"] = "Email already registered. Please use a different email or login.";
+                    return RedirectToAction("SignupPage", "Main");
+                }
+
+                // Generate and store OTP + form data in session
+                var otp = new Random().Next(100000, 999999).ToString();
+
+                Session["SignupOTP"] = otp;
+                Session["SignupOTPExpiry"] = DateTime.Now.AddMinutes(5);
+                Session["SignupFNAME"] = FNAME.Trim();
+                Session["SignupLNAME"] = LNAME.Trim();
+                Session["SignupEMAIL"] = EMAIL.Trim().ToLower();
+                Session["SignupCONTACT"] = CONTACT.Trim();
+                Session["SignupADDRESS"] = ADDRESS.Trim();
+                Session["SignupPASSWORD"] = PASSWORD;
+
+                SendOtpEmail(EMAIL.Trim(), FNAME.Trim(), otp);
+
+                TempData["SignupShowOtpStep"] = true;
+                TempData["SignupEmail"] = EMAIL.Trim();
+                TempData["SuccessMessage"] = "A 6-digit OTP has been sent to your email.";
+
+                return RedirectToAction("SignupPage", "Main");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("SendSignupOtp Error: " + ex.ToString());
+                TempData["ErrorMessage"] = "Failed to send OTP. Please try again.";
+                return RedirectToAction("SignupPage", "Main");
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult VerifySignupOtp(string otp)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(otp))
+                {
+                    TempData["ErrorMessage"] = "Please enter the OTP.";
+                    TempData["SignupShowOtpStep"] = true;
+                    TempData["SignupEmail"] = Session["SignupEMAIL"]?.ToString();
+                    return RedirectToAction("SignupPage", "Main");
+                }
+
+                if (Session["SignupOTP"] == null || Session["SignupOTPExpiry"] == null)
+                {
+                    TempData["ErrorMessage"] = "OTP session expired. Please sign up again.";
+                    return RedirectToAction("SignupPage", "Main");
+                }
+
+                var savedOtp = Session["SignupOTP"].ToString();
+                var expiry = (DateTime)Session["SignupOTPExpiry"];
+
+                if (DateTime.Now > expiry)
+                {
+                    Session.Remove("SignupOTP");
+                    TempData["ErrorMessage"] = "OTP expired. Please sign up again.";
+                    return RedirectToAction("SignupPage", "Main");
+                }
+
+                if (savedOtp != otp.Trim())
+                {
+                    TempData["ErrorMessage"] = "Invalid OTP. Please try again.";
+                    TempData["SignupShowOtpStep"] = true;
+                    TempData["SignupEmail"] = Session["SignupEMAIL"]?.ToString();
+                    return RedirectToAction("SignupPage", "Main");
+                }
+
+                // OTP valid — create the account
+                string hashedPassword = HashPassword(Session["SignupPASSWORD"].ToString());
+
+                var newUser = new tbl_users
+                {
+                    roleID = 2,
+                    firstname = Session["SignupFNAME"].ToString(),
+                    lastname = Session["SignupLNAME"].ToString(),
+                    email = Session["SignupEMAIL"].ToString(),
+                    password = hashedPassword,
+                    coNum = Session["SignupCONTACT"].ToString(),
+                    address = Session["SignupADDRESS"].ToString(),
+                    createdAt = DateTime.Now,
+                    updatedAt = DateTime.Now
+                };
+
+                db.tbl_users.Add(newUser);
+                db.SaveChanges();
+
+                // Clear session
+                Session.Remove("SignupOTP");
+                Session.Remove("SignupOTPExpiry");
+                Session.Remove("SignupFNAME");
+                Session.Remove("SignupLNAME");
+                Session.Remove("SignupEMAIL");
+                Session.Remove("SignupCONTACT");
+                Session.Remove("SignupADDRESS");
+                Session.Remove("SignupPASSWORD");
+
+                TempData["SuccessMessage"] = "Registration successful! Please login with your new account.";
+                return RedirectToAction("LoginPage", "Main");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("VerifySignupOtp Error: " + ex.ToString());
+                TempData["ErrorMessage"] = "A technical error occurred. Please try again.";
+                TempData["SignupShowOtpStep"] = true;
+                TempData["SignupEmail"] = Session["SignupEMAIL"]?.ToString();
+                return RedirectToAction("SignupPage", "Main");
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public JsonResult VerifyForgotPasswordOtp(string email, string otp)
         {
             try
