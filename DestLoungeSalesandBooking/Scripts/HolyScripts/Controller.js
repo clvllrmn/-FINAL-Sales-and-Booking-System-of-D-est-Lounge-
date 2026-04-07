@@ -41,6 +41,18 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.reviews = [];
         $scope.pagedReviews = [];
 
+        $scope.openReviewLightbox = function (img) {
+            $scope.lightboxPhoto = {
+                imageUrl: img,
+                caption: 'Review Image',
+                description: ''
+            };
+        };
+
+        $scope.closeLightbox = function () {
+            $scope.lightboxPhoto = null;
+        };
+
         // ===== REVIEW SETTINGS =====
         $scope.reviewsPage = 1;
         $scope.reviewsPerPage = 6;
@@ -53,13 +65,16 @@ app.controller("DestLoungeSalesandBookingController",
                 .then(function (res) {
                     console.log("REVIEWS DATA:", res.data);
 
-                    $scope.reviews = res.data.map(function (r) {
+                    $scope.reviews = (res.data || []).map(function (r) {
                         return {
-                            rating: r.Rating,
+                            reviewId: r.ReviewId,
+                            rating: Number(r.Rating),
                             reviewText: r.ReviewText,
                             serviceAvailed: r.ServiceAvailed || "Service",
-                            date: new Date(parseInt(r.CreatedAt.substr(6))),
-                            images: r.Images || []
+                            date: r.CreatedAt ? new Date(parseInt(r.CreatedAt.substr(6))) : null,
+                            images: r.Images || [],
+                            flagged: r.Flagged || false,
+                            isArchived: r.IsArchived || false
                         };
                     });
 
@@ -71,26 +86,58 @@ app.controller("DestLoungeSalesandBookingController",
                 });
         };
 
+
+
         // ===== PAGINATION =====
         $scope.updatePagedReviews = function () {
-            let filtered = $scope.reviews;
 
-            // ⭐ filter by rating
-            if ($scope.reviewStarFilter !== '') {
-                filtered = filtered.filter(r => r.rating == $scope.reviewStarFilter);
+            var filtered = ($scope.reviews || []).filter(function (review) {
+
+                // STAR FILTER
+                if ($scope.reviewStarFilter !== '' &&
+                    Number(review.rating) !== Number($scope.reviewStarFilter)) {
+                    return false;
+                }
+
+                // SEARCH FILTER
+                if ($scope.reviewSearch) {
+                    var q = $scope.reviewSearch.toLowerCase();
+
+                    var textMatch = (review.reviewText || "").toLowerCase().includes(q);
+                    var serviceMatch = (review.serviceAvailed || "").toLowerCase().includes(q);
+                    var dateMatch = review.date
+                        ? new Date(review.date).toLocaleDateString().toLowerCase().includes(q)
+                        : false;
+
+                    if (!textMatch && !serviceMatch && !dateMatch) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            $scope.reviewsTotalPages = Math.ceil(filtered.length / $scope.reviewsPerPage) || 1;
+
+            if ($scope.reviewsPage > $scope.reviewsTotalPages) {
+                $scope.reviewsPage = 1;
             }
 
-            // 🔍 search filter
-            if ($scope.reviewSearch) {
-                filtered = filtered.filter(r =>
-                    r.reviewText.toLowerCase().includes($scope.reviewSearch.toLowerCase())
-                );
-            }
-
-            $scope.reviewsTotalPages = Math.ceil(filtered.length / $scope.reviewsPerPage);
-
-            let start = ($scope.reviewsPage - 1) * $scope.reviewsPerPage;
+            var start = ($scope.reviewsPage - 1) * $scope.reviewsPerPage;
             $scope.pagedReviews = filtered.slice(start, start + $scope.reviewsPerPage);
+        };
+
+
+        $scope.setReviewStarFilter = function (rating) {
+            $scope.reviewStarFilter = rating;
+            $scope.reviewsPage = 1;
+            $scope.updatePagedReviews();
+        };
+
+        $scope.clearReviewStarFilter = function () {
+            $scope.reviewStarFilter = '';
+            $scope.reviewsPage = 1;
+            $scope.updatePagedReviews();
         };
 
         // ===== FILTER FUNCTION (used in HTML) =====
@@ -1699,6 +1746,7 @@ app.controller("DestLoungeSalesandBookingController",
         };
 
         // ===== ON PAGE LOAD =====
+
         var currentPath = window.location.pathname.toLowerCase();
         console.log("Current path:", currentPath);
 
@@ -2250,12 +2298,165 @@ app.controller("DestLoungeSalesandBookingController",
                 $scope.updatePagedGallery();
             }
         };
+        $scope.reviewSearchFilter = function (review) {
+            if ($scope.reviewStarFilter && String(review.rating) !== String($scope.reviewStarFilter)) {
+                return false;
+            }
+
+            if ($scope.reviewSearch) {
+                var q = $scope.reviewSearch.toLowerCase();
+
+                var textMatch = (review.reviewText || "").toLowerCase().includes(q);
+                var serviceMatch = (review.serviceAvailed || "").toLowerCase().includes(q);
+                var dateMatch = review.date ? new Date(review.date).toLocaleDateString().toLowerCase().includes(q) : false;
+
+                if (!textMatch && !serviceMatch && !dateMatch) {
+                    return false;
+                }
+            }
+
+            return true;
+        };
+        $scope.flagModal = {
+            show: false,
+            review: null,
+            reason: '',
+            note: ''
+        };
+
+        $scope.openFlagModal = function (review) {
+            $scope.flagModal.show = true;
+            $scope.flagModal.review = review;
+            $scope.flagModal.reason = '';
+            $scope.flagModal.note = '';
+        };
+
+        $scope.closeFlagModal = function () {
+            $scope.flagModal.show = false;
+            $scope.flagModal.review = null;
+            $scope.flagModal.reason = '';
+            $scope.flagModal.note = '';
+        };
+
+        $scope.submitFlagReview = function () {
+            if (!$scope.flagModal.review || !$scope.flagModal.reason) {
+                alert("Please select a reason first.");
+                return;
+            }
+
+            var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            var tokenValue = tokenElement ? tokenElement.value : "";
+
+            $http({
+                method: 'POST',
+                url: '/Main/FlagReview',
+                data: $httpParamSerializerJQLike({
+                    reviewId: $scope.flagModal.review.reviewId,
+                    reason: $scope.flagModal.reason,
+                    note: $scope.flagModal.note || '',
+                    __RequestVerificationToken: tokenValue
+                }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' }
+            }).then(function (res) {
+                console.log("FlagReview success response:", res);
+
+                if (res.data && res.data.success) {
+                    alert("Review flagged successfully.");
+                    $scope.flagModal.review.flagged = true;
+                    $scope.closeFlagModal();
+                    $scope.loadReviews();
+                } else {
+                    alert((res.data && res.data.message) || "Failed to flag review.");
+                }
+            }).catch(function (err) {
+                console.error("submitFlagReview FULL error:", err);
+                console.error("status:", err.status);
+                console.error("data:", err.data);
+                console.error("responseText:", err.responseText);
+
+                if (err.status === 400) {
+                    alert("Bad request or anti-forgery token issue.");
+                } else if (err.status === 404) {
+                    alert("FlagReview route not found.");
+                } else if (err.status === 500) {
+                    alert("Server error in FlagReview action.");
+                } else {
+                    alert("Failed to flag review.");
+                }
+            });
+        };
+        $scope.archiveReview = function (reviewId) {
+            if (!confirm("Archive this review?")) return;
+
+            $http({
+                method: 'POST',
+                url: '/Main/ArchiveReview',
+                data: $httpParamSerializerJQLike({ reviewId: reviewId }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }).then(function (res) {
+                if (res.data.success) {
+                    $scope.reviews = $scope.reviews.filter(function (r) {
+                        return r.reviewId !== reviewId;
+                    });
+
+                    $scope.loadArchivedReviews();
+                    $scope.updatePagedReviews();
+                } else {
+                    alert("Archive failed.");
+                }
+            }).catch(function (err) {
+                console.error("archiveReview error:", err);
+                alert("Archive failed.");
+            });
+        };
+
+        $scope.restoreReview = function (reviewId) {
+            $http({
+                method: 'POST',
+                url: '/Main/RestoreReview',
+                data: $httpParamSerializerJQLike({ reviewId: reviewId }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }).then(function (res) {
+                if (res.data.success) {
+                    $scope.loadReviews();
+                    $scope.loadArchivedReviews();
+                } else {
+                    alert(res.data.message || "Restore failed.");
+                }
+            }).catch(function () {
+                alert("Restore failed.");
+            });
+        };
+        $scope.archivedReviews = [];
+
+        $scope.loadArchivedReviews = function () {
+            $http.get('/Main/GetArchivedReviews')
+                .then(function (res) {
+                    $scope.archivedReviews = (res.data || []).map(function (r) {
+                        return {
+                            reviewId: r.ReviewId,
+                            rating: r.Rating,
+                            reviewText: r.ReviewText,
+                            serviceAvailed: r.ServiceAvailed || "Service",
+                            date: r.CreatedAt ? new Date(parseInt(r.CreatedAt.substr(6))) : null,
+                            images: r.Images || [],
+                            flagged: r.Flagged || false,
+                            isArchived: true
+                        };
+                    });
+                })
+                .catch(function (err) {
+                    console.error("Error loading archived reviews:", err);
+                });
+        };
 
         // ── Auto-load based on current page ─────────────────────────────────────
         var path = window.location.pathname.toLowerCase();
 
         if (path.indexOf('admingallerypage') !== -1) {
             $scope.loadGalleryPhotos();
+            $scope.loadReviews();
+            $scope.loadArchivedReviews();
         }
 
         if (path.indexOf('gallerypage') !== -1 && path.indexOf('admin') === -1) {
@@ -2334,122 +2535,8 @@ app.controller("DestLoungeSalesandBookingController",
                 $scope.loadReviews(); // 🔥 load only when clicked
             }
         };
-        $http.get('/Main/GetReviews').then(function (res) {
-            console.log("REVIEWS DATA:", res.data);
-
-            $scope.reviews = (res.data || []).map(function (r) {
-                return {
-                    reviewId: r.ReviewId,
-                    rating: r.Rating,
-                    reviewText: r.ReviewText,
-                    serviceAvailed: r.ServiceAvailed || "Service",
-                    date: new Date(parseInt(r.CreatedAt.substr(6))),
-                    images: r.Images || [],
-                    imageUrl: (r.Images && r.Images.length > 0) ? r.Images[0] : "",
-                    flagged: r.Flagged || false
-                };
-            });
-
-            $scope.reviewsPage = 1;
-            $scope.reviewsPerPage = 6;
-
-            $scope.reviewsTotalPages = Math.ceil($scope.reviews.length / $scope.reviewsPerPage);
-            $scope.updatePagedReviews();
-        }).catch(function (err) {
-            console.error("Error loading admin reviews:", err);
-        });
-        $scope.archiveReview = function (reviewId) {
-            if (!confirm("Archive this review?")) return;
-
-            $http({
-                method: 'POST',
-                url: '/Main/ArchiveReview',
-                data: $httpParamSerializerJQLike({ reviewId: reviewId }),
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-            }).then(function (res) {
-                if (res.data.success) {
-                    $scope.reviews = $scope.reviews.filter(function (r) {
-                        return r.reviewId !== reviewId;
-                    });
-
-                    $scope.loadArchivedReviews();
-                    $scope.updatePagedReviews();
-                } else {
-                    alert("Archive failed.");
-                }
-            }).catch(function (err) {
-                console.error("archiveReview error:", err);
-                alert("Archive failed.");
-            });
-        };
-
-        $scope.archivedReviews = [];
-
-        $scope.loadArchivedReviews = function () {
-            $http.get('/Main/GetArchivedReviews')
-                .then(function (res) {
-                    $scope.archivedReviews = (res.data || []).map(function (r) {
-                        return {
-                            reviewId: r.ReviewId,
-                            rating: r.Rating,
-                            reviewText: r.ReviewText,
-                            serviceAvailed: r.ServiceAvailed || "Service",
-                            date: new Date(parseInt(r.CreatedAt.substr(6))),
-                            images: r.Images || [],
-                            imageUrl: (r.Images && r.Images.length > 0) ? r.Images[0] : "",
-                            flagged: r.Flagged || false
-                        };
-                    });
-                })
-                .catch(function (err) {
-                    console.error("loadArchivedReviews error:", err);
-                });
-        };
-        $scope.reviewsPage = 1;
-        $scope.reviewsPerPage = 6;
-
-        $scope.updatePagedReviews = function () {
-            let filtered = $scope.reviews;
-
-            if ($scope.selectedRating) {
-                filtered = filtered.filter(r => r.rating === $scope.selectedRating);
-            }
-
-            var start = ($scope.reviewsPage - 1) * $scope.reviewsPerPage;
-            $scope.pagedReviews = filtered.slice(start, start + $scope.reviewsPerPage);
-        };
-
-        $scope.reviewsNext = function () {
-            if ($scope.reviewsPage < $scope.reviewsTotalPages) {
-                $scope.reviewsPage++;
-                $scope.updatePagedReviews();
-            }
-        };
-
-        $scope.reviewsPrev = function () {
-            if ($scope.reviewsPage > 1) {
-                $scope.reviewsPage--;
-                $scope.updatePagedReviews();
-            }
-        };
-
-        $scope.lightboxPhoto = null;
-
-        $scope.openLightbox = function (photo) {
-            $scope.lightboxPhoto = photo;
-        };
-
-        $scope.closeLightbox = function () {
-            $scope.lightboxPhoto = null;
-        };
-
-        $scope.selectedRating = null;
-
-        $scope.filterByRating = function (rating) {
-            $scope.selectedRating = rating;
-            $scope.reviewsPage = 1;
-            $scope.updatePagedReviews();
-        };
+      
+      
 
         if (window.location.pathname.toLowerCase().includes('gallerypage')) {
             console.log("Gallery page detected");
@@ -2687,5 +2774,6 @@ app.directive('compareTo', function () {
             }
         });
     };
+   
 
 });

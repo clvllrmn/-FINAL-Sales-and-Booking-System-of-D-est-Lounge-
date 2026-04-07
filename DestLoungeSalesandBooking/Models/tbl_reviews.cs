@@ -21,5 +21,10 @@ namespace DestLoungeSalesandBooking.Models
         public DateTime? CreatedAt { get; set; }
         public bool IsArchived { get; set; }
         public DateTime? ArchivedAt { get; set; }
+
+        public bool Flagged { get; set; }
+        public string FlagReason { get; set; }
+        public string FlagNote { get; set; }
+        public DateTime? FlaggedAt { get; set; }
     }
 }

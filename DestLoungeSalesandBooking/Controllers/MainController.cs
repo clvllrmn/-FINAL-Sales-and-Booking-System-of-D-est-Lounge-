@@ -497,7 +497,9 @@ namespace DestLoungeSalesandBooking.Controllers
                     r.Rating,
                     r.ReviewText,
                     r.CreatedAt,
-                   
+                    Flagged = r.Flagged,
+                    FlagReason = r.FlagReason,
+                    FlagNote = r.FlagNote,
                     Images = db.tbl_review_images
                         .Where(img => img.ReviewId == r.ReviewId)
                         .Select(img => img.ImageUrl)
@@ -506,6 +508,7 @@ namespace DestLoungeSalesandBooking.Controllers
 
             return Json(reviews, JsonRequestBehavior.AllowGet);
         }
+
         [HttpPost]
         [SessionCheck(RequireAdmin = true)]
         public ActionResult ArchiveReview(int reviewId)
@@ -543,7 +546,80 @@ namespace DestLoungeSalesandBooking.Controllers
 
             return Json(reviews, JsonRequestBehavior.AllowGet);
         }
-    }
 
+        [HttpPost]
+        [SessionCheck(RequireAdmin = true)]
+        public ActionResult RestoreReview(int reviewId)
+        {
+            var review = db.tbl_reviews.FirstOrDefault(r => r.ReviewId == reviewId);
+
+            if (review == null)
+                return Json(new { success = false, message = "Review not found." });
+
+            review.IsArchived = false;
+            review.ArchivedAt = null; // optional
+
+            db.SaveChanges();
+
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        [SessionCheck(RequireAdmin = true)]
+        public ActionResult FlagReview(int reviewId, string reason, string note)
+        {
+            try
+            {
+                var review = db.tbl_reviews.FirstOrDefault(r => r.ReviewId == reviewId);
+
+                if (review == null)
+                {
+                    return Json(new { success = false, message = "Review not found." });
+                }
+
+                // ✅ FLAG REVIEW
+                review.Flagged = true;
+                review.FlagReason = reason;
+                review.FlagNote = note;
+                review.FlaggedAt = DateTime.Now;
+
+                // ✅ CREATE MESSAGE
+                string message = "⚠️ Your review for booking #" + review.BookingId +
+                                 " was flagged. Reason: " + reason;
+
+                if (!string.IsNullOrWhiteSpace(note))
+                {
+                    message += " | Admin note: " + note;
+                }
+
+                // 🔥 VERY IMPORTANT: CHECK CustomerId
+                if (review.CustomerId == 0)
+                {
+                    return Json(new { success = false, message = "CustomerId missing in review." });
+                }
+
+                // ✅ INSERT NOTIFICATION
+                var notif = new tbl_notifications
+                {
+                    CustomerId = review.CustomerId,
+                    Message = message,
+                    IsRead = false,
+                    CreatedAt = DateTime.Now
+                };
+
+                db.tbl_notifications.Add(notif);
+
+                // ✅ SAVE BOTH TOGETHER
+                db.SaveChanges();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("FLAG ERROR: " + ex.ToString());
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+    }
 
     }

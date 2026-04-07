@@ -178,16 +178,27 @@
         <!-- FILTERS -->
         <div class="reviews-filter-bar">
             <div class="star-filters">
-                <button class="star-filter-btn" ng-class="{'star-filter-active': reviewStarFilter === ''}" ng-click="reviewStarFilter = ''; updatePagedReviews()">All</button>
-                <button class="star-filter-btn" ng-repeat="s in [5,4,3,2,1]" ng-class="{'star-filter-active': reviewStarFilter === s}" ng-click="reviewStarFilter = s; updatePagedReviews()">
+                <button class="star-filter-btn"
+                        ng-class="{'star-filter-active': reviewStarFilter === ''}"
+                        ng-click="clearReviewStarFilter()">
+                    All
+                </button>
+
+                <button class="star-filter-btn"
+                        ng-repeat="s in [5,4,3,2,1]"
+                        ng-class="{'star-filter-active': reviewStarFilter === s}"
+                        ng-click="setReviewStarFilter(s)">
                     <i class="fa-solid fa-star"></i> {{s}}
                 </button>
             </div>
-            <input type="text"
-                   class="review-search-input"
-                   ng-model="reviewSearch"
-                   ng-change="updatePagedReviews()"
-                   placeholder="Search reviews...">
+            <div class="review-search-wrap">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text"
+                       class="review-search-input"
+                       ng-model="reviewSearch"
+                       ng-change="reviewsPage = 1; updatePagedReviews()"
+                       placeholder="Search reviews...">
+            </div>
         </div>
 
         <div class="reviews-grid" ng-show="pagedReviews.length > 0">
@@ -203,8 +214,10 @@
                     <img ng-repeat="img in review.images"
                          ng-src="{{img}}"
                          alt="Review Photo"
-                         class="review-image" />
+                         class="review-image clickable-review-image"
+                         ng-click="openReviewLightbox(img); $event.stopPropagation();" />
                 </div>
+
                 <div class="review-footer">
                     <span class="review-service"><i class="fa-solid fa-spa"></i> {{review.serviceAvailed}}</span>
                 </div>
@@ -234,7 +247,20 @@
             <p class="lightbox-description" ng-if="lightboxPhoto.description">{{lightboxPhoto.description}}</p>
         </div>
     </div>
+    <!-- REVIEW IMAGE MODAL -->
+    <div class="image-modal-backdrop"
+         ng-show="showImageModal"
+         ng-click="closeImageModal()">
 
+        <div class="image-modal-content"
+             ng-click="$event.stopPropagation()">
+
+            <img ng-src="{{selectedImage}}">
+
+            <span class="image-modal-close"
+                  ng-click="closeImageModal()">&times;</span>
+        </div>
+    </div>
 </div>
 
 <footer>
@@ -540,21 +566,37 @@
                 color: white;
             }
 
+    .review-search-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+        .review-search-wrap i {
+            position: absolute;
+            left: 14px;
+            color: #a88d72;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
     .review-search-input {
-        padding: 0.6rem 1.2rem;
+        padding: 0.7rem 1.2rem 0.7rem 2.3rem;
         border: 2px solid #c1b2a5;
-        border-radius: 20px;
-        font-size: 0.9rem;
+        border-radius: 24px;
+        font-size: 0.95rem;
         color: #3d2817;
         font-family: 'Georgia', serif;
         outline: none;
-        min-width: 220px;
-        transition: border-color 0.3s;
+        min-width: 260px;
         background-color: white;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
     }
 
         .review-search-input:focus {
             border-color: #6b4423;
+            box-shadow: 0 4px 10px rgba(107,68,35,0.12);
         }
 
     .reviews-grid {
@@ -817,7 +859,15 @@
         display: block;
         border: 1px solid #e7dfd6;
     }
+    .clickable-review-image {
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
 
+        .clickable-review-image:hover {
+            transform: scale(1.04);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
     /* =============================================
        DESKTOP (above 1024px)
     ============================================= */

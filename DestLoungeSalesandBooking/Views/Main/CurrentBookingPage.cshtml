@@ -4,7 +4,8 @@
     var isLoggedIn = Session["UserID"] != null;
 }
 
-<header>
+<header ng-controller="DestLoungeSalesandBookingController"
+        ng-init="loadNotifications()">
     <div class="header-container">
         <div class="logo">
             <a href="@Url.Action("Homepage","Main")">
@@ -32,9 +33,6 @@
                         <i class="fa-regular fa-user"></i> LOGIN
                     </a>
                 }
-            <div ng-controller="DestLoungeSalesandBookingController"
-                 ng-init="loadNotifications()"
-                 style="position:relative; margin-left:15px;">
 
                 <button type="button"
                         ng-click="toggleNotif($event)"
@@ -49,7 +47,6 @@
 
                 <div ng-show="showNotif"
                      style="position:absolute; right:0; top:35px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999;">
-
                     <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
                         Notifications
                     </div>
@@ -64,7 +61,6 @@
                         {{n.Message || n.message}}
                     </div>
                 </div>
-            </div>
             </div>
         </nav>
 
@@ -81,9 +77,6 @@
                     <i class="fa-regular fa-user"></i> LOGIN
                 </a>
             }
-        <div ng-controller="DestLoungeSalesandBookingController"
-             ng-init="loadNotifications()"
-             style="position:relative; margin-left:15px;">
 
             <button type="button"
                     ng-click="toggleNotif($event)"
@@ -98,7 +91,6 @@
 
             <div ng-show="showNotif"
                  style="position:absolute; right:0; top:35px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999;">
-
                 <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
                     Notifications
                 </div>
@@ -114,15 +106,16 @@
                 </div>
             </div>
         </div>
-        </div>
 
         <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
-            <span></span><span></span><span></span>
+            <span></span>
+            <span></span>
+            <span></span>
         </button>
     </div>
+
     <div class="nav-overlay" id="navOverlay"></div>
 </header>
-
 
 <div class="profile-container">
     <aside class="sidebar">
@@ -254,7 +247,6 @@
 </footer>
 
 <style>
-    /* ── Hamburger ── */
     .hamburger-btn {
         display: none;
         flex-direction: column;
@@ -276,7 +268,7 @@
             height: 3px;
             background-color: #5d4037;
             border-radius: 3px;
-            transition: transform 0.3s ease,opacity 0.3s ease,width 0.3s ease;
+            transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease;
             transform-origin: center;
         }
 
@@ -323,26 +315,24 @@
         vertical-align: middle;
     }
 
-    /* ── Layout ── */
     .profile-container {
         display: flex;
         min-height: calc(100vh - 200px);
         background-color: #f5f0eb;
     }
 
-    /* To this */
     .sidebar {
         width: 280px;
         background-color: #d4c4b5;
-        display: flex; /* ← add this */
-        flex-direction: column; /* ← add this */
+        display: flex;
+        flex-direction: column;
     }
 
     .profile-nav {
         display: flex;
         flex-direction: column;
         padding-top: 40px;
-        flex: 1; /* ← replaces the min-height calc */
+        flex: 1;
         justify-content: space-between;
     }
 
@@ -357,7 +347,8 @@
             display: block;
         }
 
-            .profile-nav .nav-item:hover, .profile-nav .nav-item.active {
+            .profile-nav .nav-item:hover,
+            .profile-nav .nav-item.active {
                 background-color: #c9b5a3;
                 border-left-color: #6b5544;
             }
@@ -374,7 +365,6 @@
         padding: 80px 40px;
     }
 
-    /* ── Booking wrapper ── */
     .booking-wrapper {
         width: 100%;
         max-width: 900px;
@@ -400,13 +390,12 @@
         font-size: 16px;
     }
 
-    /* ── Booking card ── */
     .booking-item {
         background: #e8ddd1;
         padding: 24px;
         border-radius: 20px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        transition: transform 0.3s ease,box-shadow 0.3s ease;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
         .booking-item:hover {
@@ -428,6 +417,7 @@
         color: #6b5544;
         font-size: 16px;
     }
+
     .booking-section {
         margin-bottom: 40px;
     }
@@ -447,7 +437,6 @@
         padding: 35px 20px;
     }
 
-    /* ── Status badges ── */
     .booking-status {
         padding: 5px 14px;
         border-radius: 10px;
@@ -477,7 +466,6 @@
             color: white;
         }
 
-    /* ── Booking body ── */
     .booking-body {
         margin: 15px 0;
     }
@@ -499,7 +487,6 @@
         font-style: italic;
     }
 
-    /* ── Actions ── */
     .booking-actions {
         margin-top: 16px;
         display: flex;
@@ -560,7 +547,6 @@
             transform: translateY(-2px);
         }
 
-    /* ── Empty state ── */
     .empty-state {
         text-align: center;
         padding: 80px 20px;
@@ -602,7 +588,6 @@
             transform: translateY(-2px);
         }
 
-    /* ── Footer ── */
     footer {
         background-color: #e7d7c8;
         border: 2px solid #d4c4b0;
@@ -650,8 +635,6 @@
             font-weight: 500;
         }
 
-
-    /* ── Responsive ── */
     @@media (min-width: 1025px) {
         .hamburger-btn {
             display: none !important;
@@ -788,7 +771,8 @@
             justify-content: flex-start;
         }
 
-            .profile-nav .nav-top, .profile-nav .nav-bottom {
+            .profile-nav .nav-top,
+            .profile-nav .nav-bottom {
                 display: flex;
                 flex-direction: row;
             }
@@ -801,7 +785,8 @@
                 border-bottom: 4px solid transparent;
             }
 
-                .profile-nav .nav-item:hover, .profile-nav .nav-item.active {
+                .profile-nav .nav-item:hover,
+                .profile-nav .nav-item.active {
                     border-left-color: transparent;
                     border-bottom-color: #6b5544;
                 }
@@ -836,7 +821,8 @@
             flex-direction: column;
         }
 
-        .btn-cancel-booking, .btn-review {
+        .btn-cancel-booking,
+        .btn-review {
             width: 100%;
             justify-content: center;
         }
@@ -861,11 +847,30 @@
             var btn = document.getElementById('hamburgerBtn');
             var nav = document.getElementById('mainNav');
             var overlay = document.getElementById('navOverlay');
-            function openMenu() { btn.classList.add('open'); nav.classList.add('open'); overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
-            function closeMenu() { btn.classList.remove('open'); nav.classList.remove('open'); overlay.classList.remove('active'); document.body.style.overflow = ''; }
-            btn.addEventListener('click', function () { nav.classList.contains('open') ? closeMenu() : openMenu(); });
+
+            function openMenu() {
+                btn.classList.add('open');
+                nav.classList.add('open');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeMenu() {
+                btn.classList.remove('open');
+                nav.classList.remove('open');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            btn.addEventListener('click', function () {
+                nav.classList.contains('open') ? closeMenu() : openMenu();
+            });
+
             overlay.addEventListener('click', closeMenu);
-            nav.querySelectorAll('a').forEach(function (l) { l.addEventListener('click', closeMenu); });
+
+            nav.querySelectorAll('a').forEach(function (l) {
+                l.addEventListener('click', closeMenu);
+            });
         })();
     </script>
 }
