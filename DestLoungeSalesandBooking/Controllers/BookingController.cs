@@ -788,7 +788,8 @@ Hello {user.firstname},
 
 Your booking has been marked as COMPLETED. ✅
 
-Booking ID: {booking.BookingId}
+Reference No: {booking.ReferenceNo}
+
 Date: {booking.BookingDate:MMMM dd, yyyy}
 Time: {DateTime.Today.Add(booking.StartTime):h:mm tt} - {DateTime.Today.Add(booking.EndTime):h:mm tt}
 
@@ -840,7 +841,7 @@ Hello {user.firstname},
 
 We regret to inform you that your booking has been CANCELLED.
 
-Booking ID: {booking.BookingId}
+Reference No: {booking.ReferenceNo}
 Date: {booking.BookingDate:MMMM dd, yyyy}
 Time: {DateTime.Today.Add(booking.StartTime):h:mm tt} - {DateTime.Today.Add(booking.EndTime):h:mm tt}
 {(string.IsNullOrWhiteSpace(reason) ? "" : "Reason: " + reason)}
@@ -971,6 +972,7 @@ Thank you.";
 
                 Your booking has been APPROVED!
 
+                Reference No: {booking.ReferenceNo}
                 Date: {booking.BookingDate:MMMM dd, yyyy}
                 Time: {booking.StartTime} - {booking.EndTime}
                 Notes: {booking.Notes}

@@ -1478,15 +1478,21 @@ app.controller("DestLoungeSalesandBookingController",
                 console.warn("Chart.js not found.");
                 return;
             }
-            var labels = (points || []).map(function (p) { return p.label; });
-            var data = (points || []).map(function (p) { return Number(p.value || 0); });
+
             var canvas = document.getElementById("salesChart");
             if (!canvas) return;
-            var ctx = canvas.getContext("2d");
-            if (salesChartInstance) {
-                salesChartInstance.destroy();
-                salesChartInstance = null;
+
+            // 🔥 IMPORTANT FIX
+            const existingChart = Chart.getChart(canvas);
+            if (existingChart) {
+                existingChart.destroy();
             }
+
+            var labels = (points || []).map(p => p.label);
+            var data = (points || []).map(p => Number(p.value || 0));
+
+            var ctx = canvas.getContext("2d");
+
             salesChartInstance = new Chart(ctx, {
                 type: "line",
                 data: {
@@ -1494,30 +1500,31 @@ app.controller("DestLoungeSalesandBookingController",
                     datasets: [{
                         label: "Total Revenue",
                         data: data,
+                        borderColor: "rgb(75, 192, 192)",
+                        backgroundColor: "rgba(75, 192, 192, 0.2)",
                         tension: 0.35,
-                        fill: false,
-                        pointRadius: 4
+                        fill: true
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: true }
-                    },
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
+                    maintainAspectRatio: false
                 }
             });
         };
 
         if (window.location.pathname.toLowerCase().indexOf("adminsalespage") !== -1) {
-            setTimeout(function () {
-                $scope.$applyAsync(function () {
-                    $scope.loadSalesAnalytics($scope.salesRange);
-                });
-            }, 0);
+
+            if (!$scope._salesLoaded) {
+                $scope._salesLoaded = true;
+
+                setTimeout(function () {
+                    $scope.$applyAsync(function () {
+
+                        $scope.loadSalesAnalytics($scope.salesRange);
+                    });
+                }, 0);
+            }
         }
 
         // ===== CONTACT DATA =====
@@ -2941,57 +2948,8 @@ app.controller("DestLoungeSalesandBookingController",
         };
 
     });
+    
 
-$scope.submitPayment = function () {
-    if (!window.loggedInUserId || window.loggedInUserId === "null" || parseInt(window.loggedInUserId) <= 0) {
-        alert("Please login first.");
-        window.location.href = "/Main/LoginPage";
-        return;
-    }
-
-    if (!$scope.bookingSummary || !$scope.bookingSummary.bookingDate || !$scope.bookingSummary.startTime) {
-        alert("Booking details not found.");
-        return;
-    }
-
-    var fileInput = document.querySelector('input[file-model="bookingReceipt"]') ||
-        document.getElementById('receiptUpload') ||
-        document.querySelector('.upload-section input[type="file"]');
-
-    var file = fileInput && fileInput.files && fileInput.files.length > 0
-        ? fileInput.files[0]
-        : null;
-
-    if (!file) {
-        alert("Please upload your receipt first.");
-        return;
-    }
-
-    var formData = new FormData();
-    formData.append("bookingId", $scope.bookingSummary.bookingId || 0);
-    formData.append("receipt", file);
-
-    var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
-    var tokenValue = tokenElement ? tokenElement.value : "";
-    if (tokenValue) {
-        formData.append("__RequestVerificationToken", tokenValue);
-    }
-
-    $http.post("/Booking/SubmitPayment", formData, {
-        headers: { "Content-Type": undefined },
-        transformRequest: angular.identity
-    }).then(function (res) {
-        if (res.data && res.data.success) {
-            alert(res.data.message || "Payment submitted successfully.");
-            window.location.href = "/Main/ProfilePage";
-        } else {
-            alert((res.data && res.data.message) || "Failed to submit payment.");
-        }
-    }).catch(function (err) {
-        console.error("submitPayment error:", err);
-        alert((err.data && err.data.message) || "Failed to submit payment.");
-    });
-};
 
 // ===== COMPARE DIRECTIVE =====
 app.directive('compareTo', function () {
@@ -3010,70 +2968,5 @@ app.directive('compareTo', function () {
         }
     };
    
-    // Carousel state
-    $scope.carouselIndex = { manicure: 0, pedicure: 0 };
-    var VISIBLE = 3; // photos visible at once
-
-    $scope.getPhotosByCategory = function (category) {
-        return ($scope.galleryPhotos || []).filter(function (p) {
-            return p.category === category;
-        });
-    };
-
-    $scope.carouselNext = function (category) {
-        var photos = $scope.getPhotosByCategory(category);
-        var max = Math.max(0, photos.length - VISIBLE);
-        if ($scope.carouselIndex[category] < max) {
-            $scope.carouselIndex[category]++;
-        }
-    };
-
-    $scope.carouselPrev = function (category) {
-        if ($scope.carouselIndex[category] > 0) {
-            $scope.carouselIndex[category]--;
-        }
-    };
-
-    $scope.getCarouselStyle = function (category) {
-        var slideWidth = 100 / VISIBLE;
-        var offset = $scope.carouselIndex[category] * (slideWidth + (1 / VISIBLE * 3));
-        return { transform: 'translateX(-' + offset + '%)' };
-    };
-
-    $scope.submitPayment = function () {
-
-        if (!$scope.bookingSummary || !$scope.bookingSummary.bookingId) {
-            alert("Booking not found.");
-            return;
-        }
-
-        var fileInput = document.querySelector('.upload-section input[type="file"]');
-        var file = fileInput && fileInput.files.length > 0 ? fileInput.files[0] : null;
-
-        if (!file) {
-            alert("Please upload receipt.");
-            return;
-        }
-
-        var formData = new FormData();
-        formData.append("bookingId", $scope.bookingSummary.bookingId);
-        formData.append("receipt", file);
-
-        $http.post('/Booking/SubmitPayment', formData, {
-            headers: { 'Content-Type': undefined }
-        })
-            .then(function (res) {
-                if (res.data.success) {
-                    alert("Payment submitted!");
-                    window.location.href = "/Main/ProfilePage";
-                } else {
-                    alert(res.data.message);
-                }
-            })
-            .catch(function (err) {
-                console.error(err);
-                alert("Error submitting payment.");
-            });
-    };
-
+   
 });
