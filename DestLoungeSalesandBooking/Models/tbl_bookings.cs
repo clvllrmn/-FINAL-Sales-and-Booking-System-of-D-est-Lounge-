@@ -22,5 +22,7 @@ namespace DestLoungeSalesandBooking.Models
 
         public bool ReminderSent { get; set; }
         public bool Reminder3HoursSent { get; set; }
+
+        public string ReferenceNo { get; set; }
     }
 }

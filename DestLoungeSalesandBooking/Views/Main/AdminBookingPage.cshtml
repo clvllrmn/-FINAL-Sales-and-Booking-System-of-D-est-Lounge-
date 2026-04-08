@@ -115,7 +115,21 @@
                     <div class="info-icon"><i class="fa-solid fa-note-sticky"></i></div>
                     <div class="info-content">
                         <h3>Notes:</h3>
-                        <p>{{booking.notes || 'N/A'}}</p>
+                        <div class="booking-details" ng-init="n = parseNotes(booking.notes)">
+
+                            <p><strong>Service:</strong> {{n.services}}</p>
+
+                            <p><strong>Nail Tech:</strong> {{n.nailtech || 'N/A'}}</p>
+
+                            <p><strong>Downpayment:</strong> {{n.downpayment || booking.downpayment}}</p>
+
+                            <p><strong>Total Bill:</strong> ₱{{booking.totalBill}}</p>
+
+                            <p><strong>Reference No:</strong> {{booking.referenceNo}}</p>
+
+
+
+                        </div>
                     </div>
                 </div>
                 <div class="booking-divider" ng-if="booking.receiptPath"></div>

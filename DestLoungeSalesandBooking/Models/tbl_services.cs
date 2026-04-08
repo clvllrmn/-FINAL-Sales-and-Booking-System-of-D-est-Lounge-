@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -12,6 +13,8 @@ namespace DestLoungeSalesandBooking.Models
     {
         public int service_id { get; set; }
         public string name { get; set; }
+
+        [StringLength(500)]
         public string description { get; set; }
         public decimal price { get; set; }
         public sbyte is_active { get; set; }

@@ -150,6 +150,12 @@
                 <div class="booking-grid" ng-if="currentBookings.length > 0">
                     <div class="booking-item" ng-repeat="b in currentBookings">
 
+                        <!-- ✅ REFERENCE NUMBER - TOP OF CARD -->
+                        <div class="booking-ref-header">
+                            <i class="fa-solid fa-ticket"></i>
+                            <strong>Ref No:</strong> {{b.referenceNo || 'REF-' + b.bookingId}}
+                        </div>
+
                         <div class="booking-top">
                             <span class="booking-date">{{formatBookingDate(b.bookingDate)}}</span>
                             <span class="booking-status" ng-class="(b.status || '').toLowerCase().trim()">
@@ -161,13 +167,34 @@
                             <p><strong>Time:</strong> {{ formatTime(b.startTime) }} - {{ formatTime(b.endTime) }}</p>
                             <p><strong>Service:</strong> {{extractServices(b.notes)}}</p>
                             <p><strong>Nail Tech:</strong> {{b.nailTech || 'Not assigned'}}</p>
-                            <p><strong>Downpayment Paid:</strong> ₱{{ (extractDownpayment(b.notes) * 0.4) | number:0 }}</p>
+
+                            <!-- ✅ TOTAL BILL WITH 2 DECIMAL PLACES -->
+                            <p><strong>Total Bill:</strong> ₱{{(b.totalBill || 0) | number:2}}</p>
+
+                            <!-- ✅ DOWNPAYMENT WITH 2 DECIMAL PLACES -->
+                            <p><strong>Downpayment Paid:</strong> ₱{{((b.totalBill || 0) * 0.4) | number:2}}</p>
+
+                            <!-- ✅ PROOF OF PAYMENT / RECEIPT -->
+                            <div ng-if="b.receiptUrl" class="receipt-section">
+                                <strong>Proof of Payment:</strong><br>
+                                <img ng-src="{{b.receiptUrl}}" class="receipt-thumb"
+                                     alt="Payment Receipt"
+                                     ng-click="openReceiptModal(b.receiptUrl)" />
+                            </div>
+
+                            <!-- Fallback: Check notes for receipt path -->
+                            <div ng-if="!b.receiptUrl && extractReceiptUrl(b.notes)" class="receipt-section">
+                                <strong>Proof of Payment:</strong><br>
+                                <img ng-src="{{extractReceiptUrl(b.notes)}}" class="receipt-thumb"
+                                     alt="Payment Receipt"
+                                     ng-click="openReceiptModal(extractReceiptUrl(b.notes))" />
+                            </div>
                         </div>
 
                         <div class="booking-actions" ng-if="b.status.trim() == 'Pending' || b.status.trim() == 'Approved'">
                             <div ng-if="canCancelBookingByValues(b.bookingDate, b.startTime)">
                                 <button class="btn-cancel-booking"
-                                        ng-click="cancelUserBooking(b.bookingId)">
+                                        ng-click="cancelUserBooking(b.bookingId, b.referenceNo)">
                                     <i class="fa-solid fa-xmark"></i> Cancel Booking
                                 </button>
                             </div>
@@ -192,6 +219,12 @@
                 <div class="booking-grid" ng-if="bookingHistory.length > 0">
                     <div class="booking-item" ng-repeat="b in bookingHistory">
 
+                        <!-- ✅ REFERENCE NUMBER - TOP OF CARD -->
+                        <div class="booking-ref-header">
+                            <i class="fa-solid fa-ticket"></i>
+                            <strong>Ref No:</strong> {{b.referenceNo || 'REF-' + b.bookingId}}
+                        </div>
+
                         <div class="booking-top">
                             <span class="booking-date">{{formatBookingDate(b.bookingDate)}}</span>
                             <span class="booking-status" ng-class="(b.status || '').toLowerCase().trim()">
@@ -203,7 +236,28 @@
                             <p><strong>Time:</strong> {{formatTime(b.startTime)}} - {{formatTime(b.endTime)}}</p>
                             <p><strong>Service:</strong> {{extractServices(b.notes)}}</p>
                             <p><strong>Nail Tech:</strong> {{b.nailTech || 'Not assigned'}}</p>
-                            <p><strong>Downpayment Paid:</strong> ₱{{extractDownpayment(b.notes)}}</p>
+
+                            <!-- ✅ TOTAL BILL WITH 2 DECIMAL PLACES -->
+                            <p><strong>Total Bill:</strong> ₱{{(b.totalBill || 0) | number:2}}</p>
+
+                            <!-- ✅ DOWNPAYMENT WITH 2 DECIMAL PLACES -->
+                            <p><strong>Downpayment Paid:</strong> ₱{{((b.totalBill || 0) * 0.4) | number:2}}</p>
+
+                            <!-- ✅ PROOF OF PAYMENT / RECEIPT -->
+                            <div ng-if="b.receiptUrl" class="receipt-section">
+                                <strong>Proof of Payment:</strong><br>
+                                <img ng-src="{{b.receiptUrl}}" class="receipt-thumb"
+                                     alt="Payment Receipt"
+                                     ng-click="openReceiptModal(b.receiptUrl)" />
+                            </div>
+
+                            <!-- Fallback: Check notes for receipt path -->
+                            <div ng-if="!b.receiptUrl && extractReceiptUrl(b.notes)" class="receipt-section">
+                                <strong>Proof of Payment:</strong><br>
+                                <img ng-src="{{extractReceiptUrl(b.notes)}}" class="receipt-thumb"
+                                     alt="Payment Receipt"
+                                     ng-click="openReceiptModal(extractReceiptUrl(b.notes))" />
+                            </div>
                         </div>
 
                         <div class="booking-actions" ng-if="(b.status || '').toLowerCase().trim() === 'completed'">
@@ -223,6 +277,14 @@
         </div>
 
     </main>
+</div>
+
+<!-- ✅ RECEIPT MODAL (Lightbox for viewing receipt) -->
+<div class="receipt-modal" ng-if="receiptModal.show" ng-click="closeReceiptModal($event)">
+    <div class="receipt-modal-content">
+        <span class="receipt-modal-close" ng-click="closeReceiptModal()">&times;</span>
+        <img ng-src="{{receiptModal.imageUrl}}" alt="Receipt Full Size" class="receipt-full" />
+    </div>
 </div>
 
 <script>
@@ -247,6 +309,90 @@
 </footer>
 
 <style>
+    /* ✅ REFERENCE NUMBER HEADER STYLES */
+    .booking-ref-header {
+        background: #f0e8e0;
+        padding: 8px 12px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        font-size: 14px;
+        color: #6b5544;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+        .booking-ref-header i {
+            color: #8b6f47;
+        }
+
+    /* ✅ RECEIPT THUMBNAIL STYLES */
+    .receipt-section {
+        margin-top: 12px;
+        padding-top: 8px;
+        border-top: 1px dashed #c9b5a3;
+    }
+
+    .receipt-thumb {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+        border: 1px solid #c9b5a3;
+        margin-top: 5px;
+    }
+
+        .receipt-thumb:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+    /* ✅ RECEIPT MODAL STYLES */
+    .receipt-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.9);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .receipt-modal-content {
+        position: relative;
+        max-width: 90%;
+        max-height: 90%;
+        cursor: default;
+    }
+
+    .receipt-modal-close {
+        position: absolute;
+        top: -40px;
+        right: 0;
+        color: white;
+        font-size: 35px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+        .receipt-modal-close:hover {
+            color: #bbb;
+        }
+
+    .receipt-full {
+        max-width: 100%;
+        max-height: 90vh;
+        object-fit: contain;
+        border-radius: 8px;
+    }
+
     .hamburger-btn {
         display: none;
         flex-direction: column;
@@ -827,6 +973,11 @@
             justify-content: center;
         }
 
+        .receipt-thumb {
+            width: 80px;
+            height: 80px;
+        }
+
         footer {
             padding: 1.5rem 1rem;
         }
@@ -872,5 +1023,31 @@
                 l.addEventListener('click', closeMenu);
             });
         })();
+
+        // ✅ Add receipt modal functions to Angular scope
+        document.addEventListener('DOMContentLoaded', function () {
+            var rootScope = angular.element(document.querySelector('[ng-controller="DestLoungeSalesandBookingController"]')).scope();
+            if (rootScope) {
+                rootScope.receiptModal = { show: false, imageUrl: '' };
+
+                rootScope.openReceiptModal = function (imageUrl) {
+                    rootScope.receiptModal = { show: true, imageUrl: imageUrl };
+                    rootScope.$apply();
+                };
+
+                rootScope.closeReceiptModal = function ($event) {
+                    if (!$event || $event.target === $event.currentTarget) {
+                        rootScope.receiptModal = { show: false, imageUrl: '' };
+                        rootScope.$apply();
+                    }
+                };
+
+                rootScope.extractReceiptUrl = function (notes) {
+                    if (!notes) return null;
+                    var match = notes.match(/Receipt:\s*([^\|]+)/i);
+                    return match ? match[1].trim() : null;
+                };
+            }
+        });
     </script>
 }

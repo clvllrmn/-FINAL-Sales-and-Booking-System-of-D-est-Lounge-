@@ -127,11 +127,15 @@ namespace DestLoungeSalesandBooking.Controllers
             db.tbl_bookings.Add(booking);
             db.SaveChanges();
 
+            booking.ReferenceNo = "REF-" + DateTime.Now.Year + "-" + booking.BookingId.ToString("D5");
+            db.SaveChanges();
+
             return Json(new
             {
                 success = true,
                 message = "Booking created.",
-                bookingId = booking.BookingId
+                bookingId = booking.BookingId,
+                referenceNo = booking.ReferenceNo
             });
         }
         [HttpGet]
@@ -202,6 +206,7 @@ namespace DestLoungeSalesandBooking.Controllers
                         return new
                         {
                             bookingId = b.BookingId,
+                            referenceNo = b.ReferenceNo,
                             customerId = b.CustomerId,
                             serviceId = b.ServiceId,
                             bookingDate = b.BookingDate.ToString("yyyy-MM-dd"),
@@ -289,7 +294,7 @@ namespace DestLoungeSalesandBooking.Controllers
                 SendBookingEmail(booking);
                 CreateNotification(
                     booking.CustomerId,
-                    $"Your Booking #{booking.BookingId} has been APPROVED! ✅"
+                    $"Your Booking #{booking.ReferenceNo} has been APPROVED! ✅"
                 );
             }
 
@@ -297,7 +302,7 @@ namespace DestLoungeSalesandBooking.Controllers
             {
                 CreateNotification(
                     booking.CustomerId,
-                    $"Your booking #{booking.BookingId} has been CANCELLED ❌"
+                    $"Your booking #{booking.ReferenceNo} has been CANCELLED ❌"
                 );
             }
 
@@ -305,7 +310,7 @@ namespace DestLoungeSalesandBooking.Controllers
             {
                 CreateNotification(
                     booking.CustomerId,
-                    $"Your booking #{booking.BookingId} is completed! Please leave a review ⭐"
+                    $"Your booking #{booking.ReferenceNo} is completed! Please leave a review ⭐"
                 );
 
                 CreateReviewRequest(booking.CustomerId, booking.BookingId);
@@ -316,7 +321,7 @@ namespace DestLoungeSalesandBooking.Controllers
             return Json(new
             {
                 success = true,
-                message = $"Booking #{bookingId} updated to {status}."
+                message = $"Booking #{booking.ReferenceNo} updated to {status}."
             });
         }
 
@@ -359,15 +364,15 @@ namespace DestLoungeSalesandBooking.Controllers
 
             db.SaveChanges();
 
-            CreateAdminNotification("Booking #" + booking.BookingId +
+            CreateAdminNotification("Booking #" + booking.ReferenceNo +
     " was CANCELLED by Customer #" + booking.CustomerId);
 
             CreateNotification(
                 booking.CustomerId,
-                $"Your booking #{booking.BookingId} has been CANCELLED ❌"
+                $"Your booking #{booking.ReferenceNo} has been CANCELLED ❌"
             );
 
-            return Json(new { success = true, message = $"Booking #{bookingId} cancelled successfully." });
+            return Json(new { success = true, message = $"Booking #{booking.ReferenceNo} cancelled successfully." });
         }
 
         [HttpGet]
@@ -508,11 +513,16 @@ namespace DestLoungeSalesandBooking.Controllers
 
                 var services = Request["services"] ?? "";
                 var nailTech = Request["nailTech"] ?? "";
-                var downpayment = Request["downpayment"] ?? "";
+                var downpaymentRaw = Request["downpayment"] ?? "";
+
+                // ✅ CALCULATE TOTAL BILL FROM SERVICES
+                decimal totalBill = CalculateTotalBillFromServices(services);
+                decimal downpayment = totalBill * 0.4m; // 40% downpayment
 
                 var notes = "Services: " + services +
                             " | NailTech: " + nailTech +
-                            " | Downpayment: " + downpayment +
+                            " | Downpayment: ₱" + downpayment.ToString("0.##") +
+                            " | Total Bill: ₱" + totalBill.ToString("0.##") +
                             " | Receipt: " + filePath;
 
                 // ✅ FIXED NULL ERROR HERE
@@ -542,11 +552,14 @@ namespace DestLoungeSalesandBooking.Controllers
                 db.tbl_bookings.Add(booking);
                 db.SaveChanges();
 
+                booking.ReferenceNo = "REF-" + DateTime.Now.Year + "-" + booking.BookingId.ToString("D5");
+                db.SaveChanges();
 
-                CreateAdminNotification("New booking from Customer #" + booking.CustomerId +
-    " on " + booking.BookingDate.ToString("MMMM dd, yyyy") +
-    " at " + DateTime.Today.Add(booking.StartTime).ToString("h:mm tt"));
-                return Json(new { success = true, message = "Booking successful!" });
+                CreateAdminNotification($"New booking {booking.ReferenceNo} from Customer #{booking.CustomerId}" +  // ✅ Changed
+            " on " + booking.BookingDate.ToString("MMMM dd, yyyy") +
+            " at " + DateTime.Today.Add(booking.StartTime).ToString("h:mm tt"));
+
+                return Json(new { success = true, message = "Booking successful!", referenceNo = booking.ReferenceNo });
             }
             catch (Exception ex)
             {
@@ -554,6 +567,34 @@ namespace DestLoungeSalesandBooking.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
+        // ✅ ADD THIS HELPER METHOD TO CALCULATE TOTAL BILL FROM SERVICES
+        private decimal CalculateTotalBillFromServices(string services)
+        {
+            if (string.IsNullOrWhiteSpace(services))
+                return 0;
+
+            try
+            {
+                var serviceNames = services
+                    .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => s.Trim())
+                    .ToList();
+
+                var total = db.tbl_services
+                    .Where(s => serviceNames.Contains(s.name))
+                    .Select(s => (decimal?)s.price)
+                    .ToList()
+                    .Sum() ?? 0;
+
+                return total;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
         private void CreateAdminNotification(string message)
         {
             var notif = new tbl_admin_notifications
@@ -589,6 +630,7 @@ namespace DestLoungeSalesandBooking.Controllers
                     .Select(b => new
                     {
                         b.BookingId,
+                        b.ReferenceNo,
                         BookingDate = b.BookingDate.ToString("yyyy-MM-dd"),
                         StartTime = DateTime.Today.Add(b.StartTime).ToString("h:mm tt"),
                         EndTime = DateTime.Today.Add(b.EndTime).ToString("h:mm tt"),
@@ -1028,11 +1070,11 @@ Thank you.";
 
                 db.SaveChanges();
 
-                CreateAdminNotification("Booking #" + booking.BookingId + " was CANCELLED by admin.");
+                CreateAdminNotification("Booking #" + booking.ReferenceNo + " was CANCELLED by admin.");
 
                 CreateNotification(
                     booking.CustomerId,
-                    $"Your booking #{booking.BookingId} has been CANCELLED ❌" +
+                    $"Your booking #{booking.ReferenceNo} has been CANCELLED ❌" +
                     (!string.IsNullOrWhiteSpace(reason) ? $" Reason: {reason}" : "")
                 );
 
@@ -1041,7 +1083,7 @@ Thank you.";
                 return Json(new
                 {
                     success = true,
-                    message = $"Booking #{bookingId} cancelled successfully."
+                    message = $"Booking #{booking.ReferenceNo} cancelled successfully."
                 });
             }
             catch (Exception ex)

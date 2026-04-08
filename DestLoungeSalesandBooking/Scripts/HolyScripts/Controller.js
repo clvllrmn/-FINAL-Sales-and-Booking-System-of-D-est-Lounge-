@@ -1195,6 +1195,7 @@ app.controller("DestLoungeSalesandBookingController",
                     console.log("SERVER RESPONSE:", res.data);
 
                     if (res.data && res.data.success) {
+                        var refNo = res.data.referenceNo || "N/A";
                         alert("Booking successful!");
                         sessionStorage.removeItem("pendingBooking");
                         window.location.href = "/Main/CurrentBookingPage";
@@ -1240,6 +1241,7 @@ app.controller("DestLoungeSalesandBookingController",
                     $scope.bookings = rows.map(function (b) {
                         return {
                             bookingId: b.bookingId,
+                            referenceNo: b.referenceNo || "REF- " + b.bookingId,
                             customerId: b.customerId,
                             serviceId: b.serviceId,
                             bookingDate: b.bookingDate,
@@ -1333,7 +1335,7 @@ app.controller("DestLoungeSalesandBookingController",
             $scope.selectedFilter = 'all';
             $scope.loadBookings();
         }
-
+        // ===== UPDATE BOOKING STATUS (UPDATED MESSAGES) =====
         $scope.updateBookingStatus = function (bookingId, newStatus) {
             var payload = { bookingId: bookingId, status: newStatus };
             return $http({
@@ -1348,10 +1350,15 @@ app.controller("DestLoungeSalesandBookingController",
                 }
 
                 var card = $scope.bookings.find(function (b) { return b.bookingId === bookingId; });
-                if (card) card.status = newStatus;
+                if (card) {
+                    card.status = newStatus;
+                    // ✅ Show reference number in success message
+                    alert(resp.data.message || `Booking ${card.referenceNo} updated to ${newStatus}.`);
+                } else {
+                    alert(resp.data.message || "Updated.");
+                }
 
                 $scope.filterBookings($scope.selectedFilter);
-                alert(resp.data.message || "Updated.");
             }).catch(function (err) {
                 console.error("UpdateStatus error:", err);
                 alert("Failed to update booking.");
@@ -1801,6 +1808,7 @@ app.controller("DestLoungeSalesandBookingController",
 
                         return {
                             bookingId: b.bookingId,
+                            referenceNo: b.referenceNo || "REF- " + b.bookingId,
                             clientName: b.clientName,
                             service: b.service,
                             dateTime: dateStr + ' ' + fmt(b.startTime) + ' - ' + fmt(b.endTime),
@@ -1986,6 +1994,7 @@ app.controller("DestLoungeSalesandBookingController",
 
                         return {
                             bookingId: b.BookingId,
+                            referenceNo: b.referenceNo || "REF- " + b.BookingId,
                             bookingDate: b.BookingDate,
                             startTime: b.StartTime,
                             endTime: b.EndTime,
@@ -2574,6 +2583,24 @@ app.controller("DestLoungeSalesandBookingController",
 
             $scope.activeTab = 'gallery';
         }
+
+        $scope.parseNotes = function (notes) {
+            if (!notes) return {};
+
+            let result = {};
+
+            notes.split('|').forEach(part => {
+                let pieces = part.split(':');
+                if (pieces.length >= 2) {
+                    let key = pieces[0].trim().toLowerCase();
+                    let value = pieces.slice(1).join(':').trim();
+
+                    result[key] = value;
+                }
+            });
+
+            return result;
+        };
 
     });
 
