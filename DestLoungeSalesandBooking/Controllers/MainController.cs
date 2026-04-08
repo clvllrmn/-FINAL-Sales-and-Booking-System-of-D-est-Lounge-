@@ -678,6 +678,175 @@ namespace DestLoungeSalesandBooking.Controllers
             return Json(new { success = true });
         }
 
+        // ── GET: /Main/GetNailTechs ──
+        [HttpGet]
+        public JsonResult GetNailTechs()
+        {
+            try
+            {
+                var techs = db.tbl_nailtech
+                    .Where(t => !t.isDeleted)
+                    .OrderBy(t => t.name)
+                    .Select(t => new
+                    {
+                        nailTechId = t.nailTechId,
+                        name = t.name,
+                        specialization = t.specialization,
+                        contact = t.contact,
+                        status = t.status,
+                        notes = t.notes
+                    })
+                    .ToList();
+
+                return Json(techs, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        // ── POST: /Main/AddNailTech ──
+        [HttpPost]
+        public JsonResult AddNailTech(tbl_nailtech model)
+        {
+            try
+            {
+                var tech = new tbl_nailtech
+                {
+                    name = model.name?.Trim(),
+                    specialization = model.specialization?.Trim(),
+                    contact = model.contact?.Trim(),
+                    status = string.IsNullOrEmpty(model.status) ? "active" : model.status,
+                    notes = model.notes?.Trim(),
+                    createdAt = DateTime.Now,
+                    updatedAt = DateTime.Now,
+                    isDeleted = false
+                };
+
+                db.tbl_nailtech.Add(tech);
+                db.SaveChanges();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // ── POST: /Main/UpdateNailTech ──
+        [HttpPost]
+        public JsonResult UpdateNailTech(tbl_nailtech model)
+        {
+            try
+            {
+                var tech = db.tbl_nailtech.FirstOrDefault(t => t.nailTechId == model.nailTechId && !t.isDeleted);
+                if (tech == null)
+                    return Json(new { success = false, message = "Nail tech not found." });
+
+                tech.name = model.name?.Trim();
+                tech.specialization = model.specialization?.Trim();
+                tech.contact = model.contact?.Trim();
+                tech.status = string.IsNullOrEmpty(model.status) ? tech.status : model.status;
+                tech.notes = model.notes?.Trim();
+                tech.updatedAt = DateTime.Now;
+
+                db.SaveChanges();
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // ── POST: /Main/DeactivateNailTech ──
+        [HttpPost]
+        public JsonResult DeactivateNailTech(int nailTechId)
+        {
+            try
+            {
+                var tech = db.tbl_nailtech.FirstOrDefault(t => t.nailTechId == nailTechId && !t.isDeleted);
+                if (tech == null)
+                    return Json(new { success = false, message = "Nail tech not found." });
+
+                tech.status = "inactive";
+                tech.updatedAt = DateTime.Now;
+                db.SaveChanges();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // ── POST: /Main/ReactivateNailTech ──
+        [HttpPost]
+        public JsonResult ReactivateNailTech(int nailTechId)
+        {
+            try
+            {
+                var tech = db.tbl_nailtech.FirstOrDefault(t => t.nailTechId == nailTechId && !t.isDeleted);
+                if (tech == null)
+                    return Json(new { success = false, message = "Nail tech not found." });
+
+                tech.status = "active";
+                tech.updatedAt = DateTime.Now;
+                db.SaveChanges();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // ── POST: /Main/DeleteNailTech ──
+        [HttpPost]
+        public JsonResult DeleteNailTech(int nailTechId)
+        {
+            try
+            {
+                var tech = db.tbl_nailtech.FirstOrDefault(t => t.nailTechId == nailTechId && !t.isDeleted);
+                if (tech == null)
+                    return Json(new { success = false, message = "Nail tech not found." });
+
+                tech.status = "inactive";
+                tech.updatedAt = DateTime.Now;
+                db.SaveChanges();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // ── POST: /Main/PermanentDeleteNailTech ──
+        [HttpPost]
+        public JsonResult PermanentDeleteNailTech(int nailTechId)
+        {
+            try
+            {
+                var tech = db.tbl_nailtech.FirstOrDefault(t => t.nailTechId == nailTechId);
+                if (tech == null)
+                    return Json(new { success = false, message = "Nail tech not found." });
+
+                db.tbl_nailtech.Remove(tech);
+                db.SaveChanges();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
         [HttpPost]
         [SessionCheck(RequireAdmin = true)]
         public ActionResult FlagReview(int reviewId, string reason, string note)

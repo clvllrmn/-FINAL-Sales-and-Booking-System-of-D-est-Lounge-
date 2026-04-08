@@ -826,7 +826,21 @@ app.controller("DestLoungeSalesandBookingController",
       
 
         // === BOOKING PAGE DATA ====
-        $scope.nailTechs = [{ id: 1, name: "Name 1" }, { id: 2, name: "Name 2" }, { id: 3, name: "Name 3" }];
+        $scope.nailTechs = [];
+
+        $scope.loadNailTechs = function () {
+            $http.get('/Main/GetNailTechs')
+                .then(function (response) {
+                    // Filter only active techs on the client side as extra safety
+                    $scope.nailTechs = (response.data || []).filter(function (t) {
+                        return t.status !== 'inactive';
+                    });
+                })
+                .catch(function (error) {
+                    console.error('Error loading nail techs:', error);
+                    $scope.nailTechs = [];
+                });
+        };
 
         $scope.loadBookingServices = function () {
             $http.get('/Service/GetAllServices')
@@ -852,6 +866,7 @@ app.controller("DestLoungeSalesandBookingController",
         if (window.location.pathname.toLowerCase().indexOf('bookingpage') !== -1) {
             console.log("Booking page detected");
             $scope.loadBookingServices();
+            $scope.loadNailTechs();
         }
 
         $scope.booking = {
@@ -2010,7 +2025,12 @@ app.controller("DestLoungeSalesandBookingController",
                             nailTech: b.NailTech || "",
                             totalBill: b.TotalBill || 0,
                             hasReview: b.HasReview || false,
-                            dateObj: dateObj
+                            dateObj: dateObj,
+                            receiptUrl: (function (notes) {
+                                if (!notes) return "";
+                                var match = notes.match(/Receipt:\s*([^\|]+)/i);
+                                return match ? match[1].trim() : "";
+                            })(b.Notes)
                         };
                     });
 
@@ -2596,6 +2616,7 @@ app.controller("DestLoungeSalesandBookingController",
             reason: '',
             note: ''
         };
+
 
         $scope.openFlagModal = function (review) {
             $scope.flagModal.show = true;
