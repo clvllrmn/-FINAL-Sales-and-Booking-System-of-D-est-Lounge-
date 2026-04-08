@@ -1092,5 +1092,123 @@ Thank you.";
                 return Json(new { success = false, message = ex.Message });
             }
         }
+        [HttpGet]
+        public ActionResult GetPaymentSummary()
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                {
+                    return Json(new { success = false, message = "User not logged in." }, JsonRequestBehavior.AllowGet);
+                }
+
+                int userId = Convert.ToInt32(Session["UserID"]);
+
+                using (var db = new DestLoungeSalesandBookingContext())
+                {
+                    var booking = (from b in db.tbl_bookings
+                                   join s in db.tbl_services on b.ServiceId equals s.service_id
+                                   where b.CustomerId == userId && b.Status == "Pending"
+                                   orderby b.CreatedAt descending
+                                   select new
+                                   {
+                                       b.BookingId,
+                                       b.BookingDate,
+                                       b.StartTime,
+                                       b.NailTech,
+                                       ServiceName = s.name,
+                                       Price = s.price
+                                   }).FirstOrDefault();
+
+                    if (booking == null)
+                    {
+                        return Json(new { success = false, message = "No pending booking found." }, JsonRequestBehavior.AllowGet);
+                    }
+
+                    decimal total = booking.Price;
+                    decimal downpayment = total * 0.40m;
+
+                    return Json(new
+                    {
+                        bookingId = booking.BookingId,
+                        nailTech = booking.NailTech ?? "Not assigned",
+                        bookingDate = booking.BookingDate.ToString("MMM dd, yyyy"),
+                        startTime = DateTime.Today.Add(booking.StartTime).ToString("hh:mm tt"),
+                        serviceName = booking.ServiceName,
+                        price = total,
+                        total = total,
+                        downpayment = downpayment
+                    }, JsonRequestBehavior.AllowGet);
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+        [HttpPost]
+        [SessionCheck]
+        public ActionResult SubmitPayment(int bookingId, HttpPostedFileBase receipt)
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                    return Json(new { success = false, message = "Please login first." });
+
+                int userId = Convert.ToInt32(Session["UserID"]);
+
+                var booking = db.tbl_bookings.FirstOrDefault(b =>
+                    b.BookingId == bookingId &&
+                    b.CustomerId == userId &&
+                    b.Status == "Pending");
+
+                if (booking == null)
+                    return Json(new { success = false, message = "Pending booking not found." });
+
+                if (receipt == null || receipt.ContentLength <= 0)
+                    return Json(new { success = false, message = "Please upload your receipt." });
+
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".pdf" };
+                var ext = Path.GetExtension(receipt.FileName)?.ToLower();
+
+                if (string.IsNullOrWhiteSpace(ext) || !allowedExtensions.Contains(ext))
+                    return Json(new { success = false, message = "Only JPG, JPEG, PNG, and PDF files are allowed." });
+
+                var folder = Server.MapPath("~/Content/Receipts/");
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+
+                var fileName = "receipt_" + booking.BookingId + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ext;
+                var fullPath = Path.Combine(folder, fileName);
+                receipt.SaveAs(fullPath);
+
+                var filePath = "/Content/Receipts/" + fileName;
+
+                if (string.IsNullOrWhiteSpace(booking.Notes))
+                    booking.Notes = "Receipt: " + filePath;
+                else if (booking.Notes.Contains("Receipt:"))
+                    booking.Notes = System.Text.RegularExpressions.Regex.Replace(
+                        booking.Notes,
+                        @"Receipt:\s*([^\|]+)",
+                        "Receipt: " + filePath
+                    );
+                else
+                    booking.Notes += " | Receipt: " + filePath;
+
+                db.SaveChanges();
+
+                CreateAdminNotification("Payment receipt uploaded for booking #" + booking.ReferenceNo);
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Receipt uploaded successfully. Please wait for admin approval."
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
     }
 }

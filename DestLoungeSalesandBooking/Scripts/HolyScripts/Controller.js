@@ -1169,7 +1169,7 @@ app.controller("DestLoungeSalesandBookingController",
         // ===== SUBMIT PAYMENT (UPDATED WITH SERVICES) =====
         $scope.submitPayment = function () {
 
-            var fileInput = document.getElementById("receiptUpload");
+            var fileInput = document.querySelector('.upload-section input[type="file"]');
 
             if (!fileInput || fileInput.files.length === 0) {
                 alert("Please upload proof of payment to proceed");
@@ -2896,7 +2896,76 @@ app.controller("DestLoungeSalesandBookingController",
             return result;
         };
 
+        $scope.bookingSummary = null;
+
+        $scope.loadPaymentSummary = function () {
+            $http.get('/Booking/GetPaymentSummary')
+                .then(function (response) {
+                    console.log("Payment summary response:", response.data);
+                    if (response.data && response.data.success !== false) {
+                        $scope.bookingSummary = response.data;
+                    } else {
+                        $scope.bookingSummary = null;
+                    }
+                })
+                .catch(function (error) {
+                    console.log("Error loading payment summary:", error);
+                    $scope.bookingSummary = null;
+                });
+        };
+
     });
+
+$scope.submitPayment = function () {
+    if (!window.loggedInUserId || window.loggedInUserId === "null" || parseInt(window.loggedInUserId) <= 0) {
+        alert("Please login first.");
+        window.location.href = "/Main/LoginPage";
+        return;
+    }
+
+    if (!$scope.bookingSummary || !$scope.bookingSummary.bookingDate || !$scope.bookingSummary.startTime) {
+        alert("Booking details not found.");
+        return;
+    }
+
+    var fileInput = document.querySelector('input[file-model="bookingReceipt"]') ||
+        document.getElementById('receiptUpload') ||
+        document.querySelector('.upload-section input[type="file"]');
+
+    var file = fileInput && fileInput.files && fileInput.files.length > 0
+        ? fileInput.files[0]
+        : null;
+
+    if (!file) {
+        alert("Please upload your receipt first.");
+        return;
+    }
+
+    var formData = new FormData();
+    formData.append("bookingId", $scope.bookingSummary.bookingId || 0);
+    formData.append("receipt", file);
+
+    var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+    var tokenValue = tokenElement ? tokenElement.value : "";
+    if (tokenValue) {
+        formData.append("__RequestVerificationToken", tokenValue);
+    }
+
+    $http.post("/Booking/SubmitPayment", formData, {
+        headers: { "Content-Type": undefined },
+        transformRequest: angular.identity
+    }).then(function (res) {
+        if (res.data && res.data.success) {
+            alert(res.data.message || "Payment submitted successfully.");
+            window.location.href = "/Main/ProfilePage";
+        } else {
+            alert((res.data && res.data.message) || "Failed to submit payment.");
+        }
+    }).catch(function (err) {
+        console.error("submitPayment error:", err);
+        alert((err.data && err.data.message) || "Failed to submit payment.");
+    });
+};
 
 // ===== COMPARE DIRECTIVE =====
 app.directive('compareTo', function () {
@@ -2944,4 +3013,41 @@ app.directive('compareTo', function () {
         var offset = $scope.carouselIndex[category] * (slideWidth + (1 / VISIBLE * 3));
         return { transform: 'translateX(-' + offset + '%)' };
     };
+
+    $scope.submitPayment = function () {
+
+        if (!$scope.bookingSummary || !$scope.bookingSummary.bookingId) {
+            alert("Booking not found.");
+            return;
+        }
+
+        var fileInput = document.querySelector('.upload-section input[type="file"]');
+        var file = fileInput && fileInput.files.length > 0 ? fileInput.files[0] : null;
+
+        if (!file) {
+            alert("Please upload receipt.");
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append("bookingId", $scope.bookingSummary.bookingId);
+        formData.append("receipt", file);
+
+        $http.post('/Booking/SubmitPayment', formData, {
+            headers: { 'Content-Type': undefined }
+        })
+            .then(function (res) {
+                if (res.data.success) {
+                    alert("Payment submitted!");
+                    window.location.href = "/Main/ProfilePage";
+                } else {
+                    alert(res.data.message);
+                }
+            })
+            .catch(function (err) {
+                console.error(err);
+                alert("Error submitting payment.");
+            });
+    };
+
 });

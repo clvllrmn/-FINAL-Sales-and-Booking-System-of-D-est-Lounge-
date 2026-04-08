@@ -123,42 +123,77 @@
     <div class="nav-overlay" id="navOverlay"></div>
 </header>
 
-<body ng-controller="DestLoungeSalesandBookingController" ng-init="loadPaymentInfo()">
+<div class="payment-page-wrapper"
+     ng-controller="DestLoungeSalesandBookingController"
+     ng-init="loadPaymentInfo(); loadPaymentSummary()">
 
-    <div class="payment-container">
+    <div class="service-summary-card" ng-if="bookingSummary">
+        <h2>Service Summary</h2>
 
-        <h1 class="payment-title">Complete Your Booking</h1>
+        <div class="summary-box">
+            <div class="summary-row">
+                <span><i class="fa fa-user"></i> Nail Tech</span>
+                <strong>{{bookingSummary.nailTech}}</strong>
+            </div>
 
-        <div class="payment-card">
+            <div class="summary-row">
+                <span><i class="fa fa-calendar"></i> Date</span>
+                <strong>{{bookingSummary.bookingDate}}</strong>
+            </div>
 
-            <h2 class="payment-subtitle">Send Downpayment (40%)</h2>
+            <div class="summary-row">
+                <span><i class="fa fa-clock"></i> Time</span>
+                <strong>{{bookingSummary.startTime}}</strong>
+            </div>
 
-            <div class="payment-methods">
-                <div class="method-box">
-                    <h3>GCash</h3>
-                    <p>{{paymentInfo.gcash || 'Not Set'}}</p>
-                </div>
+            <hr />
+
+            <div class="service-line">
+                <span>{{bookingSummary.serviceName}}</span>
+                <strong>₱{{bookingSummary.price | number:2}}</strong>
+            </div>
+
+            <div class="total-line">
+                <span>Total</span>
+                <strong>₱{{bookingSummary.total | number:2}}</strong>
+            </div>
+
+            <div class="downpayment-line">
+                <span>Downpayment (40%)</span>
+                <strong>₱{{bookingSummary.downpayment | number:2}}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="payment-form-card">
+        <h1>Complete Your Booking</h1>
+
+        <div class="payment-box">
+            <h2>Send Downpayment (40%)</h2>
+
+            <div class="gcash-box">
+                <strong>GCash</strong>
+                <p>{{paymentInfo.gcash}}</p>
             </div>
 
             <div class="qr-section" ng-if="paymentInfo.qr">
-                <h3>Scan QR Code:</h3>
+                <label>Scan QR Code: </label>
                 <img ng-src="{{paymentInfo.qr}}" alt="QR Code" class="qr-image" />
             </div>
 
             <div class="upload-section">
                 <label>Upload Receipt</label>
-                <input type="file" id="receiptUpload" />
+                <input type="file" id="receiptUpload" file-model="bookingReceipt" />
             </div>
 
-            <button class="btn-submit" ng-click="submitPayment()">
+            <button type="button" class="submit-btn" ng-click="submitPayment()">
                 Submit Booking
             </button>
-
         </div>
-
     </div>
+</div>
 
-</body>
+
 
 <footer>
     <div class="footer-container">
@@ -333,6 +368,12 @@
         padding: 10px;
         background: white;
     }
+    .qr-section label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: #6f4e37;
+    }
 
     .upload-section {
         margin-bottom: 25px;
@@ -382,6 +423,130 @@
         .btn-submit:active {
             transform: translateY(0);
         }
+
+    .payment-page-wrapper {
+        display: flex;
+        gap: 30px;
+        justify-content: center;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding: 40px 20px;
+    }
+
+    .payment-form-card,
+    .service-summary-card {
+        background: #e8dfd6;
+        border-radius: 24px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        padding: 30px;
+    }
+
+    .payment-form-card {
+        width: 480px;
+    }
+
+        .payment-form-card h1,
+        .service-summary-card h2 {
+            text-align: center;
+            color: #6f4e37;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+    .payment-box h2 {
+        color: #6f4e37;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    .gcash-box {
+        background: #ccb9a8;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 20px;
+        color: #5b3d2e;
+    }
+
+    .qr-section {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .qr-image {
+        width: 190px;
+        height: auto;
+        border-radius: 10px;
+        border: 1px solid #b89f8a;
+    }
+
+    .upload-section {
+        margin-bottom: 20px;
+    }
+
+        .upload-section label {
+            display: block;
+            margin-bottom: 8px;
+            color: #6f4e37;
+            font-weight: 600;
+        }
+
+    .submit-btn {
+        width: 100%;
+        background: #7a5a44;
+        color: white;
+        border: none;
+        border-radius: 30px;
+        padding: 14px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+
+    .service-summary-card {
+        width: 350px;
+    }
+
+    .summary-box {
+        background: #f8f8f8;
+        border-radius: 18px;
+        padding: 20px;
+        border: 1px solid #dbcaba;
+    }
+
+    .summary-row,
+    .service-line,
+    .total-line,
+    .downpayment-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+        color: #6f4e37;
+    }
+
+        .summary-row span,
+        .service-line span,
+        .total-line span,
+        .downpayment-line span {
+            font-size: 16px;
+        }
+
+    .total-line {
+        font-size: 24px;
+        font-weight: bold;
+        margin-top: 18px;
+    }
+
+    .downpayment-line {
+        border-top: 1px dashed #c9b5a4;
+        padding-top: 14px;
+        font-size: 20px;
+        font-weight: bold;
+    }
 
     /* ── Footer ── */
     footer {
