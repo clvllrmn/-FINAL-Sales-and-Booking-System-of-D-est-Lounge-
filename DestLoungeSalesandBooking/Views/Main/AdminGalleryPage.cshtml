@@ -83,6 +83,11 @@
             <i class="fa-solid fa-images"></i> Gallery
             <span class="tab-count">{{galleryPhotos.length}}</span>
         </button>
+        <button class="tab-btn" ng-class="{'tab-active': adminTab === 'archivedGallery'}"
+                ng-click="adminTab = 'archivedGallery'; loadArchivedGallery()">
+            <i class="fa-solid fa-box-archive"></i> Archived Photos
+            <span class="tab-count tab-count-warn">{{archivedGalleryPhotos.length}}</span>
+        </button>
         <button class="tab-btn" ng-class="{'tab-active': adminTab === 'reviews'}" ng-click="adminTab = 'reviews'">
             <i class="fa-solid fa-star"></i> Reviews
             <span class="tab-count">{{reviews.length}}</span>
@@ -138,11 +143,15 @@
                 <div class="gallery-overlay">
                     <span class="gallery-caption">{{photo.caption}}</span>
                     <div class="gallery-item-actions">
-                        <button class="item-action-btn item-edit" ng-click="startEditPhoto(photo); $event.stopPropagation()" title="Edit">
+                        <button class="item-action-btn item-edit"
+                                ng-click="startEditPhoto(photo); $event.stopPropagation()"
+                                title="Edit">
                             <i class="fa-solid fa-pen"></i>
                         </button>
-                        <button class="item-action-btn item-delete" ng-click="confirmDeletePhoto(photo); $event.stopPropagation()" title="Delete">
-                            <i class="fa-solid fa-trash"></i>
+                        <button class="item-action-btn item-archive"
+                                ng-click="confirmDeletePhoto(photo); $event.stopPropagation()"
+                                title="Archive">
+                            <i class="fa-solid fa-box-archive"></i>
                         </button>
                     </div>
                 </div>
@@ -166,111 +175,140 @@
         </div>
     </div>
 
-    <!-- REVIEWS TAB -->
-    <div ng-show="adminTab === 'reviews'" class="tab-content">
-        <div class="stats-bar">
-            <div class="stat-card"><span class="stat-num">{{reviews.length}}</span><span class="stat-label">Active</span></div>
-            <div class="stat-card"><span class="stat-num">{{averageRating()}}</span><span class="stat-label">Avg. Rating</span></div>
-            <div class="stat-card stat-warn"><span class="stat-num">{{flaggedCount()}}</span><span class="stat-label">Flagged</span></div>
-            <div class="stat-card stat-muted"><span class="stat-num">{{archivedReviews.length}}</span><span class="stat-label">Archived</span></div>
-        </div>
-
-        <div class="filter-row">
-            <select class="admin-select"
-                    ng-model="reviewStarFilter"
-                    ng-change="reviewsPage = 1; updatePagedReviews()">
-                <option value="">All Ratings</option>
-                <option value="5">★★★★★ 5 Stars</option>
-                <option value="4">★★★★☆ 4 Stars</option>
-                <option value="3">★★★☆☆ 3 Stars</option>
-                <option value="2">★★☆☆☆ 2 Stars</option>
-                <option value="1">★☆☆☆☆ 1 Star</option>
-            </select>
-            <input type="text"
-                   class="admin-search"
-                   ng-model="reviewSearch"
-                   ng-change="reviewsPage = 1; updatePagedReviews()"
-                   placeholder="Search reviews...">
-        </div>
-
-        <div class="reviews-list">
-            <div class="review-admin-card" ng-repeat="review in reviews | filter:reviewSearchFilter" ng-class="{'flagged-card': review.flagged}">
-                <div class="rac-top">
-                    <div class="rac-stars">
-                        <i ng-repeat="s in [1,2,3,4,5]" class="fa-star" ng-class="s <= review.rating ? 'fa-solid' : 'fa-regular'"></i>
+        <!-- ARCHIVED GALLERY TAB -->
+        <div ng-show="adminTab === 'archivedGallery'" class="tab-content">
+            <div class="gallery-grid" ng-show="archivedGalleryPhotos.length > 0">
+                <div class="gallery-item" ng-repeat="photo in archivedGalleryPhotos">
+                    <img ng-src="{{photo.imageUrl}}" alt="{{photo.caption}}">
+                    <div class="gallery-overlay" style="opacity:1; background:rgba(61,40,23,0.85);">
+                        <span class="gallery-caption">{{photo.caption}}</span>
+                        <div class="gallery-item-actions">
+                            <button class="item-action-btn item-edit"
+                                    ng-click="restoreGalleryPhoto(photo); $event.stopPropagation()"
+                                    title="Restore">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </button>
+                            <button class="item-action-btn item-delete"
+                                    ng-click="confirmPermanentDelete(photo); $event.stopPropagation()"
+                                    title="Delete permanently">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
-                    <span class="rac-service"><i class="fa-solid fa-spa"></i> {{review.serviceAvailed}}</span>
-                    <span class="rac-date">{{review.date | date:'MMM d, yyyy'}}</span>
-                    <span class="flag-badge" ng-show="review.flagged"><i class="fa-solid fa-flag"></i> Flagged</span>
-                </div>
-                <p class="rac-text">&ldquo;{{review.reviewText}}&rdquo;</p>
-                <div class="rac-images" ng-if="review.images && review.images.length > 0">
-                    <img ng-repeat="img in review.images"
-                         ng-src="{{img}}"
-                         class="rac-image clickable-review-image"
-                         ng-click="openReviewLightbox(img); $event.stopPropagation();" />
-                </div>
-                <div class="rac-actions">
-                    <button class="admin-btn admin-btn-flag"
-                            ng-show="!review.flagged"
-                            ng-click="openFlagModal(review)">
-                        <i class="fa-solid fa-flag"></i> Flag
-                    </button>
-                    
-                    <button class="admin-btn admin-btn-unflag" ng-show="review.flagged" ng-click="unflagReview(review)"><i class="fa-solid fa-flag-checkered"></i> Unflag</button>
-                    <button class="admin-btn admin-btn-archive" ng-click="archiveReview(review.reviewId)"><i class="fa-solid fa-box-archive"></i> Archive</button>
                 </div>
             </div>
-            <div class="empty-state" ng-show="(reviews | filter:reviewSearchFilter).length === 0">
-                <i class="fa-regular fa-star"></i>
-                <p>No reviews match your filter.</p>
+            <div class="empty-state" ng-show="archivedGalleryPhotos.length === 0">
+                <i class="fa-solid fa-box-archive"></i>
+                <p>No archived photos.</p>
             </div>
         </div>
-    </div>
-    <!-- FLAG MODAL -->
-    <div class="modal-overlay"
-         ng-show="flagModal.show === true"
-         ng-click="closeFlagModal()">
 
-        <div class="modal-card" ng-click="$event.stopPropagation()" style="max-width:500px;">
-            <div class="modal-icon" style="color:#f39c12;">
-                <i class="fa-solid fa-flag"></i>
+
+        <!-- REVIEWS TAB -->
+        <div ng-show="adminTab === 'reviews'" class="tab-content">
+            <div class="stats-bar">
+                <div class="stat-card"><span class="stat-num">{{reviews.length}}</span><span class="stat-label">Active</span></div>
+                <div class="stat-card"><span class="stat-num">{{averageRating()}}</span><span class="stat-label">Avg. Rating</span></div>
+                <div class="stat-card stat-warn"><span class="stat-num">{{flaggedCount()}}</span><span class="stat-label">Flagged</span></div>
+                <div class="stat-card stat-muted"><span class="stat-num">{{archivedReviews.length}}</span><span class="stat-label">Archived</span></div>
             </div>
 
-            <h3>Flag Review</h3>
-            <p style="margin:10px 0 18px; color:#6b4423;">
-                Select the reason why this review is being flagged.
-            </p>
-
-            <div class="field-group" style="margin-bottom:14px;">
-                <label>Reason</label>
-                <select class="admin-input" ng-model="flagModal.reason">
-                    <option value="">-- Select a reason --</option>
-                    <option value="Inappropriate language">Inappropriate language</option>
-                    <option value="Spam or irrelevant content">Spam or irrelevant content</option>
-                    <option value="Offensive or abusive content">Offensive or abusive content</option>
-                    <option value="False or misleading review">False or misleading review</option>
-                    <option value="Contains sensitive/private information">Contains sensitive/private information</option>
+            <div class="filter-row">
+                <select class="admin-select"
+                        ng-model="reviewStarFilter"
+                        ng-change="reviewsPage = 1; updatePagedReviews()">
+                    <option value="">All Ratings</option>
+                    <option value="5">★★★★★ 5 Stars</option>
+                    <option value="4">★★★★☆ 4 Stars</option>
+                    <option value="3">★★★☆☆ 3 Stars</option>
+                    <option value="2">★★☆☆☆ 2 Stars</option>
+                    <option value="1">★☆☆☆☆ 1 Star</option>
                 </select>
+                <input type="text"
+                       class="admin-search"
+                       ng-model="reviewSearch"
+                       ng-change="reviewsPage = 1; updatePagedReviews()"
+                       placeholder="Search reviews...">
             </div>
 
-            <div class="field-group">
-                <label>Additional note (optional)</label>
-                <textarea class="admin-input"
-                          rows="3"
-                          ng-model="flagModal.note"
-                          placeholder="Add more details if needed..."></textarea>
-            </div>
+            <div class="reviews-list">
+                <div class="review-admin-card" ng-repeat="review in reviews | filter:reviewSearchFilter" ng-class="{'flagged-card': review.flagged}">
+                    <div class="rac-top">
+                        <div class="rac-stars">
+                            <i ng-repeat="s in [1,2,3,4,5]" class="fa-star" ng-class="s <= review.rating ? 'fa-solid' : 'fa-regular'"></i>
+                        </div>
+                        <span class="rac-service"><i class="fa-solid fa-spa"></i> {{review.serviceAvailed}}</span>
+                        <span class="rac-date">{{review.date | date:'MMM d, yyyy'}}</span>
+                        <span class="flag-badge" ng-show="review.flagged"><i class="fa-solid fa-flag"></i> Flagged</span>
+                    </div>
+                    <p class="rac-text">&ldquo;{{review.reviewText}}&rdquo;</p>
+                    <div class="rac-images" ng-if="review.images && review.images.length > 0">
+                        <img ng-repeat="img in review.images"
+                             ng-src="{{img}}"
+                             class="rac-image clickable-review-image"
+                             ng-click="openReviewLightbox(img); $event.stopPropagation();" />
+                    </div>
+                    <div class="rac-actions">
+                        <button class="admin-btn admin-btn-flag"
+                                ng-show="!review.flagged"
+                                ng-click="openFlagModal(review)">
+                            <i class="fa-solid fa-flag"></i> Flag
+                        </button>
 
-            <div class="modal-actions" style="margin-top:18px;">
-                <button class="admin-btn admin-btn-secondary" ng-click="closeFlagModal()">Cancel</button>
-                <button class="admin-btn admin-btn-flag"
-                        ng-click="submitFlagReview()"
-                        ng-disabled="!flagModal.reason">
-                    <i class="fa-solid fa-flag"></i> Confirm Flag
-                </button>
+                        <button class="admin-btn admin-btn-unflag" ng-show="review.flagged" ng-click="unflagReview(review)"><i class="fa-solid fa-flag-checkered"></i> Unflag</button>
+                        <button class="admin-btn admin-btn-archive" ng-click="archiveReview(review.reviewId)"><i class="fa-solid fa-box-archive"></i> Archive</button>
+                    </div>
+                </div>
+                <div class="empty-state" ng-show="(reviews | filter:reviewSearchFilter).length === 0">
+                    <i class="fa-regular fa-star"></i>
+                    <p>No reviews match your filter.</p>
+                </div>
             </div>
         </div>
+        <!-- FLAG MODAL -->
+        <div class="modal-overlay"
+             ng-show="flagModal.show === true"
+             ng-click="closeFlagModal()">
+
+            <div class="modal-card" ng-click="$event.stopPropagation()" style="max-width:500px;">
+                <div class="modal-icon" style="color:#f39c12;">
+                    <i class="fa-solid fa-flag"></i>
+                </div>
+
+                <h3>Flag Review</h3>
+                <p style="margin:10px 0 18px; color:#6b4423;">
+                    Select the reason why this review is being flagged.
+                </p>
+
+                <div class="field-group" style="margin-bottom:14px;">
+                    <label>Reason</label>
+                    <select class="admin-input" ng-model="flagModal.reason">
+                        <option value="">-- Select a reason --</option>
+                        <option value="Inappropriate language">Inappropriate language</option>
+                        <option value="Spam or irrelevant content">Spam or irrelevant content</option>
+                        <option value="Offensive or abusive content">Offensive or abusive content</option>
+                        <option value="False or misleading review">False or misleading review</option>
+                        <option value="Contains sensitive/private information">Contains sensitive/private information</option>
+                    </select>
+                </div>
+
+                <div class="field-group">
+                    <label>Additional note (optional)</label>
+                    <textarea class="admin-input"
+                              rows="3"
+                              ng-model="flagModal.note"
+                              placeholder="Add more details if needed..."></textarea>
+                </div>
+
+                <div class="modal-actions" style="margin-top:18px;">
+                    <button class="admin-btn admin-btn-secondary" ng-click="closeFlagModal()">Cancel</button>
+                    <button class="admin-btn admin-btn-flag"
+                            ng-click="submitFlagReview()"
+                            ng-disabled="!flagModal.reason">
+                        <i class="fa-solid fa-flag"></i> Confirm Flag
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- ARCHIVED TAB -->
@@ -298,7 +336,7 @@
                 </div>
             </div>
         </div>
-       
+
         <!-- EDIT MODAL -->
         <div class="modal-overlay" ng-show="editModal.show">
             <div class="modal-card" style="max-width:500px;" ng-click="$event.stopPropagation()">
@@ -308,10 +346,22 @@
                 <h3 style="margin-bottom:1.5rem;">Edit Photo Details</h3>
 
                 <!-- Preview -->
-                <div style="margin-bottom:1.2rem; border-radius:10px; overflow:hidden; border:2px solid #d4c4b0; max-height:180px;">
-                    <img ng-src="{{editModal.photo.imageUrl}}"
+                <div style="margin-bottom:0.8rem; border-radius:10px; overflow:hidden; border:2px solid #d4c4b0; max-height:180px;">
+                    <img ng-src="{{editModal.newImagePreview || editModal.photo.imageUrl}}"
                          style="width:100%; max-height:180px; object-fit:cover; display:block;">
                 </div>
+                <button type="button"
+                        class="admin-btn admin-btn-secondary"
+                        style="width:100%; justify-content:center; margin-bottom:1rem;"
+                        onclick="document.getElementById('editImageInput').click()">
+                    <i class="fa-solid fa-image"></i> Replace Image
+                </button>
+                <input type="file" id="editImageInput" accept="image/*"
+                       onchange="angularFileChange(this)" style="display:none">
+                <span ng-show="editModal.newImagePreview"
+                      style="font-size:0.78rem; color:#27ae60; margin-bottom:1rem; display:block;">
+                    <i class="fa-solid fa-circle-check"></i> New image selected — save to apply
+                </span>
 
                 <!-- Caption -->
                 <div class="field-group" style="margin-bottom:1rem; text-align:left;">
@@ -354,16 +404,47 @@
         <!-- DELETE MODAL -->
         <div class="modal-overlay" ng-show="deleteModal.show">
             <div class="modal-card">
-                <div class="modal-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                <h3>Delete Photo?</h3>
-                <p>Are you sure you want to delete <strong>&ldquo;{{deleteModal.photo.caption}}&rdquo;</strong>? This cannot be undone.</p>
+                <div class="modal-icon"><i class="fa-solid fa-box-archive"></i></div>
+                <h3>Archive Photo?</h3>
+                <p>
+                    &ldquo;{{deleteModal.photo.caption}}&rdquo; will be moved to
+                    <strong>Archived Photos</strong>. You can restore it later.
+                </p>
                 <div class="modal-actions">
-                    <button class="admin-btn admin-btn-secondary" ng-click="deleteModal.show = false">Cancel</button>
-                    <button class="admin-btn admin-btn-danger" ng-click="deletePhoto()"><i class="fa-solid fa-trash"></i> Delete</button>
+                    <button class="admin-btn admin-btn-secondary"
+                            ng-click="deleteModal.show = false">
+                        Cancel
+                    </button>
+                    <button class="admin-btn admin-btn-archive"
+                            ng-click="deletePhoto()">
+                        <i class="fa-solid fa-box-archive"></i> Archive
+                    </button>
                 </div>
             </div>
         </div>
 
+        <!-- PERMANENT DELETE MODAL -->
+        <div class="modal-overlay" ng-show="permanentDeleteModal.show">
+            <div class="modal-card">
+                <div class="modal-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <h3>Permanently Delete?</h3>
+                <p>
+                    This will <strong>permanently remove</strong>
+                    &ldquo;{{permanentDeleteModal.photo.caption}}&rdquo;
+                    from the server. This <strong>cannot be undone</strong>.
+                </p>
+                <div class="modal-actions">
+                    <button class="admin-btn admin-btn-secondary"
+                            ng-click="permanentDeleteModal.show = false">
+                        Cancel
+                    </button>
+                    <button class="admin-btn admin-btn-danger"
+                            ng-click="permanentDeletePhoto()">
+                        <i class="fa-solid fa-trash"></i> Delete Forever
+                    </button>
+                </div>
+            </div>
+        </div>
         <!-- TOAST -->
         <div class="toast" ng-show="toast.show" ng-class="toast.type">
             <i class="fa-solid" ng-class="toast.type === 'toast-success' ? 'fa-circle-check' : 'fa-circle-exclamation'"></i>
@@ -456,6 +537,16 @@
             margin-top: auto;
             padding: 1.25rem 0;
         }
+
+        .item-archive {
+            background-color: rgba(255,255,255,0.9);
+            color: #7f8c8d;
+        }
+
+            .item-archive:hover {
+                background-color: #7f8c8d;
+                color: white;
+            }
 
         .admin-link {
             color: #5a4a3a;
@@ -1720,11 +1811,11 @@
 
         function angularFileChange(input) {
             var scope = angular.element(document.querySelector('[ng-controller]')).scope();
-            if (scope && scope.onFileSelected) {
-                scope.$apply(function () {
-                    scope.onFileSelected(input);
-                });
-            }
+            if (!scope) return;
+            var fn = input.id === 'editImageInput' ? 'onEditImageSelected' : 'onFileSelected';
+            if (scope[fn]) scope.$apply(function () {
+                scope[fn](input);
+            });
         }
     </script>
     

@@ -54,6 +54,9 @@ namespace DestLoungeSalesandBooking.Models.Maps
                 .HasColumnName("updatedAt")
                 .IsRequired();
 
+            Property(t => t.archivedAt)
+    .HasColumnName("archivedAt")
+    .IsOptional();
         }
     }
 }

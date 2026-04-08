@@ -3,7 +3,7 @@ console.log("CONTROLLER FILE LOADED, app:", app);
 var _currentContentType = null;
 
 app.controller("DestLoungeSalesandBookingController",
-    function ($scope, $window, $http, $sce,$httpParamSerializerJQLike) {  // ✅ Fixed: Added missing $scope, removed undefined service
+    function ($scope, $window, $http, $sce, $httpParamSerializerJQLike, $timeout) {  // ✅ Fixed: Added missing $scope, removed undefined service
 
         console.log("CONTROLLER REGISTERED");
 
@@ -2277,9 +2277,10 @@ app.controller("DestLoungeSalesandBookingController",
                 return;
             }
 
-            $scope.newPhoto.file = file;
-            $scope.newPhoto.previewUrl = URL.createObjectURL(file);
-            $scope.$apply();
+            $timeout(function () {
+                $scope.newPhoto.file = file;
+                $scope.newPhoto.previewUrl = URL.createObjectURL(file);
+            });
         };
 
         // Load all active gallery photos from the DB
@@ -2340,10 +2341,11 @@ app.controller("DestLoungeSalesandBookingController",
 
         $scope.startEditPhoto = function (photo) {
             $scope.editModal = {
-                show: true,
-                photo: photo,
+                show: true, photo: photo,
                 caption: photo.caption,
-                description: photo.description || ''
+                description: photo.description || '',
+                newImageFile: null,
+                newImagePreview: ''
             };
         };
 
@@ -2405,6 +2407,120 @@ app.controller("DestLoungeSalesandBookingController",
                 } else {
                     $scope.showToast(res.data.message, 'toast-error');
                 }
+            });
+        };
+
+        // ── ARCHIVED GALLERY ─────────────────────────────────────────────────────
+        $scope.archivedGalleryPhotos = [];
+
+        $scope.loadArchivedGallery = function () {
+            $http.get('/Gallery/GetArchivedPhotos')
+                .then(function (res) {
+                    if (res.data.success) {
+                        $scope.archivedGalleryPhotos = res.data.data.map(function (p) {
+                            return {
+                                galleryId: p.galleryId,
+                                caption: p.caption,
+                                description: p.description,
+                                imageUrl: p.imageUrl,
+                                archivedAt: p.archivedAt
+                            };
+                        });
+                    }
+                })
+                .catch(function (err) { console.error('loadArchivedGallery error:', err); });
+        };
+
+        $scope.restoreGalleryPhoto = function (photo) {
+            var token = (document.querySelector('input[name="__RequestVerificationToken"]') || {}).value || '';
+            $http({
+                method: 'POST', url: '/Gallery/RestorePhoto',
+                data: $httpParamSerializerJQLike({ galleryId: photo.galleryId, __RequestVerificationToken: token }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }).then(function (res) {
+                if (res.data.success) {
+                    $scope.archivedGalleryPhotos = $scope.archivedGalleryPhotos.filter(function (p) {
+                        return p.galleryId !== photo.galleryId;
+                    });
+                    $scope.loadGalleryPhotos();
+                    $scope.showToast('Photo restored.', 'toast-success');
+                } else { $scope.showToast(res.data.message, 'toast-error'); }
+            });
+        };
+
+        $scope.permanentDeleteModal = { show: false, photo: {} };
+
+        $scope.confirmPermanentDelete = function (photo) {
+            $scope.permanentDeleteModal = { show: true, photo: photo };
+        };
+
+        $scope.permanentDeletePhoto = function () {
+            var photo = $scope.permanentDeleteModal.photo;
+            var token = (document.querySelector('input[name="__RequestVerificationToken"]') || {}).value || '';
+            $http({
+                method: 'POST', url: '/Gallery/PermanentDeletePhoto',
+                data: $httpParamSerializerJQLike({ galleryId: photo.galleryId, __RequestVerificationToken: token }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }).then(function (res) {
+                if (res.data.success) {
+                    $scope.archivedGalleryPhotos = $scope.archivedGalleryPhotos.filter(function (p) {
+                        return p.galleryId !== photo.galleryId;
+                    });
+                    $scope.permanentDeleteModal.show = false;
+                    $scope.showToast('Photo permanently deleted.', 'toast-success');
+                } else { $scope.showToast(res.data.message, 'toast-error'); }
+            });
+        };
+
+        // ── EDIT MODAL — image replacement support ───────────────────────────────
+        $scope.editModal.newImageFile = null;
+        $scope.editModal.newImagePreview = '';
+
+        $scope.onEditImageSelected = function (input) {
+            var file = input.files[0];
+            if (!file) return;
+            var allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+            if (!allowed.includes(file.type)) {
+                alert('Only JPG, PNG, WEBP, or GIF images are allowed.');
+                input.value = ''; return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File exceeds the 5 MB limit.');
+                input.value = ''; return;
+            }
+
+            $timeout(function () {
+                $scope.editModal.newImageFile = file;
+                $scope.editModal.newImagePreview = URL.createObjectURL(file);
+            });
+        };
+
+        // Replace saveEditPhoto to support image upload
+        $scope.saveEditPhoto = function (photo) {
+            var token = (document.querySelector('input[name="__RequestVerificationToken"]') || {}).value || '';
+
+            var fd = new FormData();
+            fd.append('galleryId', photo.galleryId);
+            fd.append('caption', $scope.editModal.caption);
+            fd.append('description', $scope.editModal.description || '');
+            fd.append('__RequestVerificationToken', token);
+            if ($scope.editModal.newImageFile) {
+                fd.append('newImageFile', $scope.editModal.newImageFile);
+            }
+
+            $http.post('/Gallery/UpdateCaption', fd, {
+                transformRequest: angular.identity,
+                headers: { 'Content-Type': undefined }
+            }).then(function (res) {
+                if (res.data.success) {
+                    photo.caption = $scope.editModal.caption;
+                    photo.description = $scope.editModal.description;
+                    if (res.data.imageUrl) photo.imageUrl = res.data.imageUrl;
+                    $scope.editModal.show = false;
+                    $scope.editModal.newImageFile = null;
+                    $scope.editModal.newImagePreview = '';
+                    $scope.showToast('Photo updated.', 'toast-success');
+                } else { $scope.showToast(res.data.message, 'toast-error'); }
             });
         };
 
