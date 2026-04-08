@@ -140,9 +140,51 @@
             </div>
         </nav>
     </aside>
+    <div class="review-list-wrapper"
+         ng-if="@ViewBag.BookingId == null"
+         ng-controller="DestLoungeSalesandBookingController"
+         ng-init="loadMyReviews()">
+
+        <h2 class="review-service-name">My Reviews</h2>
+
+        <div ng-if="myReviews.length === 0" class="empty-state">
+            <h3>No reviews yet</h3>
+            <p>Your submitted reviews will appear here.</p>
+        </div>
+
+        <div class="booking-item" ng-repeat="r in myReviews">
+
+            <div class="booking-top">
+                <span><strong>Ref No:</strong> {{r.booking.ReferenceNo || ('REF-' + r.bookingId)}}</span>
+            </div>
+
+            <div class="booking-body">
+                <p><strong>Rating:</strong> {{r.rating}} / 5</p>
+                <p><strong>Review:</strong> {{r.reviewText}}</p>
+                <p><strong>Date:</strong> {{r.createdAt | date:'MMMM d, yyyy'}}</p>
+                <p><strong>Service:</strong> {{extractServices(r.booking.Notes)}}</p>
+                <p><strong>Nail Tech:</strong> {{r.booking.NailTech}}</p>
+
+                <div ng-if="r.flagged" style="color:#a04040;">
+                    ⚠ Flagged: {{r.flagReason}}
+                </div>
+            </div>
+
+            <div class="booking-actions">
+                <button class="btn-review" ng-click="openEditMyReview(r)">
+                    Edit
+                </button>
+
+                <button class="btn-cancel-booking"
+                        ng-click="deleteMyReview(r.reviewId)">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
 
     <main class="profile-content">
-        <div class="review-card">
+        <div class="review-card" ng-if="@ViewBag.BookingId != null">
             <h2 class="review-service-name">Service</h2>
 
             <form id="reviewForm" method="POST" action="@Url.Action("SubmitReview", "Main")" enctype="multipart/form-data">

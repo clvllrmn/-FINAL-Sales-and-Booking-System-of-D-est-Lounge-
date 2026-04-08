@@ -486,10 +486,119 @@ namespace DestLoungeSalesandBooking.Controllers
             return RedirectToAction("GalleryPage");
         }
 
-        public JsonResult GetReviews()
+        [SessionCheck]
+        [HttpGet]
+        public ActionResult GetMyReviews()
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                    return Json(new { success = false, message = "Please login first." }, JsonRequestBehavior.AllowGet);
+
+                int userId = Convert.ToInt32(Session["UserID"]);
+
+                var reviews = db.tbl_reviews
+                    .Where(r => r.CustomerId == userId && !r.IsArchived)
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToList()
+                    .Select(r => new
+                    {
+                        r.ReviewId,
+                        r.BookingId,
+                        r.Rating,
+                        r.ReviewText,
+                        r.CreatedAt,
+                        r.Flagged,
+                        r.FlagReason,
+                        r.FlagNote,
+                        Images = db.tbl_review_images
+                            .Where(img => img.ReviewId == r.ReviewId)
+                            .Select(img => img.ImageUrl)
+                            .ToList(),
+
+                        Booking = db.tbl_bookings
+                            .Where(b => b.BookingId == r.BookingId)
+                            .Select(b => new
+                            {
+                                b.ReferenceNo,
+                                BookingDate = b.BookingDate,
+                                b.StartTime,
+                                b.EndTime,
+                                b.NailTech,
+                                b.Notes
+                            })
+                            .FirstOrDefault()
+                    })
+                    .ToList();
+
+                return Json(new { success = true, data = reviews }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [SessionCheck]
+        [HttpPost]
+        public ActionResult DeleteMyReview(int reviewId)
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                    return Json(new { success = false, message = "Please login first." });
+
+                int userId = Convert.ToInt32(Session["UserID"]);
+
+                var review = db.tbl_reviews.FirstOrDefault(r => r.ReviewId == reviewId && r.CustomerId == userId);
+                if (review == null)
+                    return Json(new { success = false, message = "Review not found." });
+
+                var images = db.tbl_review_images.Where(x => x.ReviewId == reviewId).ToList();
+                if (images.Any())
+                    db.tbl_review_images.RemoveRange(images);
+
+                db.tbl_reviews.Remove(review);
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Review deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [SessionCheck]
+        [HttpPost]
+        public ActionResult UpdateMyReview(int reviewId, int rating, string reviewText)
+        {
+            try
+            {
+                if (Session["UserID"] == null)
+                    return Json(new { success = false, message = "Please login first." });
+
+                int userId = Convert.ToInt32(Session["UserID"]);
+
+                var review = db.tbl_reviews.FirstOrDefault(r => r.ReviewId == reviewId && r.CustomerId == userId);
+                if (review == null)
+                    return Json(new { success = false, message = "Review not found." });
+
+                review.Rating = rating;
+                review.ReviewText = reviewText ?? "";
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Review updated successfully." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+        public JsonResult GetPublicReviews()
         {
             var reviews = db.tbl_reviews
-                .Where(r => !r.IsArchived)
+                .Where(r => !r.IsArchived && !r.Flagged)
                 .ToList()
                 .Select(r => new
                 {
@@ -500,6 +609,7 @@ namespace DestLoungeSalesandBooking.Controllers
                     Flagged = r.Flagged,
                     FlagReason = r.FlagReason,
                     FlagNote = r.FlagNote,
+                    IsArchived = r.IsArchived,
                     Images = db.tbl_review_images
                         .Where(img => img.ReviewId == r.ReviewId)
                         .Select(img => img.ImageUrl)
@@ -617,6 +727,57 @@ namespace DestLoungeSalesandBooking.Controllers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine("FLAG ERROR: " + ex.ToString());
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+        [HttpGet]
+        [SessionCheck(RequireAdmin = true)]
+        public JsonResult GetAdminReviews()
+        {
+            var reviews = db.tbl_reviews
+                .Where(r => !r.IsArchived) // ✅ DO NOT FILTER FLAGGED
+                .ToList()
+                .Select(r => new
+                {
+                    r.ReviewId,
+                    r.Rating,
+                    r.ReviewText,
+                    r.CreatedAt,
+                    r.Flagged,
+                    r.FlagReason,
+                    r.FlagNote,
+                    Images = db.tbl_review_images
+                        .Where(img => img.ReviewId == r.ReviewId)
+                        .Select(img => img.ImageUrl)
+                        .ToList()
+                }).ToList();
+
+            return Json(reviews, JsonRequestBehavior.AllowGet);
+        }
+        [HttpPost]
+        [SessionCheck(RequireAdmin = true)]
+        public ActionResult UnflagReview(int reviewId)
+        {
+            try
+            {
+                var review = db.tbl_reviews.FirstOrDefault(r => r.ReviewId == reviewId);
+
+                if (review == null)
+                {
+                    return Json(new { success = false, message = "Review not found." });
+                }
+
+                review.Flagged = false;
+                review.FlagReason = null;
+                review.FlagNote = null;
+                review.FlaggedAt = null;
+
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Review unflagged successfully." });
+            }
+            catch (Exception ex)
+            {
                 return Json(new { success = false, message = ex.Message });
             }
         }

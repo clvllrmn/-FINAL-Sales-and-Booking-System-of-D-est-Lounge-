@@ -59,9 +59,15 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.reviewStarFilter = '';
         $scope.reviewSearch = '';
 
-        // ===== LOAD REVIEWS =====
         $scope.loadReviews = function () {
-            $http.get('/Main/GetReviews')
+
+            var path = window.location.pathname.toLowerCase();
+
+            var url = path.indexOf('admingallerypage') !== -1
+                ? '/Main/GetAdminReviews'   // ✅ ADMIN
+                : '/Main/GetPublicReviews'; // ✅ CUSTOMER
+
+            $http.get(url)
                 .then(function (res) {
                     console.log("REVIEWS DATA:", res.data);
 
@@ -74,7 +80,9 @@ app.controller("DestLoungeSalesandBookingController",
                             date: r.CreatedAt ? new Date(parseInt(r.CreatedAt.substr(6))) : null,
                             images: r.Images || [],
                             flagged: r.Flagged || false,
-                            isArchived: r.IsArchived || false
+                            isArchived: r.IsArchived || false,
+                            flagReason: r.FlagReason || "",
+                            flagNote: r.FlagNote || ""
                         };
                     });
 
@@ -1988,13 +1996,12 @@ app.controller("DestLoungeSalesandBookingController",
 
                     var now = new Date();
                     var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
                     var bookings = (res.data.data || []).map(function (b) {
                         var dateObj = new Date(b.BookingDate);
 
                         return {
                             bookingId: b.BookingId,
-                            referenceNo: b.referenceNo || "REF- " + b.BookingId,
+                            referenceNo: b.ReferenceNo || ("REF-" + b.BookingId),
                             bookingDate: b.BookingDate,
                             startTime: b.StartTime,
                             endTime: b.EndTime,
@@ -2002,9 +2009,119 @@ app.controller("DestLoungeSalesandBookingController",
                             notes: b.Notes || "",
                             nailTech: b.NailTech || "",
                             totalBill: b.TotalBill || 0,
+                            hasReview: b.HasReview || false,
                             dateObj: dateObj
                         };
                     });
+
+                    $scope.myReviews = [];
+                    $scope.reviewEditModal = {
+                        show: false,
+                        reviewId: 0,
+                        rating: 0,
+                        reviewText: ""
+                    };
+
+                    $scope.loadMyReviews = function () {
+                        return $http.get('/Booking/GetMyReviews')
+                            .then(function (res) {
+                                if (!res.data || !res.data.success) {
+                                    $scope.myReviews = [];
+                                    return;
+                                }
+
+                                $scope.myReviews = (res.data.data || []).map(function (r) {
+                                    return {
+                                        reviewId: r.ReviewId,
+                                        bookingId: r.BookingId,
+                                        rating: r.Rating,
+                                        reviewText: r.ReviewText || "",
+                                        createdAt: r.CreatedAt,
+                                        flagged: r.Flagged || false,
+                                        flagReason: r.FlagReason || "",
+                                        flagNote: r.FlagNote || "",
+                                        images: r.Images || [],
+                                        booking: r.Booking || {}
+                                    };
+                                });
+                            })
+                            .catch(function (err) {
+                                console.error("loadMyReviews error:", err);
+                                $scope.myReviews = [];
+                            });
+                    };
+
+                    $scope.openEditMyReview = function (r) {
+                        $scope.reviewEditModal = {
+                            show: true,
+                            reviewId: r.reviewId,
+                            rating: r.rating,
+                            reviewText: r.reviewText
+                        };
+                    };
+
+                    $scope.closeEditMyReview = function () {
+                        $scope.reviewEditModal = {
+                            show: false,
+                            reviewId: 0,
+                            rating: 0,
+                            reviewText: ""
+                        };
+                    };
+
+                    $scope.updateMyReview = function () {
+                        var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+                        var tokenValue = tokenElement ? tokenElement.value : "";
+
+                        $http({
+                            method: 'POST',
+                            url: '/Booking/UpdateMyReview',
+                            data: $httpParamSerializerJQLike({
+                                reviewId: $scope.reviewEditModal.reviewId,
+                                rating: $scope.reviewEditModal.rating,
+                                reviewText: $scope.reviewEditModal.reviewText,
+                                __RequestVerificationToken: tokenValue
+                            }),
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                        }).then(function (res) {
+                            if (res.data && res.data.success) {
+                                alert("Review updated.");
+                                $scope.closeEditMyReview();
+                                $scope.loadMyReviews();
+                            } else {
+                                alert(res.data.message || "Failed to update review.");
+                            }
+                        });
+                    };
+
+                    $scope.deleteMyReview = function (reviewId) {
+                        if (!confirm("Delete this review?")) return;
+
+                        var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+                        var tokenValue = tokenElement ? tokenElement.value : "";
+
+                        $http({
+                            method: 'POST',
+                            url: '/Booking/DeleteMyReview',
+                            data: $httpParamSerializerJQLike({
+                                reviewId: reviewId,
+                                __RequestVerificationToken: tokenValue
+                            }),
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                        }).then(function (res) {
+                            if (res.data && res.data.success) {
+                                alert("Review deleted.");
+                                $scope.loadMyReviews();
+                                $scope.loadUserBookings(); // refresh HasReview status
+                            } else {
+                                alert(res.data.message || "Failed to delete review.");
+                            }
+                        });
+                    };
+
+                    if (window.location.pathname.toLowerCase().includes("reviewpage")) {
+                        $scope.loadMyReviews();
+                    }
 
                     $scope.currentBookings = bookings.filter(function (b) {
                         return (
@@ -2448,6 +2565,46 @@ app.controller("DestLoungeSalesandBookingController",
                 console.error("archiveReview error:", err);
                 alert("Archive failed.");
             });
+        };
+
+        $scope.unflagReview = function (review) {
+            if (!review || !review.reviewId) {
+                alert("Invalid review.");
+                return;
+            }
+
+            if (!confirm("Unflag this review?")) return;
+
+            var tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            var tokenValue = tokenElement ? tokenElement.value : "";
+
+            $http({
+                method: 'POST',
+                url: '/Main/UnflagReview',
+                data: $httpParamSerializerJQLike({
+                    reviewId: review.reviewId,
+                    __RequestVerificationToken: tokenValue
+                }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' }
+            }).then(function (res) {
+                if (res.data && res.data.success) {
+                    review.flagged = false;
+                    review.flagReason = "";
+                    review.flagNote = "";
+                    $scope.loadReviews();
+                } else {
+                    alert((res.data && res.data.message) || "Failed to unflag review.");
+                }
+            }).catch(function (err) {
+                console.error("unflagReview error:", err);
+                alert("Failed to unflag review.");
+            });
+        };
+
+        $scope.flaggedCount = function () {
+            return ($scope.reviews || []).filter(function (r) {
+                return r.flagged === true;
+            }).length;
         };
 
         $scope.restoreReview = function (reviewId) {

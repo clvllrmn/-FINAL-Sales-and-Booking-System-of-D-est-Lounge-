@@ -261,11 +261,13 @@
                         </div>
 
                         <div class="booking-actions" ng-if="(b.status || '').toLowerCase().trim() === 'completed'">
-                            <button class="btn-review" ng-click="goToReview(b.bookingId)">
-                                <i class="fa-solid fa-star"></i> Leave a Review
+                            <button class="btn-review"
+                                    ng-click="!b.hasReview && goToReview(b.bookingId)"
+                                    ng-disabled="b.hasReview">
+                                <i class="fa-solid fa-star"></i>
+                                {{ b.hasReview ? 'Already Reviewed' : 'Leave a Review' }}
                             </button>
                         </div>
-
                     </div>
                 </div>
 
@@ -692,6 +694,18 @@
             background: #5a4635;
             transform: translateY(-2px);
         }
+
+        .btn-review:disabled {
+            background: #b7a99a;
+            cursor: not-allowed;
+            opacity: 0.8;
+            transform: none;
+        }
+
+            .btn-review:disabled:hover {
+                background: #b7a99a;
+                transform: none;
+            }
 
     .empty-state {
         text-align: center;

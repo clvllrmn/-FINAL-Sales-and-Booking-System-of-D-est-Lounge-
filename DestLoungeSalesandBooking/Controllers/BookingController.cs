@@ -638,7 +638,8 @@ namespace DestLoungeSalesandBooking.Controllers
                         b.Notes,
                         b.CreatedAt,
                         b.NailTech,
-                        TotalBill = GetTotalBillFromNotes(b.Notes)
+                        TotalBill = GetTotalBillFromNotes(b.Notes),
+                        HasReview = db.tbl_reviews.Any(r => r.BookingId == b.BookingId)
                     })
                     .ToList();
 
@@ -657,7 +658,7 @@ namespace DestLoungeSalesandBooking.Controllers
                 }, JsonRequestBehavior.AllowGet);
             }
         }
-        
+
 
         [SessionCheck]
         public ActionResult GetNotifications(int userId)
