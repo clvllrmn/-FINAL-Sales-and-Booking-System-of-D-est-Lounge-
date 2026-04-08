@@ -16,7 +16,18 @@
         <a href="@Url.Action("AdminNailTechPage","Main")" class="nav-item ">NAIL TECHS</a>
         <a href="@Url.Action("AdminContactPage","Main")" class="nav-item">CONTACT</a>
         <a href="@Url.Action("AdminFAQsPage","Main")" class="nav-item">FAQs</a>
-        <a href="@Url.Action("AdminInboxPage","Main")" class="nav-item">INBOX</a>
+        <a href="@Url.Action("AdminInboxPage","Main")"
+           class="nav-item active inbox-link"
+           ng-controller="DestLoungeSalesandBookingController"
+           ng-init="loadAdminInboxCount()">
+
+            <span>INBOX</span>
+
+            <span class="inbox-badge" ng-if="adminInboxCount > 0">
+                {{adminInboxCount}}
+            </span>
+
+        </a>
         <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
         <a href="@Url.Action("AdminGalleryPage","Main")" class="nav-item active">GALLERY</a>
         <a href="@Url.Action("AdminPaymentSetting","Main")" class="nav-item">PAYMENT</a>
@@ -1797,6 +1808,18 @@
                 border-radius: 10px;
                 border: 1px solid #ddd;
             }
+        }
+        
+
+        .inbox-badge {
+            background: #d32f2f;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 50px;
+            min-width: 18px;
+            text-align: center;
         }
     </style>
 
