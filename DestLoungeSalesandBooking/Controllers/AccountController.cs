@@ -489,7 +489,7 @@ namespace DestLoungeSalesandBooking.Controllers
                 Session["ForgotPasswordEmail"] = email;
                 Session["ForgotPasswordOTPExpiry"] = DateTime.Now.AddMinutes(5);
 
-                SendOtpEmail(user.email, user.firstname, otp);
+                SendOtpEmail(user.email, user.firstname, otp, "reset");
 
                 TempData["SuccessMessage"] = "OTP has been sent to your email.";
                 TempData["ShowOtpStep"] = true;
@@ -564,7 +564,7 @@ namespace DestLoungeSalesandBooking.Controllers
                 Session["SignupADDRESS"] = ADDRESS.Trim();
                 Session["SignupPASSWORD"] = PASSWORD;
 
-                SendOtpEmail(EMAIL.Trim(), FNAME.Trim(), otp);
+                SendOtpEmail(EMAIL.Trim(), FNAME.Trim(), otp, "signup");
 
                 TempData["SignupShowOtpStep"] = true;
                 TempData["SignupEmail"] = EMAIL.Trim();
@@ -793,7 +793,7 @@ namespace DestLoungeSalesandBooking.Controllers
             }
         }
 
-        private void SendOtpEmail(string toEmail, string firstName, string otp)
+        private void SendOtpEmail(string toEmail, string firstName, string otp, string type)
         {
             var smtpHost = ConfigurationManager.AppSettings["SmtpHost"];
             var smtpPort = int.Parse(ConfigurationManager.AppSettings["SmtpPort"]);
@@ -801,8 +801,28 @@ namespace DestLoungeSalesandBooking.Controllers
             var smtpPass = ConfigurationManager.AppSettings["SmtpPass"];
             var fromName = ConfigurationManager.AppSettings["SmtpFromName"];
 
-            var subject = "D'est Lounge Password Reset OTP";
-            var body = $@"Hello {firstName},
+            string subject = "";
+            string body = "";
+
+            if (type == "signup")
+            {
+                subject = "D'est Lounge Signup OTP";
+
+                body = $@"Hello {firstName},
+
+Your OTP for account registration is: {otp}
+
+This OTP is valid for 5 minutes.
+
+If you did not request this, please ignore this email.
+
+- D'est Lounge";
+            }
+            else if (type == "reset")
+            {
+                subject = "D'est Lounge Password Reset OTP";
+
+                body = $@"Hello {firstName},
 
 Your OTP for password reset is: {otp}
 
@@ -811,6 +831,7 @@ This OTP is valid for 5 minutes.
 If you did not request this, please ignore this email.
 
 - D'est Lounge";
+            }
 
             using (var message = new MailMessage())
             {
@@ -826,9 +847,7 @@ If you did not request this, please ignore this email.
                     client.EnableSsl = true;
                     client.Send(message);
                 }
-
             }
-
         }
     }
    

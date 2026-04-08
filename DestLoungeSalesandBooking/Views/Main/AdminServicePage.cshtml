@@ -99,7 +99,7 @@
             </div>
         </div>
 
-        <div class="services-content">
+        <div class="services-content" ng-show="!showServiceTrash">
             <div class="service-card" ng-repeat="service in services | filter:categoryFilter">
                 <div class="admin-controls">
                     <button class="edit-btn" ng-click="editService(service)">
@@ -137,25 +137,31 @@
     </div>
 
     <!-- Deleted Services Panel -->
-    <div ng-repeat="s in deletedServices"
-         style="display:flex; justify-content:space-between; align-items:center;
+    <div ng-show="showServiceTrash">
+        <div ng-repeat="s in deletedServices"
+             style="display:flex; justify-content:space-between; align-items:center;
         padding:0.8rem 1rem; border-bottom:1px solid #e0d5cb;">
-        <div>
-            <strong style="color:#3d2817;">{{s.name}}</strong>
-            <span style="color:#888; margin-left:1rem;">₱{{s.price}}</span>
-            <p style="margin:0.2rem 0 0; font-size:0.85rem; color:#777;">{{s.description}}</p>
-        </div>
-        <div style="display:flex; gap:0.5rem;">
-            <button class="edit-btn"
-                    style="border-radius:6px; width:auto; padding:0.4rem 1rem;"
-                    ng-click="restoreService(s.serviceId)">
-                <i class="fa-solid fa-rotate-left"></i> Restore
-            </button>
-            <button class="delete-btn"
-                    style="border-radius:6px; width:auto; padding:0.4rem 1rem;"
-                    ng-click="permanentDeleteService(s.serviceId)">
-                <i class="fa-solid fa-trash-can"></i> Delete
-            </button>
+
+            <div>
+                <strong style="color:#3d2817;">{{s.name}}</strong>
+                <span style="color:#888; margin-left:1rem;">₱{{s.price}}</span>
+                <p style="margin:0.2rem 0 0; font-size:0.85rem; color:#777;">{{s.description}}</p>
+            </div>
+
+            <div style="display:flex; gap:0.5rem;">
+                <button class="edit-btn"
+                        style="border-radius:6px; width:auto; padding:0.4rem 1rem;"
+                        ng-click="restoreService(s.serviceId)">
+                    <i class="fa-solid fa-rotate-left"></i> Restore
+                </button>
+
+                <button class="delete-btn"
+                        style="border-radius:6px; width:auto; padding:0.4rem 1rem;"
+                        ng-click="permanentDeleteService(s.serviceId)">
+                    <i class="fa-solid fa-trash-can"></i> Delete
+                </button>
+            </div>
+
         </div>
     </div>
 
