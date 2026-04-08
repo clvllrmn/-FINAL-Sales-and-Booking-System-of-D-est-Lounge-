@@ -2621,5 +2621,33 @@ app.directive('compareTo', function () {
         }
     };
    
+    // Carousel state
+    $scope.carouselIndex = { manicure: 0, pedicure: 0 };
+    var VISIBLE = 3; // photos visible at once
 
+    $scope.getPhotosByCategory = function (category) {
+        return ($scope.galleryPhotos || []).filter(function (p) {
+            return p.category === category;
+        });
+    };
+
+    $scope.carouselNext = function (category) {
+        var photos = $scope.getPhotosByCategory(category);
+        var max = Math.max(0, photos.length - VISIBLE);
+        if ($scope.carouselIndex[category] < max) {
+            $scope.carouselIndex[category]++;
+        }
+    };
+
+    $scope.carouselPrev = function (category) {
+        if ($scope.carouselIndex[category] > 0) {
+            $scope.carouselIndex[category]--;
+        }
+    };
+
+    $scope.getCarouselStyle = function (category) {
+        var slideWidth = 100 / VISIBLE;
+        var offset = $scope.carouselIndex[category] * (slideWidth + (1 / VISIBLE * 3));
+        return { transform: 'translateX(-' + offset + '%)' };
+    };
 });

@@ -344,11 +344,26 @@
         padding: 0 16px 10px 16px;
         line-height: 1.5;
         text-align: center;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+        max-height: 4.5rem;
+        overflow-y: auto;
+        overflow-x: hidden;
+        word-break: break-word;
+        scrollbar-width: thin;
+        scrollbar-color: #c9b5a3 transparent;
     }
+
+        .service-description::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .service-description::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .service-description::-webkit-scrollbar-thumb {
+            background-color: #c9b5a3;
+            border-radius: 4px;
+        }
 
     .service-price {
         color: #6b5544;

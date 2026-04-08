@@ -391,9 +391,10 @@
     .services-content {
         flex: 1;
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, minmax(0, 280px));
         gap: 2rem;
         align-content: start;
+        justify-content: start;
     }
 
     /* Service Card */
@@ -433,7 +434,6 @@
         padding: 0.5rem 0 0.25rem 0;
     }
 
-    /* ── Description on Card ── */
     .service-description {
         text-align: center;
         font-size: 0.82rem;
@@ -441,11 +441,26 @@
         font-weight: 400;
         padding: 0 0.5rem 0.5rem 0.5rem;
         line-height: 1.5;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+        max-height: 4.5rem;
+        overflow-y: auto;
+        overflow-x: hidden;
+        word-break: break-word;
+        scrollbar-width: thin;
+        scrollbar-color: #c9b5a3 transparent;
     }
+
+        .service-description::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .service-description::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .service-description::-webkit-scrollbar-thumb {
+            background-color: #c9b5a3;
+            border-radius: 4px;
+        }
 
     .service-price {
         text-align: center;
