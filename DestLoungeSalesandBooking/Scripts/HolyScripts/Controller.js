@@ -8,6 +8,30 @@ app.controller("DestLoungeSalesandBookingController",
         console.log("CONTROLLER REGISTERED");
 
         $scope.test = "Working";
+        $scope.closeLightbox = function () {
+            $scope.lightboxPhoto = null;
+        };
+        $scope.adminInboxCount = 0;
+
+        $scope.loadAdminInboxCount = function () {
+            $http.get('/Booking/GetInboxItems')
+                .then(function (response) {
+                    if (response.data && angular.isArray(response.data)) {
+
+                        // count only pending bookings
+                        $scope.adminInboxCount = response.data.filter(function (item) {
+                            return item.status === "Pending";
+                        }).length;
+
+                    } else {
+                        $scope.adminInboxCount = 0;
+                    }
+                })
+                .catch(function (error) {
+                    console.error("Error loading inbox count:", error);
+                    $scope.adminInboxCount = 0;
+                });
+        };
 
         // ===== INITIALIZE DEFAULT VALUES =====
         $scope.bannerText = {
@@ -49,10 +73,7 @@ app.controller("DestLoungeSalesandBookingController",
             };
         };
 
-        $scope.closeLightbox = function () {
-            $scope.lightboxPhoto = null;
-        };
-
+       
         // ===== REVIEW SETTINGS =====
         $scope.reviewsPage = 1;
         $scope.reviewsPerPage = 6;
@@ -815,6 +836,11 @@ app.controller("DestLoungeSalesandBookingController",
             });
         };
         // ===== AUTO-LOAD on admin service page =====
+
+        if (window.location.pathname.toLowerCase().indexOf('admin') !== -1) {
+            $scope.loadAdminInboxCount();
+        }
+
         if (window.location.pathname.toLowerCase().indexOf('adminservicepage') !== -1) {
             $scope.loadServices();
         }
