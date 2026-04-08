@@ -620,8 +620,9 @@
         z-index: 99999;
         overflow: hidden;
         animation: fadeIn 0.25s ease;
-        max-height: 400px; 
-        overflow-y: auto; 
+        /* ❌ DELETE THESE TWO: */
+        max-height: 400px;
+        overflow-y: auto;
     }
     .notif-items-scroll {
         overflow-y: auto;
@@ -710,4 +711,24 @@
         color: #6b4423;
         font-size: 0.85rem;
     }
+    [ng-show="showNotif"] {
+        max-height: 350px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        position: absolute !important;
+    }
+
+        [ng-show="showNotif"]::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        [ng-show="showNotif"]::-webkit-scrollbar-track {
+            background: #f5ece4;
+            border-radius: 10px;
+        }
+
+        [ng-show="showNotif"]::-webkit-scrollbar-thumb {
+            background: #c4a882;
+            border-radius: 10px;
+        }
 </style>
