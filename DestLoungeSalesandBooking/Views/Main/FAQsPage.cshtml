@@ -32,35 +32,38 @@
                         <i class="fa-regular fa-user"></i> LOGIN
                     </a>
                 }
-                <button type="button"
-                        ng-click="toggleNotif($event)"
-                        style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037; z-index:9999;">
-                    <i class="fa-solid fa-bell"></i>
+                <!-- FIXED: wrapped in ng-controller -->
+                <div ng-controller="DestLoungeSalesandBookingController"
+                     ng-init="loadNotifications()"
+                     style="position:relative; margin-left:15px;">
 
-                    <span ng-if="notifications.length > 0"
-                          style="position:absolute; top:-8px; right:-10px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:11px;">
-                        {{notifications.length}}
-                    </span>
-                </button>
+                    <button type="button"
+                            ng-click="toggleNotif($event)"
+                            style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037; z-index:9999;">
+                        <i class="fa-solid fa-bell"></i>
+                        <span ng-if="notifications.length > 0"
+                              style="position:absolute; top:-8px; right:-10px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:11px;">
+                            {{notifications.length}}
+                        </span>
+                    </button>
 
-                <div ng-show="showNotif"
-                     style="position:absolute; right:0; top:35px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999;">
-                    <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
-                        Notifications
-                    </div>
-
-                    <div ng-if="!notifications.length" style="padding:10px;">
-                        No notifications
-                    </div>
-
-                    <div ng-repeat="n in notifications"
-                         style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
-                         ng-click="goToBooking()">
-                        {{n.Message || n.message}}
+                    <div ng-show="showNotif"
+                         style="position:absolute; right:0; top:35px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999;">
+                        <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
+                            Notifications
+                        </div>
+                        <div ng-if="!notifications.length" style="padding:10px;">
+                            No notifications
+                        </div>
+                        <div ng-repeat="n in notifications"
+                             style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
+                             ng-click="goToBooking()">
+                            {{n.Message || n.message}}
+                        </div>
                     </div>
                 </div>
             </div>
-</nav>
+        </nav>
 
         <div class="header-actions desktop-only">
             @if (isLoggedIn)
@@ -75,41 +78,44 @@
                     <i class="fa-regular fa-user"></i> LOGIN
                 </a>
             }
-            <button type="button"
-                    ng-click="toggleNotif($event)"
-                    style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037; z-index:9999;">
-                <i class="fa-solid fa-bell"></i>
+            <!-- FIXED: wrapped in ng-controller -->
+            <div ng-controller="DestLoungeSalesandBookingController"
+                 ng-init="loadNotifications()"
+                 style="position:relative; margin-left:15px;">
 
-                <span ng-if="notifications.length > 0"
-                      style="position:absolute; top:-8px; right:-10px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:11px;">
-                    {{notifications.length}}
-                </span>
-            </button>
+                <button type="button"
+                        ng-click="toggleNotif($event)"
+                        style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037; z-index:9999;">
+                    <i class="fa-solid fa-bell"></i>
+                    <span ng-if="notifications.length > 0"
+                          style="position:absolute; top:-8px; right:-10px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:11px;">
+                        {{notifications.length}}
+                    </span>
+                </button>
 
-            <div ng-show="showNotif"
-                 style="position:absolute; right:0; top:35px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999;">
-                <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
-                    Notifications
-                </div>
-
-                <div ng-if="!notifications.length" style="padding:10px;">
-                    No notifications
-                </div>
-
-                <div ng-repeat="n in notifications"
-                     style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
-                     ng-click="goToBooking()">
-                    {{n.Message || n.message}}
+                <div ng-show="showNotif"
+                     style="position:absolute; right:0; top:35px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999;">
+                    <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
+                        Notifications
+                    </div>
+                    <div ng-if="!notifications.length" style="padding:10px;">
+                        No notifications
+                    </div>
+                    <div ng-repeat="n in notifications"
+                         style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
+                         ng-click="goToBooking()">
+                        {{n.Message || n.message}}
+                    </div>
                 </div>
             </div>
         </div>
 
-            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-        </div>
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </div>
 
     <div class="nav-overlay" id="navOverlay"></div>
 </header>
@@ -316,10 +322,6 @@
         border-right: none;
         padding: 2.5rem 3rem;
         text-align: center;
-    }
-
-    .footer-container {
-        margin: 0 auto;
     }
 
     .footer-title {
@@ -583,7 +585,7 @@
             .faq-answer p {
                 font-size: 0.92rem;
             }
-        /* Footer */
+
         footer {
             padding: 1.5rem 1rem;
         }

@@ -558,4 +558,137 @@
         .welcome-text i {
             font-size: 1.1rem;
         }
+    /* ── Notification Wrapper ── */
+    .notif-wrapper {
+        position: relative;
+        margin-left: 15px;
+        display: flex;
+        align-items: center;
+    }
+
+    /* ── Bell Button ── */
+    .notif-bell-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 22px;
+        position: relative;
+        color: #5d4037;
+        padding: 6px 8px;
+        border-radius: 10px;
+        transition: background 0.2s ease, color 0.2s ease;
+        display: flex;
+        align-items: center;
+    }
+
+        .notif-bell-btn:hover {
+            background-color: rgba(93, 64, 55, 0.1);
+            color: #6b4423;
+        }
+
+    /* ── Badge ── */
+    .notif-badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        background: #c0392b;
+        color: white;
+        border-radius: 50%;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 4px;
+        font-size: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #e7dfd6;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        line-height: 1;
+    }
+
+    /* ── Dropdown ── */
+    .notif-dropdown {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 12px);
+        width: 290px;
+        background: #fff8f3;
+        border: 1px solid #d4c4b0;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        z-index: 99999;
+        overflow: hidden;
+        animation: fadeIn 0.25s ease;
+    }
+
+    /* ── Dropdown Header ── */
+    .notif-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 18px;
+        font-weight: 700;
+        font-size: 1rem;
+        color: #fff8f3;
+        background-color: #6b4423;
+        letter-spacing: 0.04em;
+    }
+
+    /* ── Empty State ── */
+    .notif-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 28px 16px;
+        color: #9e8c7e;
+        font-size: 0.9rem;
+        font-style: italic;
+    }
+
+        .notif-empty i {
+            font-size: 2rem;
+            color: #c4b09a;
+        }
+
+        .notif-empty p {
+            margin: 0;
+        }
+
+    /* ── Notification Items ── */
+    .notif-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 13px 18px;
+        border-bottom: 1px solid #ede3d9;
+        cursor: pointer;
+        font-size: 0.88rem;
+        color: #4a3728;
+        line-height: 1.5;
+        transition: background 0.15s ease;
+    }
+
+        .notif-item:last-child {
+            border-bottom: none;
+        }
+
+        .notif-item:hover {
+            background-color: #f0e6da;
+        }
+
+    /* ── Item Icon ── */
+    .notif-icon-wrap {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #ede3d9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: #6b4423;
+        font-size: 0.85rem;
+    }
 </style>
