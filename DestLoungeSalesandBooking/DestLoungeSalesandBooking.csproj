@@ -1083,6 +1083,7 @@
     <Content Include="Views\Main\PaymentPage.cshtml" />
     <Content Include="Views\Main\AdminPaymentSetting.cshtml" />
     <Content Include="Views\Shared\View.cshtml" />
+    <Content Include="Views\Main\AdminNailTechPage.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

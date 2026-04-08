@@ -92,6 +92,10 @@ namespace DestLoungeSalesandBooking.Controllers
         {
             return View();
         }
+        public ActionResult AdminNailTechPage()
+        {
+            return View();
+        }
 
         [SessionCheck]
         [NoCache]

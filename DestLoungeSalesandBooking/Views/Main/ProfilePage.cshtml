@@ -32,6 +32,52 @@
                         <i class="fa-regular fa-user"></i> LOGIN
                     </a>
                 }
+                <div ng-controller="DestLoungeSalesandBookingController"
+                     ng-init="loadNotifications()"
+                     style="position:relative; margin-left:15px;">
+
+                    <button type="button"
+                            ng-click="toggleNotif($event)"
+                            style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037; z-index:9999;">
+                        <i class="fa-solid fa-bell"></i>
+
+                        <span ng-if="notifications.length > 0"
+                              style="position:absolute; top:-8px; right:-10px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:11px;">
+                            {{notifications.length}}
+                        </span>
+                    </button>
+
+                    <div ng-show="showNotif"
+                         style="position:absolute; right:0; top:35px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999;">
+                        <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
+                            Notifications
+                        </div>
+                        <div ng-if="!notifications.length" style="padding:10px;">
+                            No notifications
+                        </div>
+                        <div ng-repeat="n in notifications"
+                             style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
+                             ng-click="goToBooking()">
+                            {{n.Message || n.message}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="header-actions desktop-only">
+            @if (isLoggedIn)
+            {
+                <a href="@Url.Action("ProfilePage","Main")" class="welcome-text">
+                    <i class="fa-solid fa-circle-user"></i> Welcome, @userFirstName!
+                </a>
+            }
+            else
+            {
+                <a href="@Url.Action("LoginPage","Main")" class="login-link">
+                    <i class="fa-regular fa-user"></i> LOGIN
+                </a>
+            }
             <div ng-controller="DestLoungeSalesandBookingController"
                  ng-init="loadNotifications()"
                  style="position:relative; margin-left:15px;">
@@ -49,15 +95,12 @@
 
                 <div ng-show="showNotif"
                      style="position:absolute; right:0; top:35px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999;">
-
                     <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
                         Notifications
                     </div>
-
                     <div ng-if="!notifications.length" style="padding:10px;">
                         No notifications
                     </div>
-
                     <div ng-repeat="n in notifications"
                          style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
                          ng-click="goToBooking()">
@@ -65,55 +108,6 @@
                     </div>
                 </div>
             </div>
-            </div>
-        </nav>
-
-        <div class="header-actions desktop-only">
-            @if (isLoggedIn)
-            {
-                <a href="@Url.Action("ProfilePage","Main")" class="welcome-text">
-                    <i class="fa-solid fa-circle-user"></i> Welcome, @userFirstName!
-                </a>
-            }
-            else
-            {
-                <a href="@Url.Action("LoginPage","Main")" class="login-link">
-                    <i class="fa-regular fa-user"></i> LOGIN
-                </a>
-            }
-        <div ng-controller="DestLoungeSalesandBookingController"
-             ng-init="loadNotifications()"
-             style="position:relative; margin-left:15px;">
-
-            <button type="button"
-                    ng-click="toggleNotif($event)"
-                    style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037; z-index:9999;">
-                <i class="fa-solid fa-bell"></i>
-
-                <span ng-if="notifications.length > 0"
-                      style="position:absolute; top:-8px; right:-10px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:11px;">
-                    {{notifications.length}}
-                </span>
-            </button>
-
-            <div ng-show="showNotif"
-                 style="position:absolute; right:0; top:35px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999;">
-
-                <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
-                    Notifications
-                </div>
-
-                <div ng-if="!notifications.length" style="padding:10px;">
-                    No notifications
-                </div>
-
-                <div ng-repeat="n in notifications"
-                     style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
-                     ng-click="goToBooking()">
-                    {{n.Message || n.message}}
-                </div>
-            </div>
-        </div>
         </div>
 
         <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
@@ -133,11 +127,6 @@
                 <a href="@Url.Action("ProfilePage","Main")" class="nav-item active">Profile</a>
                 <a href="@Url.Action("CurrentBookingPage","Main")" class="nav-item">Current booking</a>
                 <a href="@Url.Action("ReviewPage","Main")" class="nav-item">To Review</a>
-            </div>
-            <div class="nav-bottom">
-                <a href="@Url.Action("Logout","Account")" class="nav-item nav-logout">
-                    <i class="fa-solid fa-sign-out-alt"></i> Logout
-                </a>
             </div>
         </nav>
     </aside>
@@ -162,9 +151,12 @@
         <div class="profile-card" id="viewCard">
             <div class="profile-card-header">
                 <h2 class="profile-heading">Profile</h2>
-                <button class="btn-edit" onclick="showEditMode()">
-                    <i class="fa-solid fa-pen"></i> Edit
-                </button>
+                <div class="profile-card-header-actions">
+                    <button class="btn-edit" onclick="showEditMode()">
+                        <i class="fa-solid fa-pen"></i> Edit
+                    </button>
+                    
+                </div>
             </div>
 
             <div class="profile-info">
@@ -179,7 +171,12 @@
                 <p class="profile-label">Address</p>
                 <p class="profile-value">
                     @(string.IsNullOrWhiteSpace(ViewBag.Address as string) ? "Not set" : ViewBag.Address)
-                </p>
+                </p>              
+
+                <!-- ADD logout here -->
+                <a href="@Url.Action("Logout","Account")" class="btn-logout" style="margin-top: 20px; align-self: flex-end;">
+                    <i class="fa-solid fa-sign-out-alt"></i> Logout
+                </a>
             </div>
         </div>
 
@@ -193,7 +190,6 @@
             {
                 @Html.AntiForgeryToken()
 
-                @* Read-only fields — shown for context but not submitted *@
                 <div class="form-group">
                     <label class="form-label">Full Name</label>
                     <input type="text" class="form-input form-input-readonly" value="@ViewBag.UserName" readonly />
@@ -203,7 +199,6 @@
                     <input type="email" class="form-input form-input-readonly" value="@ViewBag.UserEmail" readonly />
                 </div>
 
-                @* Editable fields *@
                 <div class="form-group">
                     <label class="form-label" for="coNum">Contact Number <span class="required">*</span></label>
                     <input type="tel"
@@ -297,6 +292,12 @@
         margin-bottom: 30px;
     }
 
+    .profile-card-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
     .profile-heading {
         color: #6b5544;
         font-size: 32px;
@@ -324,6 +325,27 @@
 
         .btn-edit:hover {
             background-color: #5a4a3a;
+        }
+
+    .btn-logout {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background-color: transparent;
+        color: #a04040;
+        border: 1.5px solid #a04040;
+        padding: 0.5rem 1.2rem;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+
+        .btn-logout:hover {
+            background-color: #a04040;
+            color: white;
         }
 
     .btn-cancel {
@@ -546,10 +568,6 @@
                 background-color: #c9b5a3;
                 border-left-color: #6b5544;
             }
-
-    .nav-logout {
-        color: #a04040;
-    }
 
     .profile-content {
         flex: 1;
@@ -812,12 +830,6 @@
             flex: 1;
         }
 
-        .nav-bottom {
-            display: flex;
-            flex-direction: row;
-            flex-shrink: 0;
-        }
-
         .profile-nav .nav-item {
             white-space: nowrap;
             padding: 16px 22px;
@@ -883,7 +895,7 @@
             font-size: 15px;
         }
 
-        .btn-edit, .btn-cancel {
+        .btn-edit, .btn-logout {
             padding: 0.4rem 0.9rem;
             font-size: 13px;
         }
@@ -936,12 +948,17 @@
             width: 100%;
             justify-content: center;
         }
+
+        .profile-card-header-actions {
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.4rem;
+        }
     }
 </style>
 
 @section scripts {
     <script>
-        // ── Toggle view / edit mode ──
         function showEditMode() {
             document.getElementById('viewCard').style.display = 'none';
             document.getElementById('editCard').style.display = 'block';
@@ -953,7 +970,6 @@
             document.getElementById('viewCard').style.display = 'block';
         }
 
-        // ── Numbers-only enforcement for contact field ──
         document.addEventListener('DOMContentLoaded', function () {
             var coNumInput = document.getElementById('coNum');
             if (coNumInput) {
@@ -963,7 +979,6 @@
             }
         });
 
-        // ── Hamburger menu ──
         (function () {
             var btn = document.getElementById('hamburgerBtn');
             var nav = document.getElementById('mainNav');
