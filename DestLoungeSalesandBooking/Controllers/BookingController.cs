@@ -1155,7 +1155,7 @@ Thank you.";
             }
         }
         [HttpGet]
-        public ActionResult GetPaymentSummary()
+        public ActionResult GetPaymentSummary(int bookingId)
         {
             try
             {
@@ -1170,8 +1170,8 @@ Thank you.";
                 {
                     var booking = (from b in db.tbl_bookings
                                    join s in db.tbl_services on b.ServiceId equals s.service_id
-                                   where b.CustomerId == userId && b.Status == "Pending"
-                                   orderby b.CreatedAt descending
+                                   where b.BookingId == bookingId
+                                      && b.CustomerId == userId
                                    select new
                                    {
                                        b.BookingId,
@@ -1184,7 +1184,7 @@ Thank you.";
 
                     if (booking == null)
                     {
-                        return Json(new { success = false, message = "No pending booking found." }, JsonRequestBehavior.AllowGet);
+                        return Json(new { success = false, message = "Booking not found." }, JsonRequestBehavior.AllowGet);
                     }
 
                     decimal total = booking.Price;
@@ -1192,12 +1192,13 @@ Thank you.";
 
                     return Json(new
                     {
+                        success = true,
                         bookingId = booking.BookingId,
-                        nailTech = booking.NailTech ?? "Not assigned",
                         bookingDate = booking.BookingDate.ToString("MMM dd, yyyy"),
                         startTime = DateTime.Today.Add(booking.StartTime).ToString("hh:mm tt"),
+                        nailTech = booking.NailTech,
                         serviceName = booking.ServiceName,
-                        price = total,
+                        price = booking.Price,
                         total = total,
                         downpayment = downpayment
                     }, JsonRequestBehavior.AllowGet);

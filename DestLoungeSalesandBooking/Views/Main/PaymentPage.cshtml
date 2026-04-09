@@ -151,31 +151,37 @@
      ng-controller="DestLoungeSalesandBookingController"
      ng-init="loadPaymentInfo(); loadPaymentSummary()">
 
-    <div class="service-summary-card" ng-if="bookingSummary">
+    <div class="service-summary-card">
         <h2>Service Summary</h2>
 
         <div class="summary-box">
             <div class="summary-meta">
-               
-                  
 
-                    <div class="summary-item">
-                        <span class="summary-service-name">Service:    {{bookingSummary.serviceName}}</span>
-                        <span class="summary-service-price">₱{{bookingSummary.price | number:2}}</span>
-                    </div>
-
-                    <div class="summary-divider"></div>
-
-                    <div class="summary-total-row">
-                        <span class="summary-total-label">Total:</span>
-                        <span class="summary-total-value">₱{{bookingSummary.total | number:2}}</span>
-                    </div>
-
-                    <div class="summary-downpayment-row">
-                        <span class="summary-dp-label">Downpayment (40%)</span>
-                        <span class="summary-dp-value">₱{{bookingSummary.downpayment | number:2}}</span>
-                    </div>
+                <div class="summary-item">
+                    <span class="summary-service-name">
+                        Service: {{bookingSummary.serviceName || '—'}}
+                    </span>
+                    <span class="summary-service-price">
+                        ₱{{bookingSummary.price ? (bookingSummary.price | number:2) : '0.00'}}
+                    </span>
                 </div>
+
+                <div class="summary-divider"></div>
+
+                <div class="summary-total-row">
+                    <span class="summary-total-label">Total:</span>
+                    <span class="summary-total-value">
+                        ₱{{bookingSummary.total ? (bookingSummary.total | number:2) : '0.00'}}
+                    </span>
+                </div>
+
+                <div class="summary-downpayment-row">
+                    <span class="summary-dp-label">Downpayment (40%)</span>
+                    <span class="summary-dp-value">
+                        ₱{{bookingSummary.downpayment ? (bookingSummary.downpayment | number:2) : '0.00'}}
+                    </span>
+                </div>
+            </div>
             </div>
     </div>
 
@@ -382,6 +388,7 @@
         padding: 10px;
         background: white;
     }
+
     .qr-section label {
         display: block;
         margin-bottom: 10px;
@@ -969,6 +976,9 @@
         }
     }
 </style>
+<script>
+    window.paymentBookingId = '@ViewBag.BookingId';
+</script>
 
 @section scripts {
     <script>
@@ -1002,4 +1012,5 @@
             });
         })();
     </script>
+  
 }

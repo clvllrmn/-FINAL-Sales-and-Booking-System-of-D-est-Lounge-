@@ -81,8 +81,9 @@ namespace DestLoungeSalesandBooking.Controllers
 
         [SessionCheck]
         [NoCache]
-        public ActionResult PaymentPage()
+        public ActionResult PaymentPage(int? bookingId)
         {
+            ViewBag.BookingId = bookingId;
             return View();
         }
 

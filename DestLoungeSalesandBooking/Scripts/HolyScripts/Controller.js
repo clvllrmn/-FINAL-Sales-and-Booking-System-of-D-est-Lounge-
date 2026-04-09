@@ -1194,7 +1194,7 @@ app.controller("DestLoungeSalesandBookingController",
 
                 // proceed to payment page
                 sessionStorage.setItem("pendingBooking", JSON.stringify(payload));
-                window.location.href = "/Main/PaymentPage";
+                window.location.href = "/Main/PaymentPage?bookingId=" + (payload.bookingId || "");
             }).catch(function (error) {
                 console.error("Error checking slot:", error);
                 alert("Unable to check slot availability. Please try again.");
@@ -3078,7 +3078,15 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.bookingSummary = null;
 
         $scope.loadPaymentSummary = function () {
-            $http.get('/Booking/GetPaymentSummary')
+            if (!window.paymentBookingId || window.paymentBookingId === "null" || window.paymentBookingId === "") {
+                console.log("No paymentBookingId found.");
+                $scope.bookingSummary = null;
+                return;
+            }
+
+            $http.get('/Booking/GetPaymentSummary', {
+                params: { bookingId: window.paymentBookingId }
+            })
                 .then(function (response) {
                     console.log("Payment summary response:", response.data);
                     if (response.data && response.data.success !== false) {
@@ -3092,7 +3100,6 @@ app.controller("DestLoungeSalesandBookingController",
                     $scope.bookingSummary = null;
                 });
         };
-
 
        
 
