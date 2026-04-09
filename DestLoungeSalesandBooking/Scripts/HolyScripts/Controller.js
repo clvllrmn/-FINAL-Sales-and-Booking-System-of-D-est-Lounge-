@@ -1,4 +1,5 @@
-﻿var app = angular.module("DestLoungeSalesandBooking");
+﻿// Controller.js
+var app = angular.module("DestLoungeSalesandBooking");
 console.log("CONTROLLER FILE LOADED, app:", app);
 var _currentContentType = null;
 
