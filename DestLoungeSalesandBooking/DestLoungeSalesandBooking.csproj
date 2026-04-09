@@ -1089,7 +1089,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Uploads\" />
+    <Folder Include="Uploads\Reviews\" />
     <Folder Include="Views\GoogleSignInRequest\" />
     <Folder Include="Views\Reminder\" />
     <Folder Include="Views\tbl_admin_notifications\" />

@@ -466,18 +466,41 @@ namespace DestLoungeSalesandBooking.Controllers
             db.tbl_reviews.Add(review);
             db.SaveChanges();
 
-            // Handle image uploads (optional)
+            // Handle image uploads (optional) - MAX 5 PHOTOS
             if (PhotoUpload != null)
             {
+                // Count valid files
+                var validFiles = PhotoUpload.Where(f => f != null && f.ContentLength > 0).ToList();
+
+                // Enforce 5 photo limit on server side
+                if (validFiles.Count > 5)
+                {
+                    // Delete the review we just added
+                    db.tbl_reviews.Remove(review);
+                    db.SaveChanges();
+
+                    TempData["ErrorMessage"] = "Maximum 5 photos allowed per review.";
+                    return RedirectToAction("ReviewPage", "Main", new { bookingId = BookingId });
+                }
+
                 // Create directory if not exists
                 string uploadDir = Server.MapPath("~/Uploads/Reviews");
                 if (!Directory.Exists(uploadDir))
                     Directory.CreateDirectory(uploadDir);
 
-                foreach (var file in PhotoUpload)
+                int uploadedCount = 0;
+                foreach (var file in validFiles)
                 {
+                    if (uploadedCount >= 5) break; // Extra safety
+
                     if (file != null && file.ContentLength > 0)
                     {
+                        // Validate file size (max 5MB)
+                        if (file.ContentLength > 5 * 1024 * 1024)
+                        {
+                            continue; // Skip files over 5MB
+                        }
+
                         // Validate file type
                         string extension = Path.GetExtension(file.FileName).ToLower();
                         if (extension == ".jpg" || extension == ".jpeg" || extension == ".png" || extension == ".gif")
@@ -491,6 +514,8 @@ namespace DestLoungeSalesandBooking.Controllers
                                 ReviewId = review.ReviewId,
                                 ImageUrl = "/Uploads/Reviews/" + fileName
                             });
+
+                            uploadedCount++;
                         }
                     }
                 }

@@ -197,12 +197,13 @@
 
                     <!-- Photo Upload Section - OPTIONAL -->
                     <div class="photo-upload-section">
-                        <label class="review-label">Upload Photos (Optional)</label>
+                        <label class="review-label">Upload Photos (Optional - Max 5 photos)</label>
                         <div class="photo-upload-box" id="photoUploadBox">
                             <div class="upload-placeholder" onclick="document.getElementById('photoInput').click();">
                                 <i class="fa-solid fa-camera camera-icon"></i>
                                 <p class="upload-text">Click to upload photos</p>
-                                <small style="color: #8b7b6b;">Max 5MB per image (JPG, PNG, GIF)</small>
+                                <small style="color: #8b7b6b;">Max 5 images | 5MB per image (JPG, PNG, GIF)</small>
+                                <small style="color: #8b7b6b; display: block;">Current: <span id="photoCount">0</span>/5 photos</small>
                             </div>
                             <input type="file" name="PhotoUpload" id="photoInput" multiple accept="image/jpeg,image/png,image/gif" style="display: none;" onchange="previewImages(this)" />
                             <div id="imagePreviewContainer" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;"></div>
@@ -999,27 +1000,163 @@
             });
         })();
 
-        // Image preview function
+        // Image preview function with 5 photo limit
+        let currentFiles = [];
+
         function previewImages(input) {
+            var container = document.getElementById('imagePreviewContainer');
+            var photoCountSpan = document.getElementById('photoCount');
+
+            // Check if adding new files would exceed limit
+            var totalFiles = currentFiles.length + input.files.length;
+
+            if (totalFiles > 5) {
+                alert('You can only upload a maximum of 5 photos. You currently have ' + currentFiles.length + ' photo(s) and trying to add ' + input.files.length + ' more.');
+                input.value = ''; // Clear the input
+                return;
+            }
+
+            // Add new files to currentFiles array
+            for (var i = 0; i < input.files.length; i++) {
+                var file = input.files[i];
+
+                // Validate file size (max 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File "' + file.name + '" exceeds 5MB limit. Please choose a smaller file.');
+                    input.value = '';
+                    return;
+                }
+
+                // Validate file type
+                if (!file.type.match(/image\/(jpeg|png|gif)/)) {
+                    alert('File "' + file.name + '" is not a valid image type. Please upload JPG, PNG, or GIF files only.');
+                    input.value = '';
+                    return;
+                }
+
+                currentFiles.push(file);
+            }
+
+            // Update the file input with all files
+            updateFileInput();
+
+            // Update photo count display
+            photoCountSpan.textContent = currentFiles.length;
+
+            // Clear and rebuild preview container
+            container.innerHTML = '';
+
+            // Display all images with remove buttons
+            currentFiles.forEach(function (file, index) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var wrapper = document.createElement('div');
+                    wrapper.style.position = 'relative';
+                    wrapper.style.display = 'inline-block';
+                    wrapper.style.margin = '5px';
+
+                    var img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.width = '100px';
+                    img.style.height = '100px';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '8px';
+                    img.style.border = '2px solid #c9b5a3';
+
+                    var removeBtn = document.createElement('button');
+                    removeBtn.innerHTML = '×';
+                    removeBtn.style.position = 'absolute';
+                    removeBtn.style.top = '-8px';
+                    removeBtn.style.right = '-8px';
+                    removeBtn.style.width = '24px';
+                    removeBtn.style.height = '24px';
+                    removeBtn.style.borderRadius = '50%';
+                    removeBtn.style.backgroundColor = '#e74c3c';
+                    removeBtn.style.color = 'white';
+                    removeBtn.style.border = 'none';
+                    removeBtn.style.cursor = 'pointer';
+                    removeBtn.style.fontSize = '16px';
+                    removeBtn.style.fontWeight = 'bold';
+                    removeBtn.style.display = 'flex';
+                    removeBtn.style.alignItems = 'center';
+                    removeBtn.style.justifyContent = 'center';
+                    removeBtn.onclick = (function (idx) {
+                        return function () { removeImage(idx); };
+                    })(index);
+
+                    wrapper.appendChild(img);
+                    wrapper.appendChild(removeBtn);
+                    container.appendChild(wrapper);
+                }
+                reader.readAsDataURL(file);
+            });
+
+            // Clear the input value so we can add more files later
+            input.value = '';
+        }
+
+        function removeImage(index) {
+            currentFiles.splice(index, 1);
+            updateFileInput();
+            var photoCountSpan = document.getElementById('photoCount');
+            photoCountSpan.textContent = currentFiles.length;
+
+            // Rebuild preview
             var container = document.getElementById('imagePreviewContainer');
             container.innerHTML = '';
 
-            if (input.files) {
-                Array.from(input.files).forEach(function (file) {
-                    var reader = new FileReader();
-                    reader.onload = function (e) {
-                        var img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.style.width = '100px';
-                        img.style.height = '100px';
-                        img.style.objectFit = 'cover';
-                        img.style.borderRadius = '8px';
-                        img.style.margin = '5px';
-                        container.appendChild(img);
-                    }
-                    reader.readAsDataURL(file);
-                });
-            }
+            currentFiles.forEach(function (file, idx) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var wrapper = document.createElement('div');
+                    wrapper.style.position = 'relative';
+                    wrapper.style.display = 'inline-block';
+                    wrapper.style.margin = '5px';
+
+                    var img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.width = '100px';
+                    img.style.height = '100px';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '8px';
+                    img.style.border = '2px solid #c9b5a3';
+
+                    var removeBtn = document.createElement('button');
+                    removeBtn.innerHTML = '×';
+                    removeBtn.style.position = 'absolute';
+                    removeBtn.style.top = '-8px';
+                    removeBtn.style.right = '-8px';
+                    removeBtn.style.width = '24px';
+                    removeBtn.style.height = '24px';
+                    removeBtn.style.borderRadius = '50%';
+                    removeBtn.style.backgroundColor = '#e74c3c';
+                    removeBtn.style.color = 'white';
+                    removeBtn.style.border = 'none';
+                    removeBtn.style.cursor = 'pointer';
+                    removeBtn.style.fontSize = '16px';
+                    removeBtn.style.fontWeight = 'bold';
+                    removeBtn.style.display = 'flex';
+                    removeBtn.style.alignItems = 'center';
+                    removeBtn.style.justifyContent = 'center';
+                    removeBtn.onclick = (function (i) {
+                        return function () { removeImage(i); };
+                    })(idx);
+
+                    wrapper.appendChild(img);
+                    wrapper.appendChild(removeBtn);
+                    container.appendChild(wrapper);
+                }
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function updateFileInput() {
+            // Create a new FileList-like structure
+            var dataTransfer = new DataTransfer();
+            currentFiles.forEach(function (file) {
+                dataTransfer.items.add(file);
+            });
+            document.getElementById('photoInput').files = dataTransfer.files;
         }
 
         // Form validation
@@ -1041,7 +1178,13 @@
                 return false;
             }
 
+            // Optional: Show summary before submit
+            if (currentFiles.length > 0) {
+                console.log('Submitting with ' + currentFiles.length + ' photo(s)');
+            }
+
             return true;
         });
     </script>
+}
 }
