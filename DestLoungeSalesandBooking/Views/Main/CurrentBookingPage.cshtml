@@ -238,7 +238,7 @@
                 <div class="booking-grid" ng-if="bookingHistory.length > 0">
                     <div class="booking-item" ng-repeat="b in bookingHistory" id="booking-{{b.bookingId}}">
 
-                        <!-- ✅ REFERENCE NUMBER - TOP OF CARD -->
+                        <!-- REFERENCE NUMBER - TOP OF CARD -->
                         <div class="booking-ref-header">
                             <i class="fa-solid fa-ticket"></i>
                             <strong>Ref No:</strong> {{b.referenceNo || 'REF-' + b.bookingId}}
@@ -255,14 +255,10 @@
                             <p><strong>Time:</strong> {{formatTime(b.startTime)}} - {{formatTime(b.endTime)}}</p>
                             <p><strong>Service:</strong> {{extractServices(b.notes)}}</p>
                             <p><strong>Nail Tech:</strong> {{b.nailTech || 'Not assigned'}}</p>
-
-                            <!-- ✅ TOTAL BILL WITH 2 DECIMAL PLACES -->
                             <p><strong>Total Bill:</strong> ₱{{(b.totalBill || 0) | number:2}}</p>
-
-                            <!-- ✅ DOWNPAYMENT WITH 2 DECIMAL PLACES -->
                             <p><strong>Downpayment Paid:</strong> ₱{{((b.totalBill || 0) * 0.4) | number:2}}</p>
 
-                            <!-- ✅ PROOF OF PAYMENT / RECEIPT -->
+                            <!-- PROOF OF PAYMENT / RECEIPT -->
                             <div ng-if="b.receiptUrl" class="receipt-section">
                                 <strong>Proof of Payment:</strong><br>
                                 <img ng-src="{{b.receiptUrl}}" class="receipt-thumb"
@@ -276,6 +272,18 @@
                                 <img ng-src="{{extractReceiptUrl(b.notes)}}" class="receipt-thumb"
                                      alt="Payment Receipt"
                                      ng-click="openReceiptModal(extractReceiptUrl(b.notes))" />
+                            </div>
+                        </div>
+
+                        <!-- ✅ REVIEW BUTTON SECTION - ADD THIS -->
+                        <div class="booking-actions" ng-if="b.status === 'Completed'">
+                            <button class="btn-review"
+                                    ng-if="!b.hasReview"
+                                    ng-click="goToReview(b.bookingId)">
+                                <i class="fa-solid fa-star"></i> Leave a Review
+                            </button>
+                            <div ng-if="b.hasReview" class="already-reviewed">
+                                <i class="fa-solid fa-check-circle"></i> You've reviewed this booking
                             </div>
                         </div>
 
@@ -439,6 +447,9 @@
             opacity: 0;
             width: 0;
         }
+
+
+
 
         .hamburger-btn.open span:nth-child(3) {
             transform: translateY(-8px) rotate(-45deg);
@@ -686,6 +697,7 @@
         border: 1px dashed #c9b5a3;
     }
 
+    /* Review Button Styles */
     .btn-review {
         display: inline-flex;
         align-items: center;
@@ -704,6 +716,22 @@
         .btn-review:hover {
             background: #5a4635;
             transform: translateY(-2px);
+        }
+
+    .already-reviewed {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 10px 16px;
+        background: #ece4db;
+        color: #4a7c59;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+        .already-reviewed i {
+            font-size: 16px;
         }
 
         .btn-review:disabled {

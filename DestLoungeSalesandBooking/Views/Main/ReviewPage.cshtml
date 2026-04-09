@@ -2,6 +2,7 @@
     Layout = "~/Views/Shared/_MainLayout.cshtml";
     var userFirstName = Session["UserFirstName"] as string;
     var isLoggedIn = Session["UserID"] != null;
+    int? bookingId = ViewBag.BookingId as int?;
 }
 
 <header>
@@ -32,6 +33,66 @@
                         <i class="fa-regular fa-user"></i> LOGIN
                     </a>
                 }
+                <div ng-controller="DestLoungeSalesandBookingController"
+                     ng-init="loadNotifications()"
+                     style="position:relative; margin-left:15px;">
+
+                    <button type="button"
+                            ng-click="toggleNotif($event)"
+                            style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037; z-index:9999;">
+                        <i class="fa-solid fa-bell"></i>
+
+                        <span ng-if="getUnreadCount() > 0"
+                              class="notif-badge">!</span>
+                    </button>
+
+                    <div ng-show="showNotif"
+                         ng-click="$event.stopPropagation()"
+                         style="position:absolute; right:0; top:35px; width:280px; max-height:350px; overflow-y:auto; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999; box-shadow:0 4px 10px rgba(0,0,0,0.2);">
+                        <div style="padding:10px 12px; font-weight:bold; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                            <span style="color:#333;">Notifications</span>
+                            <button ng-if="notifications.length > 0"
+                                    ng-click="clearAllNotifications($event)"
+                                    style="font-size:11px; color:#e74c3c; background:none; border:none; cursor:pointer; padding:0;">
+                                Clear all
+                            </button>
+                        </div>
+                        <div ng-if="!notifications.length" style="padding:12px; color:gray; font-size:13px; text-align:center;">
+                            No notifications yet.
+                        </div>
+                        <div ng-repeat="n in notifications"
+                             class="notif-item"
+                             ng-class="(n.IsRead || n.isRead) ? 'read' : 'unread'"
+                             style="padding:10px 12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                            <span ng-click="markAsReadAndGo(n, $event)"
+                                  style="cursor:pointer; flex:1; line-height:1.4;"
+                                  ng-style="(n.IsRead || n.isRead) ? {'font-size':'13px','color':'#999','font-weight':'normal'} : {'font-size':'13px','color':'#333','font-weight':'600'}">
+                                <span ng-if="!(n.IsRead || n.isRead)" class="notif-unread-dot"></span>
+                                {{n.Message || n.message}}
+                            </span>
+                            <button ng-click="deleteNotification(n.NotificationId || n.notificationId, $event)"
+                                    style="background:none; border:none; cursor:pointer; color:#aaa; font-size:16px; padding:0 0 0 6px; flex-shrink:0; line-height:1;">
+                                &times;
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="header-actions desktop-only">
+            @if (isLoggedIn)
+            {
+                <a href="@Url.Action("ProfilePage","Main")" class="welcome-text">
+                    <i class="fa-solid fa-circle-user"></i> Welcome, @userFirstName!
+                </a>
+            }
+            else
+            {
+                <a href="@Url.Action("LoginPage","Main")" class="login-link">
+                    <i class="fa-regular fa-user"></i> LOGIN
+                </a>
+            }
             <div ng-controller="DestLoungeSalesandBookingController"
                  ng-init="loadNotifications()"
                  style="position:relative; margin-left:15px;">
@@ -76,66 +137,6 @@
                     </div>
                 </div>
             </div>
-            </div>
-        </nav>
-
-        <div class="header-actions desktop-only">
-            @if (isLoggedIn)
-            {
-                <a href="@Url.Action("ProfilePage","Main")" class="welcome-text">
-                    <i class="fa-solid fa-circle-user"></i> Welcome, @userFirstName!
-                </a>
-            }
-            else
-            {
-                <a href="@Url.Action("LoginPage","Main")" class="login-link">
-                    <i class="fa-regular fa-user"></i> LOGIN
-                </a>
-            }
-        <div ng-controller="DestLoungeSalesandBookingController"
-             ng-init="loadNotifications()"
-             style="position:relative; margin-left:15px;">
-
-            <button type="button"
-                    ng-click="toggleNotif($event)"
-                    style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037; z-index:9999;">
-                <i class="fa-solid fa-bell"></i>
-
-                <span ng-if="getUnreadCount() > 0"
-                      class="notif-badge">!</span>
-            </button>
-
-            <div ng-show="showNotif"
-                 ng-click="$event.stopPropagation()"
-                 style="position:absolute; right:0; top:35px; width:280px; max-height:350px; overflow-y:auto; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999; box-shadow:0 4px 10px rgba(0,0,0,0.2);">
-                <div style="padding:10px 12px; font-weight:bold; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
-                    <span style="color:#333;">Notifications</span>
-                    <button ng-if="notifications.length > 0"
-                            ng-click="clearAllNotifications($event)"
-                            style="font-size:11px; color:#e74c3c; background:none; border:none; cursor:pointer; padding:0;">
-                        Clear all
-                    </button>
-                </div>
-                <div ng-if="!notifications.length" style="padding:12px; color:gray; font-size:13px; text-align:center;">
-                    No notifications yet.
-                </div>
-                <div ng-repeat="n in notifications"
-                     class="notif-item"
-                     ng-class="(n.IsRead || n.isRead) ? 'read' : 'unread'"
-                     style="padding:10px 12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
-                    <span ng-click="markAsReadAndGo(n, $event)"
-                          style="cursor:pointer; flex:1; line-height:1.4;"
-                          ng-style="(n.IsRead || n.isRead) ? {'font-size':'13px','color':'#999','font-weight':'normal'} : {'font-size':'13px','color':'#333','font-weight':'600'}">
-                        <span ng-if="!(n.IsRead || n.isRead)" class="notif-unread-dot"></span>
-                        {{n.Message || n.message}}
-                    </span>
-                    <button ng-click="deleteNotification(n.NotificationId || n.notificationId, $event)"
-                            style="background:none; border:none; cursor:pointer; color:#aaa; font-size:16px; padding:0 0 0 6px; flex-shrink:0; line-height:1;">
-                        &times;
-                    </button>
-                </div>
-            </div>
-        </div>
         </div>
 
         <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
@@ -153,42 +154,113 @@
             <div class="nav-top">
                 <a href="@Url.Action("ProfilePage","Main")" class="nav-item">Profile</a>
                 <a href="@Url.Action("CurrentBookingPage","Main")" class="nav-item">Current booking</a>
-                <a href="@Url.Action("ReviewPage", "Main")" class="nav-item active">To Review</a>
+                <a href="@Url.Action("ReviewPage","Main")" class="nav-item active">To Review</a>
             </div>
-
         </nav>
     </aside>
 
-    <!-- My Reviews List (shown when no BookingId) -->
-    <div class="review-list-wrapper"
-         ng-controller="DestLoungeSalesandBookingController"
-         ng-init="loadMyReviews()">
+    <!-- Review Form (shown when bookingId is provided) -->
+    @if (bookingId.HasValue && bookingId.Value > 0)
+    {
+        using (Html.BeginForm("SubmitReview", "Main", FormMethod.Post, new { enctype = "multipart/form-data", id = "reviewForm" }))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="BookingId" value="@bookingId.Value" />
 
-        <h2 class="review-service-name">My Reviews</h2>
+            <div class="profile-content">
+                <div class="review-card">
+                    <h2 class="review-service-name">Write a Review</h2>
 
-        <div ng-if="myReviews.length === 0" class="empty-state">
-            <h3>No reviews yet</h3>
-            <p>Your submitted reviews will appear here.</p>
-        </div>
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-error">@TempData["ErrorMessage"]</div>
+                    }
 
-        <div class="booking-item" ng-repeat="r in myReviews">
-            <div class="booking-top">
-                <span><strong>Ref No:</strong> {{r.booking.ReferenceNo || ('REF-' + r.bookingId)}}</span>
-            </div>
-            <div class="booking-body">
-                <p><strong>Rating:</strong> {{r.rating}} / 5</p>
-                <p><strong>Review:</strong> {{r.reviewText}}</p>
-                <p><strong>Date:</strong> {{r.createdAt | date:'MMMM d, yyyy'}}</p>
-                <p><strong>Service:</strong> {{extractServices(r.booking.Notes)}}</p>
-                <p><strong>Nail Tech:</strong> {{r.booking.NailTech}}</p>
-                <div ng-if="r.flagged" style="color:#a04040;">
-                    ⚠ Flagged: {{r.flagReason}}
+                    <!-- Rating Section - REQUIRED -->
+                    <div class="rating-section">
+                        <div class="rating-label">Your Rating <span style="color: red;">*</span></div>
+                        <div class="star-rating">
+                            <input type="radio" name="Rating" value="5" id="star5" /><label for="star5" title="5 stars">★</label>
+                            <input type="radio" name="Rating" value="4" id="star4" /><label for="star4" title="4 stars">★</label>
+                            <input type="radio" name="Rating" value="3" id="star3" /><label for="star3" title="3 stars">★</label>
+                            <input type="radio" name="Rating" value="2" id="star2" /><label for="star2" title="2 stars">★</label>
+                            <input type="radio" name="Rating" value="1" id="star1" /><label for="star1" title="1 star">★</label>
+                        </div>
+                        <div id="ratingError" style="color: red; font-size: 12px; text-align: center; display: none;">Please select a rating</div>
+                    </div>
+
+                    <!-- Review Text Section - OPTIONAL -->
+                    <div class="review-text-section">
+                        <label for="ReviewText" class="review-label">Your Review (Optional)</label>
+                        <textarea name="ReviewText" id="ReviewText" class="review-textarea" placeholder="Share your experience with us... (optional)"></textarea>
+                    </div>
+
+                    <!-- Photo Upload Section - OPTIONAL -->
+                    <div class="photo-upload-section">
+                        <label class="review-label">Upload Photos (Optional)</label>
+                        <div class="photo-upload-box" id="photoUploadBox">
+                            <div class="upload-placeholder" onclick="document.getElementById('photoInput').click();">
+                                <i class="fa-solid fa-camera camera-icon"></i>
+                                <p class="upload-text">Click to upload photos</p>
+                                <small style="color: #8b7b6b;">Max 5MB per image (JPG, PNG, GIF)</small>
+                            </div>
+                            <input type="file" name="PhotoUpload" id="photoInput" multiple accept="image/jpeg,image/png,image/gif" style="display: none;" onchange="previewImages(this)" />
+                            <div id="imagePreviewContainer" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;"></div>
+                        </div>
+                    </div>
+
+                    <div class="review-actions">
+                        <button type="button" class="btn-cancel" onclick="window.location.href='/Main/CurrentBookingPage'">Cancel</button>
+                        <button type="submit" class="btn-upload">Submit Review</button>
+                    </div>
                 </div>
             </div>
+        }
+    }
+    else
+    {
+        <!-- My Reviews List (shown when no BookingId) -->
+        <div class="review-list-wrapper"
+             ng-controller="DestLoungeSalesandBookingController"
+             ng-init="loadMyReviews()">
 
+            <h2 class="review-service-name">My Reviews</h2>
+
+            <div ng-if="myReviews.length === 0" class="empty-state">
+                <h3>No reviews yet</h3>
+                <p>Your submitted reviews will appear here.</p>
+            </div>
+
+            <div class="booking-item" ng-repeat="r in myReviews">
+                <div class="booking-top">
+                    <span><strong>Ref No:</strong> {{r.booking.ReferenceNo || ('REF-' + r.bookingId)}}</span>
+                </div>
+                <div class="booking-body">
+                    <div class="review-stars-display">
+                        <i ng-repeat="s in [1,2,3,4,5]" class="fa-star" ng-class="s <= r.rating ? 'fa-solid' : 'fa-regular'" style="color: #f5a623;"></i>
+                    </div>
+                    <p><strong>Review:</strong> {{r.reviewText || 'No comment provided.'}}</p>
+                    <p><strong>Date:</strong> {{r.createdAt | date:'MMMM d, yyyy'}}</p>
+                    <p><strong>Service:</strong> {{extractServices(r.booking.Notes)}}</p>
+                    <p><strong>Nail Tech:</strong> {{r.booking.NailTech}}</p>
+
+                    <!-- Display uploaded images -->
+                    <div ng-if="r.images && r.images.length > 0" class="review-images-wrap">
+                        <strong>Attached Photos:</strong><br />
+                        <img ng-repeat="img in r.images"
+                             ng-src="{{img}}"
+                             alt="Review Image"
+                             class="review-image clickable-review-image"
+                             ng-click="openReviewLightbox(img); $event.stopPropagation();" />
+                    </div>
+
+                    <div ng-if="r.flagged" style="color:#a04040; margin-top: 10px;">
+                        ⚠ Flagged: {{r.flagReason}}
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-
+    }
 </div>
 
 <footer>
@@ -209,6 +281,55 @@
 </footer>
 
 <style>
+    .alert {
+        padding: 12px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .review-stars-display {
+        margin-bottom: 10px;
+    }
+
+        .review-stars-display i {
+            font-size: 18px;
+            margin-right: 2px;
+        }
+
+    .review-images-wrap {
+        margin-top: 15px;
+        padding-top: 10px;
+        border-top: 1px solid #c9b5a3;
+    }
+
+    .review-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: transform 0.2s;
+        margin-right: 8px;
+        margin-top: 5px;
+    }
+
+        .review-image:hover {
+            transform: scale(1.05);
+        }
+
     .hamburger-btn {
         display: none;
         flex-direction: column;
@@ -292,17 +413,6 @@
         gap: 1.2rem;
     }
 
-    .bell-icon {
-        color: #5d4037;
-        font-size: 1.2rem;
-        text-decoration: none;
-        transition: color 0.3s ease;
-    }
-
-        .bell-icon:hover {
-            color: #6b4423;
-        }
-
     .profile-container {
         display: flex;
         min-height: 100vh;
@@ -344,10 +454,6 @@
                 background-color: #c9b5a3;
                 border-left-color: #6b5544;
             }
-
-    .nav-logout {
-        color: #a04040;
-    }
 
     .profile-content {
         flex: 1;
@@ -444,6 +550,74 @@
             color: #a89585;
         }
 
+    .photo-upload-section {
+        margin-bottom: 35px;
+    }
+
+    .photo-upload-box {
+        background-color: #f8f4ef;
+        border-radius: 15px;
+        padding: 20px;
+        min-height: 150px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        position: relative;
+        transition: background-color 0.3s ease;
+        cursor: pointer;
+    }
+
+        .photo-upload-box:hover {
+            background-color: #f0e8dd;
+        }
+
+    .upload-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .camera-icon {
+        font-size: 60px;
+        color: #6b5544;
+        margin-bottom: 10px;
+    }
+
+    .upload-text {
+        color: #6b5544;
+        font-size: 16px;
+        margin: 0;
+    }
+
+    .review-actions {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        margin-top: 40px;
+    }
+
+    .btn-cancel, .btn-upload {
+        padding: 15px 45px;
+        border: none;
+        border-radius: 25px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background-color: #6b5544;
+        color: white;
+    }
+
+        .btn-cancel:hover, .btn-upload:hover {
+            background-color: #5a4635;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
     .review-list-wrapper {
         flex: 1;
         padding: 80px 40px;
@@ -503,77 +677,6 @@
         .empty-state p {
             color: #8b7b6b;
             font-size: 16px;
-        }
-
-    /* ── Photo Upload ── */
-    .photo-upload-section {
-        margin-bottom: 35px;
-    }
-
-    .photo-upload-box {
-        background-color: #f8f4ef;
-        border-radius: 15px;
-        padding: 20px;
-        min-height: 150px;
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 8px;
-        position: relative;
-        transition: background-color 0.3s ease;
-    }
-
-        .photo-upload-box:hover {
-            background-color: #f0e8dd;
-        }
-
-    .upload-placeholder {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        position: absolute;
-        inset: 0;
-        border-radius: 15px;
-    }
-
-    .camera-icon {
-        font-size: 60px;
-        color: #6b5544;
-        margin-bottom: 10px;
-    }
-
-    .upload-text {
-        color: #6b5544;
-        font-size: 16px;
-        margin: 0;
-    }
-
-    .review-actions {
-        display: flex;
-        gap: 20px;
-        justify-content: center;
-        margin-top: 40px;
-    }
-
-    .btn-cancel, .btn-upload {
-        padding: 15px 45px;
-        border: none;
-        border-radius: 25px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        background-color: #6b5544;
-        color: white;
-    }
-
-        .btn-cancel:hover, .btn-upload:hover {
-            background-color: #5a4635;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
     footer {
@@ -780,12 +883,6 @@
             flex: 1;
         }
 
-        .nav-bottom {
-            display: flex;
-            flex-direction: row;
-            flex-shrink: 0;
-        }
-
         .profile-nav .nav-item {
             white-space: nowrap;
             padding: 16px 22px;
@@ -867,41 +964,12 @@
             gap: 1.5rem;
         }
     }
-
-    @@media (max-width: 400px) {
-        .profile-nav .nav-item {
-            padding: 12px 13px;
-            font-size: 13px;
-        }
-
-        .profile-content {
-            padding: 1rem 0.75rem;
-        }
-
-        .review-card {
-            padding: 1.2rem 1rem;
-            border-radius: 14px;
-        }
-
-        .review-service-name {
-            font-size: 20px;
-        }
-
-        .star-rating label {
-            font-size: 32px;
-        }
-
-        .btn-cancel, .btn-upload {
-            padding: 12px 25px;
-            font-size: 15px;
-        }
-    }
 </style>
 
 @section scripts {
     <script>
+        // Hamburger menu
         (function () {
-            // ── Hamburger ──
             var btn = document.getElementById('hamburgerBtn');
             var nav = document.getElementById('mainNav');
             var overlay = document.getElementById('navOverlay');
@@ -930,6 +998,50 @@
                 link.addEventListener('click', closeMenu);
             });
         })();
-    </script>
 
+        // Image preview function
+        function previewImages(input) {
+            var container = document.getElementById('imagePreviewContainer');
+            container.innerHTML = '';
+
+            if (input.files) {
+                Array.from(input.files).forEach(function (file) {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        var img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.width = '100px';
+                        img.style.height = '100px';
+                        img.style.objectFit = 'cover';
+                        img.style.borderRadius = '8px';
+                        img.style.margin = '5px';
+                        container.appendChild(img);
+                    }
+                    reader.readAsDataURL(file);
+                });
+            }
+        }
+
+        // Form validation
+        document.getElementById('reviewForm')?.addEventListener('submit', function (e) {
+            var ratingSelected = false;
+            var stars = document.querySelectorAll('input[name="Rating"]');
+
+            for (var i = 0; i < stars.length; i++) {
+                if (stars[i].checked) {
+                    ratingSelected = true;
+                    break;
+                }
+            }
+
+            if (!ratingSelected) {
+                e.preventDefault();
+                document.getElementById('ratingError').style.display = 'block';
+                alert('Please select a star rating (1-5 stars) before submitting.');
+                return false;
+            }
+
+            return true;
+        });
+    </script>
 }

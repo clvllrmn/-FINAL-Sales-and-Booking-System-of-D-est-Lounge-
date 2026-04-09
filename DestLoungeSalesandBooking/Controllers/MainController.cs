@@ -413,15 +413,23 @@ namespace DestLoungeSalesandBooking.Controllers
 
         // ── POST: SubmitReview ──
 
+        // Replace SubmitReview action 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [SessionCheck]
-        public ActionResult SubmitReview(int BookingId, int Rating, string ReviewText, IEnumerable<HttpPostedFileBase> PhotoUpload)
+        public ActionResult SubmitReview(int BookingId, int? Rating, string ReviewText, IEnumerable<HttpPostedFileBase> PhotoUpload)
         {
             if (Session["UserID"] == null)
                 return RedirectToAction("LoginPage", "Main");
 
             int userId = (int)Session["UserID"];
+
+            // VALIDATION: Rating is REQUIRED
+            if (!Rating.HasValue || Rating.Value < 1 || Rating.Value > 5)
+            {
+                TempData["ErrorMessage"] = "Please select a star rating (1-5 stars).";
+                return RedirectToAction("ReviewPage", "Main", new { bookingId = BookingId });
+            }
 
             var booking = db.tbl_bookings.FirstOrDefault(b =>
                 b.BookingId == BookingId &&
@@ -450,30 +458,40 @@ namespace DestLoungeSalesandBooking.Controllers
             {
                 BookingId = BookingId,
                 CustomerId = userId,
-                Rating = Rating,
-                ReviewText = ReviewText,
+                Rating = Rating.Value,
+                ReviewText = ReviewText ?? "", // Optional - can be empty
                 CreatedAt = DateTime.Now
             };
 
             db.tbl_reviews.Add(review);
             db.SaveChanges();
 
+            // Handle image uploads (optional)
             if (PhotoUpload != null)
             {
+                // Create directory if not exists
+                string uploadDir = Server.MapPath("~/Uploads/Reviews");
+                if (!Directory.Exists(uploadDir))
+                    Directory.CreateDirectory(uploadDir);
+
                 foreach (var file in PhotoUpload)
                 {
                     if (file != null && file.ContentLength > 0)
                     {
-                        string fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
-                        string path = Path.Combine(Server.MapPath("~/Uploads"), fileName);
-
-                        file.SaveAs(path);
-
-                        db.tbl_review_images.Add(new tbl_review_images
+                        // Validate file type
+                        string extension = Path.GetExtension(file.FileName).ToLower();
+                        if (extension == ".jpg" || extension == ".jpeg" || extension == ".png" || extension == ".gif")
                         {
-                            ReviewId = review.ReviewId,
-                            ImageUrl = "/Uploads/" + fileName
-                        });
+                            string fileName = Guid.NewGuid().ToString() + extension;
+                            string path = Path.Combine(uploadDir, fileName);
+                            file.SaveAs(path);
+
+                            db.tbl_review_images.Add(new tbl_review_images
+                            {
+                                ReviewId = review.ReviewId,
+                                ImageUrl = "/Uploads/Reviews/" + fileName
+                            });
+                        }
                     }
                 }
 
@@ -487,7 +505,7 @@ namespace DestLoungeSalesandBooking.Controllers
                 db.SaveChanges();
             }
 
-            TempData["SuccessMessage"] = "Review submitted successfully.";
+            TempData["SuccessMessage"] = "Thank you for your review!";
             return RedirectToAction("GalleryPage");
         }
 
