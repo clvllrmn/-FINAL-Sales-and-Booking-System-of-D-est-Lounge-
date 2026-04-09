@@ -1763,7 +1763,9 @@
     }
 
     function angularFileChange(input) {
-        var scope = angular.element(document.querySelector('[ng-controller]')).scope();
+        var scope = angular.element(
+            document.querySelector('.main-content[ng-controller]')
+        ).scope();
         if (!scope) return;
         var fn = input.id === 'editImageInput' ? 'onEditImageSelected' : 'onFileSelected';
         if (scope[fn]) scope.$apply(function () { scope[fn](input); });

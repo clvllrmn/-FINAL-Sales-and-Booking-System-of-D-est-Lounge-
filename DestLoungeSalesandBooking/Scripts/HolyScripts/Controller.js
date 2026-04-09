@@ -2523,7 +2523,7 @@ app.controller("DestLoungeSalesandBookingController",
                         return p.galleryId !== photo.galleryId;
                     });
                     $scope.deleteModal.show = false;
-                    $scope.showToast('Photo deleted.', 'toast-success');
+                    $scope.showToast('Photo archived successfully', 'toast-success');
                 } else {
                     $scope.showToast(res.data.message, 'toast-error');
                 }
