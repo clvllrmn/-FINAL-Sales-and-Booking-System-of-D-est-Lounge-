@@ -358,21 +358,10 @@ namespace DestLoungeSalesandBooking.Controllers
         }
         //Google Sign In
         [HttpPost]
-        public async Task<ActionResult> GoogleSignIn()
+        public async Task<ActionResult> GoogleSignIn(GoogleSignInRequest request)
         {
             try
             {
-                Request.InputStream.Position = 0;
-                string body;
-
-                using (var reader = new StreamReader(Request.InputStream))
-                {
-                    body = reader.ReadToEnd();
-                }
-
-                var serializer = new JavaScriptSerializer();
-                var request = serializer.Deserialize<DestLoungeSalesandBooking.Models.GoogleSignInRequest>(body);
-
                 if (request == null || string.IsNullOrWhiteSpace(request.IdToken))
                 {
                     return Json(new { success = false, message = "Missing Google token." });
@@ -392,11 +381,13 @@ namespace DestLoungeSalesandBooking.Controllers
                     return Json(new { success = false, message = "Invalid Google token." });
                 }
 
+                var email = (payload.Email ?? "").Trim().ToLower();
+
                 var user = db.tbl_users.FirstOrDefault(u => u.googleSub == payload.Subject);
 
-                if (user == null && !string.IsNullOrWhiteSpace(payload.Email))
+                if (user == null && !string.IsNullOrWhiteSpace(email))
                 {
-                    user = db.tbl_users.FirstOrDefault(u => u.email.ToLower() == payload.Email.ToLower());
+                    user = db.tbl_users.FirstOrDefault(u => u.email.ToLower() == email);
                 }
 
                 if (user == null)
@@ -406,7 +397,7 @@ namespace DestLoungeSalesandBooking.Controllers
                         roleID = 2,
                         firstname = payload.GivenName ?? "Google",
                         lastname = payload.FamilyName ?? "User",
-                        email = payload.Email ?? "",
+                        email = email,
                         password = "GOOGLE_LOGIN_ONLY",
                         coNum = "",
                         address = "",
@@ -428,8 +419,8 @@ namespace DestLoungeSalesandBooking.Controllers
                     if (string.IsNullOrWhiteSpace(user.lastname) && !string.IsNullOrWhiteSpace(payload.FamilyName))
                         user.lastname = payload.FamilyName;
 
-                    if (string.IsNullOrWhiteSpace(user.email) && !string.IsNullOrWhiteSpace(payload.Email))
-                        user.email = payload.Email;
+                    if (string.IsNullOrWhiteSpace(user.email) && !string.IsNullOrWhiteSpace(email))
+                        user.email = email;
 
                     user.updatedAt = DateTime.Now;
                 }
@@ -460,7 +451,6 @@ namespace DestLoungeSalesandBooking.Controllers
                 System.Diagnostics.Debug.WriteLine("GoogleSignIn Error: " + ex.ToString());
                 return Json(new { success = false, message = "Google sign-in failed." });
             }
-
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
