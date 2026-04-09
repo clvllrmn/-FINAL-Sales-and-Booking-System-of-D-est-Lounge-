@@ -8,6 +8,8 @@ app.controller("DestLoungeSalesandBookingController",
         console.log("CONTROLLER REGISTERED");
 
         $scope.test = "Working";
+        $scope.myReviews = [];
+
         $scope.closeLightbox = function () {
             $scope.lightboxPhoto = null;
         };
@@ -115,6 +117,11 @@ app.controller("DestLoungeSalesandBookingController",
                 });
         };
 
+        $scope.showReviewForm = false;
+
+        $scope.goToReview = function (bookingId) {
+            window.location.href = "/Main/ReviewPage?bookingId=" + bookingId;
+        };
 
 
         // ===== PAGINATION =====
@@ -2075,35 +2082,6 @@ app.controller("DestLoungeSalesandBookingController",
                         reviewText: ""
                     };
 
-                    $scope.loadMyReviews = function () {
-                        return $http.get('/Booking/GetMyReviews')
-                            .then(function (res) {
-                                if (!res.data || !res.data.success) {
-                                    $scope.myReviews = [];
-                                    return;
-                                }
-
-                                $scope.myReviews = (res.data.data || []).map(function (r) {
-                                    return {
-                                        reviewId: r.ReviewId,
-                                        bookingId: r.BookingId,
-                                        rating: r.Rating,
-                                        reviewText: r.ReviewText || "",
-                                        createdAt: r.CreatedAt,
-                                        flagged: r.Flagged || false,
-                                        flagReason: r.FlagReason || "",
-                                        flagNote: r.FlagNote || "",
-                                        images: r.Images || [],
-                                        booking: r.Booking || {}
-                                    };
-                                });
-                            })
-                            .catch(function (err) {
-                                console.error("loadMyReviews error:", err);
-                                $scope.myReviews = [];
-                            });
-                    };
-
                     $scope.openEditMyReview = function (r) {
                         $scope.reviewEditModal = {
                             show: true,
@@ -2201,6 +2179,37 @@ app.controller("DestLoungeSalesandBookingController",
                     $scope.currentBookings = [];
                     $scope.bookingHistory = [];
                     $scope.bookingsLoading = false;
+                });
+        };
+     
+
+        $scope.loadMyReviews = function () {
+            return $http.get('/Main/GetMyReviews')
+                .then(function (res) {
+                    console.log("GetMyReviews response:", res.data);
+
+                    if (!res.data || !res.data.success) {
+                        $scope.myReviews = [];
+                        return;
+                    }
+                    $scope.myReviews = (res.data.data || []).map(function (r) {
+                        return {
+                            reviewId: r.ReviewId,
+                            bookingId: r.BookingId,
+                            rating: r.Rating,
+                            reviewText: r.ReviewText || "",
+                            createdAt: r.CreatedAt ? new Date(parseInt(r.CreatedAt.substr(6))) : null,
+                            flagged: r.Flagged || false,
+                            flagReason: r.FlagReason || "",
+                            flagNote: r.FlagNote || "",
+                            images: r.Images || [],
+                            booking: r.Booking || {}
+                        };
+                    });
+                })
+                .catch(function (err) {
+                    console.error("loadMyReviews error:", err);
+                    $scope.myReviews = [];
                 });
         };
 

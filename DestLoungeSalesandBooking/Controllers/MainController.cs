@@ -106,10 +106,11 @@ namespace DestLoungeSalesandBooking.Controllers
 
             int userId = (int)Session["UserID"];
 
+            // If no bookingId is provided, just open the My Reviews page
             if (!bookingId.HasValue || bookingId.Value <= 0)
             {
-                TempData["ErrorMessage"] = "Please select a completed booking first.";
-                return RedirectToAction("CurrentBookingPage", "Main");
+                ViewBag.BookingId = null;
+                return View();
             }
 
             var booking = db.tbl_bookings.FirstOrDefault(b =>

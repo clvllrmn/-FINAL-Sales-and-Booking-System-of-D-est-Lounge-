@@ -32,6 +32,55 @@
                         <i class="fa-regular fa-user"></i> LOGIN
                     </a>
                 }
+                <div ng-controller="DestLoungeSalesandBookingController"
+                     ng-init="loadNotifications()"
+                     style="position:relative; margin-left:15px;">
+
+                    <button type="button"
+                            ng-click="toggleNotif($event)"
+                            style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037; z-index:9999;">
+                        <i class="fa-solid fa-bell"></i>
+
+                        <span ng-if="notifications.length > 0"
+                              style="position:absolute; top:-8px; right:-10px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:11px;">
+                            {{notifications.length}}
+                        </span>
+                    </button>
+
+                    <div ng-show="showNotif"
+                         style="position:absolute; right:0; top:35px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999;">
+
+                        <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
+                            Notifications
+                        </div>
+
+                        <div ng-if="!notifications.length" style="padding:10px;">
+                            No notifications
+                        </div>
+
+                        <div ng-repeat="n in notifications"
+                             style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
+                             ng-click="goToBooking()">
+                            {{n.Message || n.message}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="header-actions desktop-only">
+            @if (isLoggedIn)
+            {
+                <a href="@Url.Action("ProfilePage","Main")" class="welcome-text">
+                    <i class="fa-solid fa-circle-user"></i> Welcome, @userFirstName!
+                </a>
+            }
+            else
+            {
+                <a href="@Url.Action("LoginPage","Main")" class="login-link">
+                    <i class="fa-regular fa-user"></i> LOGIN
+                </a>
+            }
             <div ng-controller="DestLoungeSalesandBookingController"
                  ng-init="loadNotifications()"
                  style="position:relative; margin-left:15px;">
@@ -65,55 +114,6 @@
                     </div>
                 </div>
             </div>
-            </div>
-        </nav>
-
-        <div class="header-actions desktop-only">
-            @if (isLoggedIn)
-            {
-                <a href="@Url.Action("ProfilePage","Main")" class="welcome-text">
-                    <i class="fa-solid fa-circle-user"></i> Welcome, @userFirstName!
-                </a>
-            }
-            else
-            {
-                <a href="@Url.Action("LoginPage","Main")" class="login-link">
-                    <i class="fa-regular fa-user"></i> LOGIN
-                </a>
-            }
-        <div ng-controller="DestLoungeSalesandBookingController"
-             ng-init="loadNotifications()"
-             style="position:relative; margin-left:15px;">
-
-            <button type="button"
-                    ng-click="toggleNotif($event)"
-                    style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037; z-index:9999;">
-                <i class="fa-solid fa-bell"></i>
-
-                <span ng-if="notifications.length > 0"
-                      style="position:absolute; top:-8px; right:-10px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:11px;">
-                    {{notifications.length}}
-                </span>
-            </button>
-
-            <div ng-show="showNotif"
-                 style="position:absolute; right:0; top:35px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999;">
-
-                <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
-                    Notifications
-                </div>
-
-                <div ng-if="!notifications.length" style="padding:10px;">
-                    No notifications
-                </div>
-
-                <div ng-repeat="n in notifications"
-                     style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
-                     ng-click="goToBooking()">
-                    {{n.Message || n.message}}
-                </div>
-            </div>
-        </div>
         </div>
 
         <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
@@ -131,13 +131,12 @@
             <div class="nav-top">
                 <a href="@Url.Action("ProfilePage","Main")" class="nav-item">Profile</a>
                 <a href="@Url.Action("CurrentBookingPage","Main")" class="nav-item">Current booking</a>
-                <a href="@Url.Action("ReviewPage", "Main")" class="nav-item">To Review</a>
+                <a href="@Url.Action("ReviewPage", "Main")" class="nav-item active">To Review</a>
             </div>
-            
+
         </nav>
     </aside>
     <div class="review-list-wrapper"
-         ng-if="@ViewBag.BookingId == null"
          ng-controller="DestLoungeSalesandBookingController"
          ng-init="loadMyReviews()">
 
@@ -166,68 +165,9 @@
                 </div>
             </div>
 
-            <div class="booking-actions">
-                <button class="btn-review" ng-click="openEditMyReview(r)">
-                    Edit
-                </button>
-
-                <button class="btn-cancel-booking"
-                        ng-click="deleteMyReview(r.reviewId)">
-                    Delete
-                </button>
-            </div>
         </div>
     </div>
 
-    <main class="profile-content">
-        <div class="review-card" ng-if="@ViewBag.BookingId != null">
-            <h2 class="review-service-name">Service</h2>
-
-            <form id="reviewForm" method="POST" action="@Url.Action("SubmitReview", "Main")" enctype="multipart/form-data">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="BookingId" value="@ViewBag.BookingId" />
-
-                <div class="rating-section">
-                    <p class="rating-label">Rate your experience</p>
-                    <div class="star-rating">
-                        <input type="radio" id="star5" name="Rating" value="5" />
-                        <label for="star5" class="star">★</label>
-                        <input type="radio" id="star4" name="Rating" value="4" />
-                        <label for="star4" class="star">★</label>
-                        <input type="radio" id="star3" name="Rating" value="3" />
-                        <label for="star3" class="star">★</label>
-                        <input type="radio" id="star2" name="Rating" value="2" />
-                        <label for="star2" class="star">★</label>
-                        <input type="radio" id="star1" name="Rating" value="1" />
-                        <label for="star1" class="star">★</label>
-                    </div>
-                </div>
-
-                <div class="review-text-section">
-                    <label class="review-label">Share your thoughts</label>
-                    <textarea name="ReviewText" id="reviewText" class="review-textarea"
-                              placeholder="Tell us about your experience..." rows="5" maxlength="500"></textarea>
-                </div>
-
-                <div class="photo-upload-section">
-                    <p id="photoCount" style="font-size:13px;color:#a89585;margin:6px 0 0 4px;">0 / 5 photos added</p>
-                    <label class="review-label">Add your image (MAX: 5)</label>
-                    <div class="photo-upload-box" id="photoUploadBox">
-                        <input type="file" id="photoInput" name="PhotoUpload" accept="image/*" multiple style="display:none;" />
-                        <div class="upload-placeholder" id="uploadPlaceholder">
-                            <i class="fa-solid fa-camera camera-icon"></i>
-                            <p class="upload-text">Add photo</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="review-actions">
-                    <button type="button" class="btn-cancel" onclick="window.location.href='@Url.Action("CurrentBookingPage","Main")'">Cancel</button>
-                    <button type="submit" class="btn-upload">Upload</button>
-                </div>
-            </form>
-        </div>
-    </main>
 </div>
 
 <footer>
@@ -486,6 +426,67 @@
 
         .review-textarea::placeholder {
             color: #a89585;
+        }
+
+    .review-list-wrapper {
+        flex: 1;
+        padding: 80px 40px;
+        max-width: 900px;
+    }
+
+    .booking-item {
+        background: #e8ddd1;
+        padding: 24px;
+        border-radius: 20px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+
+    .booking-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #c9b5a3;
+        color: #6b5544;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .booking-body {
+        margin: 15px 0;
+    }
+
+        .booking-body p {
+            margin: 8px 0;
+            color: #5a4a3a;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .booking-body strong {
+            color: #6b5544;
+            font-weight: 600;
+        }
+
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+        background: #e8ddd1;
+        border-radius: 20px;
+        margin-top: 20px;
+    }
+
+        .empty-state h3 {
+            color: #6b5544;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .empty-state p {
+            color: #8b7b6b;
+            font-size: 16px;
         }
 
     /* ── Photo Upload ── */
@@ -886,122 +887,35 @@
 
 @section scripts {
     <script>
-        // ── Hamburger ──
         (function () {
             var btn = document.getElementById('hamburgerBtn');
             var nav = document.getElementById('mainNav');
             var overlay = document.getElementById('navOverlay');
-            function openMenu() { btn.classList.add('open'); nav.classList.add('open'); overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
-            function closeMenu() { btn.classList.remove('open'); nav.classList.remove('open'); overlay.classList.remove('active'); document.body.style.overflow = ''; }
-            btn.addEventListener('click', function () { nav.classList.contains('open') ? closeMenu() : openMenu(); });
-            overlay.addEventListener('click', closeMenu);
-            nav.querySelectorAll('a').forEach(function (link) { link.addEventListener('click', closeMenu); });
-        })();
 
-        // ── Photo Upload ──
-        const photoInput = document.getElementById('photoInput');
-        const photoUploadBox = document.getElementById('photoUploadBox');
-        const uploadPlaceholder = document.getElementById('uploadPlaceholder');
-        let selectedFiles = [];
-
-        function updateCounter() {
-            const count = document.getElementById('photoCount');
-            if (count) count.textContent = selectedFiles.length + ' / 5 photos added';
-        }
-
-        function refreshAddMoreTile() {
-            const existing = document.getElementById('addMoreTile');
-            if (existing) existing.remove();
-            if (selectedFiles.length > 0 && selectedFiles.length < 5) {
-                const tile = document.createElement("div");
-                tile.id = "addMoreTile";
-                tile.style.cssText = "width:90px;height:90px;border-radius:10px;border:2px dashed #6b5544;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:#6b5544;font-size:12px;font-weight:600;gap:4px;flex-shrink:0;transition:background 0.2s;";
-                tile.innerHTML = '<span style="font-size:28px;line-height:1;font-weight:300;">+</span><span>Add more</span>';
-                tile.addEventListener('mouseenter', function () { tile.style.background = '#f0e8dd'; });
-                tile.addEventListener('mouseleave', function () { tile.style.background = 'transparent'; });
-                tile.addEventListener('click', function (e) { e.stopPropagation(); photoInput.click(); });
-                photoUploadBox.appendChild(tile);
+            function openMenu() {
+                btn.classList.add('open');
+                nav.classList.add('open');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
             }
-            updateCounter();
-        }
 
-        uploadPlaceholder.addEventListener('click', function (e) {
-            e.stopPropagation();
-            if (selectedFiles.length < 5) photoInput.click();
-        });
+            function closeMenu() {
+                btn.classList.remove('open');
+                nav.classList.remove('open');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
 
-        photoInput.addEventListener('change', function (e) {
-
-            const files = Array.from(e.target.files);
-            if (selectedFiles.length >= 5) { alert("You've already added 5 photos."); photoInput.value = ""; return; }
-            const remaining = 5 - selectedFiles.length;
-            const toAdd = files.slice(0, remaining);
-            if (files.length > remaining) alert("Maximum of 5 photos. Only the first " + remaining + " were added.");
-
-            let loadedCount = 0;
-            toAdd.forEach(function (file) {
-                selectedFiles.push(file);
-                const reader = new FileReader();
-                reader.onload = function (ev) {
-                    const container = document.createElement("div");
-                    container.style.cssText = "position:relative;display:inline-flex;margin:4px;flex-shrink:0;overflow:visible;";
-
-                    const img = document.createElement("img");
-                    img.src = ev.target.result;
-                    img.style.cssText = "width:90px;height:90px;object-fit:cover;border-radius:10px;display:block;";
-
-                    // ── Remove button (X icon, NOT +) ──
-                    const removeBtn = document.createElement("button");
-                    removeBtn.type = "button";
-                    removeBtn.innerHTML = '<i class="fa-solid fa-xmark" style="font-size:11px;"></i>';
-                    removeBtn.style.cssText = "position:absolute;top:-8px;right:-8px;background:#a04040;color:white;border:2px solid white;border-radius:50%;width:22px;height:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:background 0.2s;padding:0;";
-                    removeBtn.addEventListener('mouseenter', function () { removeBtn.style.background = '#7a2020'; });
-                    removeBtn.addEventListener('mouseleave', function () { removeBtn.style.background = '#a04040'; });
-                    removeBtn.addEventListener('click', function (ev) {
-                        ev.stopPropagation();
-                        selectedFiles = selectedFiles.filter(function (f) { return f !== file; });
-                        container.remove();
-                        photoInput.value = "";
-                        if (selectedFiles.length === 0) uploadPlaceholder.style.display = "flex";
-                        refreshAddMoreTile();
-                    });
-
-                    container.appendChild(img);
-                    container.appendChild(removeBtn);
-
-                    const addMoreTile = document.getElementById('addMoreTile');
-                    if (addMoreTile) photoUploadBox.insertBefore(container, addMoreTile);
-                    else photoUploadBox.appendChild(container);
-
-                    loadedCount++;
-                    if (loadedCount === toAdd.length) {
-                        uploadPlaceholder.style.display = "none";
-                        photoInput.value = "";
-                        refreshAddMoreTile();
-                    }
-                };
-                reader.readAsDataURL(file);
-            });
-        });
-        document.getElementById('reviewForm').addEventListener('submit', function () {
-            var dataTransfer = new DataTransfer();
-
-            selectedFiles.forEach(function (file) {
-                dataTransfer.items.add(file);
+            btn.addEventListener('click', function () {
+                nav.classList.contains('open') ? closeMenu() : openMenu();
             });
 
-            photoInput.files = dataTransfer.files;
-        });
+            overlay.addEventListener('click', closeMenu);
+
+            nav.querySelectorAll('a').forEach(function (link) {
+                link.addEventListener('click', closeMenu);
+            });
+        })();
     </script>
-    <script>
-        document.getElementById('reviewForm').addEventListener('submit', function () {
-            var dataTransfer = new DataTransfer();
 
-            selectedFiles.forEach(function (file) {
-                dataTransfer.items.add(file);
-            });
-
-            photoInput.files = dataTransfer.files;
-        });
-    </script>
 }

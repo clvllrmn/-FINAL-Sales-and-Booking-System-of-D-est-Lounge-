@@ -255,14 +255,6 @@
                             </div>
                         </div>
 
-                        <div class="booking-actions" ng-if="(b.status || '').toLowerCase().trim() === 'completed'">
-                            <button class="btn-review"
-                                    ng-click="!b.hasReview && goToReview(b.bookingId)"
-                                    ng-disabled="b.hasReview">
-                                <i class="fa-solid fa-star"></i>
-                                {{ b.hasReview ? 'Already Reviewed' : 'Leave a Review' }}
-                            </button>
-                        </div>
                     </div>
                 </div>
 
