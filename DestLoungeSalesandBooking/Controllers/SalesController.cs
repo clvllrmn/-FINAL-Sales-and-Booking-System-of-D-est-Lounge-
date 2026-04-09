@@ -1,4 +1,5 @@
-﻿using DestLoungeSalesandBooking.Filters;
+﻿// SalesController.cs
+using DestLoungeSalesandBooking.Filters;
 using DestLoungeSalesandBooking.Models.Context;
 using System;
 using System.Collections.Generic;
@@ -44,18 +45,17 @@ namespace DestLoungeSalesandBooking.Controllers
                 range = "week";
             }
 
-            var completed = db.tbl_bookings
-                .Where(b => b.Status == "Completed" && b.BookingDate >= start && b.BookingDate < endExclusive)
+            var sales = db.tbl_sales
+                .Where(s => s.Status == "Paid" && s.CreatedAt >= start && s.CreatedAt < endExclusive)
                 .ToList();
 
-            // group by date
-            var byDay = completed
-                .GroupBy(b => b.BookingDate.Date)
+            var byDay = sales
+                .GroupBy(s => s.CreatedAt.Date)
                 .OrderBy(g => g.Key)
                 .Select(g => new
                 {
                     Date = g.Key,
-                    Revenue = g.Sum(x => ExtractDownpayment(x.Notes))
+                    Revenue = g.Sum(x => x.Total)
                 })
                 .ToList();
 
@@ -97,8 +97,9 @@ namespace DestLoungeSalesandBooking.Controllers
                 }
             }
 
-            decimal totalRevenue = byDay.Sum(x => x.Revenue);
-            int totalBookings = completed.Count;
+            decimal totalRevenue = sales.Sum(x => x.Total);
+            int totalBookings = db.tbl_bookings
+    .Count(b => b.Status == "Completed" && b.BookingDate >= start && b.BookingDate < endExclusive);
 
             return Json(new
             {

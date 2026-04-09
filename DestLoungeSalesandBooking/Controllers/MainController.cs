@@ -1,4 +1,5 @@
-﻿using DestLoungeSalesandBooking.Filters;
+﻿// MainController.cs
+using DestLoungeSalesandBooking.Filters;
 using DestLoungeSalesandBooking.Models;
 using DestLoungeSalesandBooking.Models.Context;
 using DestLoungeSalesandBooking.Models.Maps;
@@ -1016,59 +1017,99 @@ namespace DestLoungeSalesandBooking.Controllers
         }
 
         [HttpGet]
-        public JsonResult Analytics(string range = "week")
+        public ActionResult Analytics(string range = "week")
         {
-            try
+            range = (range ?? "week").Trim().ToLowerInvariant();
+
+            DateTime today = DateTime.Today;
+            DateTime start;
+            DateTime endExclusive;
+
+            if (range == "today")
             {
-                DateTime now = DateTime.Now;
-                DateTime startDate;
+                start = today;
+                endExclusive = today.AddDays(1);
+            }
+            else if (range == "month")
+            {
+                start = new DateTime(today.Year, today.Month, 1);
+                endExclusive = start.AddMonths(1);
+            }
+            else
+            {
+                int diff = ((int)today.DayOfWeek - (int)DayOfWeek.Monday);
+                if (diff < 0) diff += 7;
+                start = today.AddDays(-diff);
+                endExclusive = start.AddDays(7);
+                range = "week";
+            }
 
-                switch (range)
+            // ✅ GET SALES (THIS IS THE FIX)
+            var sales = db.tbl_sales
+    .Where(s => s.Status == "Paid")
+    .ToList();
+
+            // ✅ GROUP BY DATE
+            var byDay = sales
+                .GroupBy(s => s.CreatedAt.Date)
+                .OrderBy(g => g.Key)
+                .Select(g => new
                 {
-                    case "today":
-                        startDate = now.Date;
-                        break;
-                    case "month":
-                        startDate = new DateTime(now.Year, now.Month, 1);
-                        break;
-                    default:
-                        startDate = now.AddMonths(-3);
-                        break;
-                }
-
-                // ✅ GET SALES (NOT BOOKINGS)
-                var sales = db.tbl_sales
-                .Where(s => s.Status == "Paid")
+                    Date = g.Key,
+                    Revenue = g.Sum(x => x.Total)
+                })
                 .ToList();
 
-                var totalRevenue = sales.Sum(s => s.Total);
-                var totalBookings = sales.Count; // or distinct bookingId if needed
+            var points = new List<object>();
 
-                var grouped = sales
-                    .GroupBy(s => s.CreatedAt.Date)
-                    .Select(g => new
-                    {
-                        label = g.Key.ToString("ddd"),
-                        value = g.Sum(x => x.Total)
-                    })
-                    .OrderBy(x => x.label)
-                    .ToList();
-
-                System.Diagnostics.Debug.WriteLine("StartDate: " + startDate);
-                System.Diagnostics.Debug.WriteLine("Now: " + DateTime.Now);
-
-                return Json(new
-                {
-                    totalRevenue,
-                    totalBookings,
-                    range,
-                    points = grouped
-                }, JsonRequestBehavior.AllowGet);
-            }
-            catch (Exception ex)
+            if (range == "today")
             {
-                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+                decimal rev = byDay.Sum(x => x.Revenue);
+                points.Add(new
+                {
+                    label = today.ToString("ddd"),
+                    value = rev
+                });
             }
+            else if (range == "week")
+            {
+                for (int i = 0; i < 7; i++)
+                {
+                    var d = start.AddDays(i).Date;
+                    var found = byDay.FirstOrDefault(x => x.Date == d);
+
+                    points.Add(new
+                    {
+                        label = d.ToString("ddd"),
+                        value = found != null ? found.Revenue : 0
+                    });
+                }
+            }
+            else
+            {
+                int days = DateTime.DaysInMonth(start.Year, start.Month);
+
+                for (int day = 1; day <= days; day++)
+                {
+                    var d = new DateTime(start.Year, start.Month, day);
+                    var found = byDay.FirstOrDefault(x => x.Date == d);
+
+                    points.Add(new
+                    {
+                        label = day.ToString(),
+                        value = found != null ? found.Revenue : 0
+                    });
+                }
+            }
+            int totalBookings = db.tbl_bookings
+    .Count(b => b.Status == "Completed" && b.BookingDate >= start && b.BookingDate < endExclusive);
+            return Json(new
+            {
+                range,
+                totalRevenue = sales.Sum(x => x.Total),
+                totalBookings, // ✅ THIS ONE
+                points
+            }, JsonRequestBehavior.AllowGet);
 
         }
 

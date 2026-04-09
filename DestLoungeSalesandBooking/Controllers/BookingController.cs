@@ -289,6 +289,33 @@ namespace DestLoungeSalesandBooking.Controllers
             booking.Status = status;
             db.SaveChanges();
 
+            // ✅ CREATE SALES RECORD ONLY WHEN COMPLETED (ONE TIME ONLY)
+            if (status == "Completed")
+            {
+                decimal totalAmount = GetTotalBillFromNotes(booking.Notes);
+
+                var existingSale = db.tbl_sales.FirstOrDefault(s => s.BookingId == booking.BookingId);
+
+                if (existingSale == null)
+                {
+                    var newSale = new tbl_sales
+                    {
+                        BookingId = booking.BookingId,
+                        CustomerId = booking.CustomerId,
+                        Subtotal = totalAmount,
+                        Discount = 0,
+                        Total = totalAmount,
+                        PaymentMethod = "Cash",
+                        Status = "Paid",
+                        CreatedAt = DateTime.Now,
+                        UpdatedAt = DateTime.Now
+                    };
+
+                    db.tbl_sales.Add(newSale);
+                    db.SaveChanges();
+                }
+            }
+
             if (status == "Approved")
             {
                 SendBookingEmail(booking);
