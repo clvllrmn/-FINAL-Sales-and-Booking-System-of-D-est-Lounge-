@@ -13,7 +13,7 @@ namespace DestLoungeSalesandBooking.Models
     {
         public int service_id { get; set; }
         public string name { get; set; }
-        public string description { get; set; }  // ← removed [StringLength(500)]
+        public string description { get; set; }
         public decimal price { get; set; }
         public sbyte is_active { get; set; }
         public string category { get; set; }

@@ -164,14 +164,14 @@
                 <div class="booking-actions">
                     <div ng-if="booking.status === 'Pending'">
                         <button class="approve-btn" ng-click="updateBookingStatus(booking.bookingId, 'Approved')">Approve</button>
-                        <button class="cancel-btn" ng-click="cancelBooking(booking.bookingId)">Cancel</button>
+                        <button class="cancel-btn" ng-click="cancelBooking(booking.bookingId, $event)">Cancel</button>
                     </div>
-
                     <div ng-if="booking.status === 'Approved'">
                         <button class="booking-complete-btn" ng-click="updateBookingStatus(booking.bookingId, 'Completed')">Booking Complete</button>
-                        <button class="cancel-btn" ng-click="cancelBooking(booking.bookingId)">Cancel</button>
+                        <button class="cancel-btn" ng-click="cancelBooking(booking.bookingId, $event)">Cancel</button>
                         <div class="status-pill approved">👍 Approved</div>
                     </div>
+                </div>
 
                     <div class="status-pill completed" ng-if="booking.status === 'Completed'">✅ Completed</div>
 

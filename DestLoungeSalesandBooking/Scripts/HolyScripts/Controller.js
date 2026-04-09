@@ -1525,8 +1525,23 @@ app.controller("DestLoungeSalesandBookingController",
             });
         };
 
-        $scope.cancelBooking = function (bookingId) {
-            var reason = prompt("Reason for cancellation (optional):") || "";
+        $scope.cancelBooking = function (bookingId, $event) {
+            if ($event) {
+                $event.stopPropagation();
+                $event.preventDefault();
+            }
+
+            var confirmed = confirm("Are you sure you want to cancel this booking?");
+            if (!confirmed) return;
+
+            var reason = prompt("Reason for cancellation (optional):");
+
+            // NULL means user clicked Cancel on the prompt — stop here
+            if (reason === null) return;
+
+            // Empty string is fine (they just left it blank and clicked OK)
+            reason = reason || "";
+            
             return $http({
                 method: "POST",
                 url: "/Booking/AdminCancel",
