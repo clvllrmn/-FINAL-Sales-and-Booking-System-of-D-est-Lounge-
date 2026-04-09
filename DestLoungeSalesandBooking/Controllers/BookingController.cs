@@ -294,24 +294,24 @@ namespace DestLoungeSalesandBooking.Controllers
                 SendBookingEmail(booking);
                 CreateNotification(
                     booking.CustomerId,
-                    $"Your Booking #{booking.ReferenceNo} has been APPROVED! ✅"
-                );
+                    $"Your Booking #{booking.ReferenceNo} has been APPROVED! ✅",
+                    booking.BookingId);
             }
 
             if (status == "Cancelled")
             {
                 CreateNotification(
                     booking.CustomerId,
-                    $"Your booking #{booking.ReferenceNo} has been CANCELLED ❌"
-                );
+                    $"Your booking #{booking.ReferenceNo} has been CANCELLED ❌",
+                    booking.BookingId);
             }
 
             if (status == "Completed")
             {
                 CreateNotification(
                     booking.CustomerId,
-                    $"Your booking #{booking.ReferenceNo} is completed! Please leave a review ⭐"
-                );
+                    $"Your booking #{booking.ReferenceNo} is completed! Please leave a review ⭐",
+                    booking.BookingId);
 
                 CreateReviewRequest(booking.CustomerId, booking.BookingId);
 
@@ -668,9 +668,11 @@ namespace DestLoungeSalesandBooking.Controllers
                 .OrderByDescending(n => n.CreatedAt)
                 .Select(n => new
                 {
+                    n.NotificationId,
                     n.Message,
                     n.CreatedAt,
-                    n.IsRead
+                    n.IsRead,
+                    n.BookingId
                 })
                 .ToList();
 
@@ -930,14 +932,15 @@ Thank you.";
             return TimeSpan.TryParse(s, out t);
         }
 
-        private void CreateNotification(int customerId, string message)
+        private void CreateNotification(int customerId, string message, int? bookingId = null)
         {
             var notif = new tbl_notifications
             {
                 CustomerId = customerId,
                 Message = message,
                 CreatedAt = DateTime.Now,
-                IsRead = false
+                IsRead = false,
+                BookingId = bookingId   // ← must be here
             };
 
             db.tbl_notifications.Add(notif);
@@ -958,6 +961,63 @@ Thank you.";
             db.SaveChanges();
         }
 
+        [HttpPost]
+        [SessionCheck]
+        public ActionResult DeleteNotification(int notificationId)
+        {
+            if (Session["UserID"] == null)
+                return Json(new { success = false, message = "Please login first." });
+
+            int userId = Convert.ToInt32(Session["UserID"]);
+
+            var notif = db.tbl_notifications
+                .FirstOrDefault(n => n.NotificationId == notificationId && n.CustomerId == userId);
+
+            if (notif == null)
+                return Json(new { success = false, message = "Notification not found." });
+
+            db.tbl_notifications.Remove(notif);
+            db.SaveChanges();
+
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        [SessionCheck]
+        public ActionResult DeleteAllNotifications()
+        {
+            if (Session["UserID"] == null)
+                return Json(new { success = false, message = "Please login first." });
+
+            int userId = Convert.ToInt32(Session["UserID"]);
+
+            var notifs = db.tbl_notifications.Where(n => n.CustomerId == userId).ToList();
+            db.tbl_notifications.RemoveRange(notifs);
+            db.SaveChanges();
+
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        [SessionCheck]
+        public ActionResult MarkNotificationRead(int notificationId)
+        {
+            if (Session["UserID"] == null)
+                return Json(new { success = false, message = "Please login first." });
+
+            int userId = Convert.ToInt32(Session["UserID"]);
+
+            var notif = db.tbl_notifications
+                .FirstOrDefault(n => n.NotificationId == notificationId && n.CustomerId == userId);
+
+            if (notif == null)
+                return Json(new { success = false, message = "Notification not found." });
+
+            notif.IsRead = true;
+            db.SaveChanges();
+
+            return Json(new { success = true });
+        }
         private void SendBookingEmail(tbl_bookings booking)
         {
             try

@@ -2218,7 +2218,9 @@ app.controller("DestLoungeSalesandBookingController",
                 });
         };
 
-        $scope.toggleNotif = function () {
+
+        $scope.toggleNotif = function ($event) {
+            if ($event) $event.stopPropagation();
             $scope.showNotif = !$scope.showNotif;
         };
 
@@ -2255,6 +2257,85 @@ app.controller("DestLoungeSalesandBookingController",
                 event.preventDefault();
             }
         };
+
+        // Delete single notification
+        $scope.deleteNotification = function (notifId, $event) {
+            if ($event) $event.stopPropagation();
+
+            console.log("deleteNotification called, id =", notifId);
+            $http({
+                method: 'POST',
+                url: '/Booking/DeleteNotification',
+                data: 'notificationId=' + notifId,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }).then(function (res) {
+                console.log("response =", res.data);
+                if (res.data.success) {
+                    $scope.notifications = $scope.notifications.filter(function (n) {
+                        return (n.NotificationId || n.notificationId) !== notifId;
+                    });
+                }
+            }).catch(function (err) {
+                console.log("error =", err);  // ← moved inside .catch()
+            });
+        };
+
+        // Delete all notifications
+        $scope.clearAllNotifications = function ($event) {
+            if ($event) $event.stopPropagation();
+            $http({
+                method: 'POST',
+                url: '/Booking/DeleteAllNotifications',
+                data: '',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }).then(function (res) {
+                if (res.data.success) {
+                    $scope.notifications = [];
+                    $scope.showNotif = false;
+                }
+            });
+        };
+
+        // Count only unread notifications
+        $scope.getUnreadCount = function () {
+            return $scope.notifications.filter(function (n) {
+                return !(n.IsRead || n.isRead);
+            }).length;
+        };
+
+        // Mark as read then go to booking page
+        $scope.markAsReadAndGo = function (notif, $event) {
+            if ($event) $event.stopPropagation();
+
+            var notifId = notif.NotificationId || notif.notificationId;
+            var bookingId = notif.BookingId || notif.bookingId || null;
+
+            if (!(notif.IsRead || notif.isRead)) {
+                $http({
+                    method: 'POST',
+                    url: '/Booking/MarkNotificationRead',
+                    data: 'notificationId=' + notifId,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                }).then(function () {
+                    notif.IsRead = true;
+                    notif.isRead = true;
+                    // ← navigate with bookingId as URL hash
+                    if (bookingId) {
+                        window.location.href = "/Main/CurrentBookingPage#booking-" + bookingId;
+                    } else {
+                        window.location.href = "/Main/CurrentBookingPage";
+                    }
+                }).catch(function () {
+                    window.location.href = "/Main/CurrentBookingPage";
+                });
+            } else {
+                if (bookingId) {
+                    window.location.href = "/Main/CurrentBookingPage#booking-" + bookingId;
+                } else {
+                    window.location.href = "/Main/CurrentBookingPage";
+                }
+            }
+        };
         $scope.verifyOtp = function () {
             if (!$scope.resetPassword.otp || $scope.resetPassword.otp.length !== 6) {
                 alert("Please enter the 6-digit OTP.");
@@ -2286,6 +2367,12 @@ app.controller("DestLoungeSalesandBookingController",
                     alert("Something went wrong. Please try again.");
                 });
         };
+        
+        document.addEventListener('click', function () {
+            $scope.$apply(function () {
+                $scope.showNotif = false;
+            });
+        });
 
         $scope.goToReview = function (bookingId) {
             window.location.href = "/Main/ReviewPage?bookingId=" + bookingId;
@@ -2305,6 +2392,29 @@ app.controller("DestLoungeSalesandBookingController",
                 alert("Booking cancelled");
                 $scope.loadUserBookings();
             });
+        };
+
+        $scope.markAsReadAndGo = function (notif, $event) {
+            if ($event) $event.stopPropagation();
+
+            var notifId = notif.NotificationId || notif.notificationId;
+
+            if (!(notif.IsRead || notif.isRead)) {
+                $http({
+                    method: 'POST',
+                    url: '/Booking/MarkNotificationRead',
+                    data: 'notificationId=' + notifId,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                }).then(function () {
+                    notif.IsRead = true;
+                    notif.isRead = true;
+                    window.location.href = "/Main/CurrentBookingPage";
+                }).catch(function () {
+                    window.location.href = "/Main/CurrentBookingPage";
+                });
+            } else {
+                window.location.href = "/Main/CurrentBookingPage";
+            }
         };
 
         // ── GALLERY (admin tab) ──────────────────────────────────────────────────
@@ -2643,6 +2753,28 @@ app.controller("DestLoungeSalesandBookingController",
 
             return true;
         };
+
+        // Open lightbox
+        $scope.openLightbox = function (photo) {
+            $scope.lightboxPhoto = photo;
+        };
+
+        // Close lightbox
+        $scope.closeLightbox = function () {
+            $scope.lightboxPhoto = null;
+        };
+
+        // Review image modal
+        $scope.openReviewLightbox = function (imgUrl) {
+            $scope.selectedImage = imgUrl;
+            $scope.showImageModal = true;
+        };
+
+        $scope.closeImageModal = function () {
+            $scope.showImageModal = false;
+            $scope.selectedImage = null;
+        };
+
         $scope.flagModal = {
             show: false,
             review: null,

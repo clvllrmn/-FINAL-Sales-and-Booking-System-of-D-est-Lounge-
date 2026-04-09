@@ -39,23 +39,38 @@
 
                     <a href="" ng-click="toggleNotif(); $event.preventDefault()">
                         <i class="fa-solid fa-bell"></i> Notifications
-                        <span ng-if="notifications.length > 0">({{notifications.length}})</span>
+                        <span ng-if="getUnreadCount() > 0"
+                              class="notif-badge">!</span>
                     </a>
 
                     <div ng-show="showNotif"
-                         style="position:absolute; right:0; top:30px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999;">
-                        <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
-                            Notifications
+                         ng-click="$event.stopPropagation()"
+                         style="position:absolute; right:0; top:35px; width:280px; max-height:350px; overflow-y:auto; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999; box-shadow:0 4px 10px rgba(0,0,0,0.2);">
+                        <div style="padding:10px 12px; font-weight:bold; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                            <span style="color:#333;">Notifications</span>
+                            <button ng-if="notifications.length > 0"
+                                    ng-click="clearAllNotifications($event)"
+                                    style="font-size:11px; color:#e74c3c; background:none; border:none; cursor:pointer; padding:0;">
+                                Clear all
+                            </button>
                         </div>
-
-                        <div ng-if="!notifications.length" style="padding:10px;">
-                            No notifications
+                        <div ng-if="!notifications.length" style="padding:12px; color:gray; font-size:13px; text-align:center;">
+                            No notifications yet.
                         </div>
-
                         <div ng-repeat="n in notifications"
-                             style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
-                             ng-click="goToBooking()">
-                            {{n.Message || n.message}}
+                             class="notif-item"
+                             ng-class="(n.IsRead || n.isRead) ? 'read' : 'unread'"
+                             style="padding:10px 12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                            <span ng-click="markAsReadAndGo(n, $event)"
+                                  style="cursor:pointer; flex:1; line-height:1.4;"
+                                  ng-style="(n.IsRead || n.isRead) ? {'font-size':'13px','color':'#999','font-weight':'normal'} : {'font-size':'13px','color':'#333','font-weight':'600'}">
+                                <span ng-if="!(n.IsRead || n.isRead)" class="notif-unread-dot"></span>
+                                {{n.Message || n.message}}
+                            </span>
+                            <button ng-click="deleteNotification(n.NotificationId || n.notificationId, $event)"
+                                    style="background:none; border:none; cursor:pointer; color:#aaa; font-size:16px; padding:0 0 0 6px; flex-shrink:0; line-height:1;">
+                                &times;
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -85,26 +100,38 @@
                         style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037; z-index:9999;">
                     <i class="fa-solid fa-bell"></i>
 
-                    <span ng-if="notifications.length > 0"
-                          style="position:absolute; top:-8px; right:-10px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:11px;">
-                        {{notifications.length}}
-                    </span>
+                    <span ng-if="getUnreadCount() > 0"
+                          class="notif-badge">!</span>
                 </button>
 
                 <div ng-show="showNotif"
-                     style="position:absolute; right:0; top:35px; width:260px; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999;">
-                    <div style="padding:10px; font-weight:bold; border-bottom:1px solid #eee;">
-                        Notifications
+                     ng-click="$event.stopPropagation()"
+                     style="position:absolute; right:0; top:35px; width:280px; max-height:350px; overflow-y:auto; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999; box-shadow:0 4px 10px rgba(0,0,0,0.2);">
+                    <div style="padding:10px 12px; font-weight:bold; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:#333;">Notifications</span>
+                        <button ng-if="notifications.length > 0"
+                                ng-click="clearAllNotifications($event)"
+                                style="font-size:11px; color:#e74c3c; background:none; border:none; cursor:pointer; padding:0;">
+                            Clear all
+                        </button>
                     </div>
-
-                    <div ng-if="!notifications.length" style="padding:10px;">
-                        No notifications
+                    <div ng-if="!notifications.length" style="padding:12px; color:gray; font-size:13px; text-align:center;">
+                        No notifications yet.
                     </div>
-
                     <div ng-repeat="n in notifications"
-                         style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
-                         ng-click="goToBooking()">
-                        {{n.Message || n.message}}
+                         class="notif-item"
+                         ng-class="(n.IsRead || n.isRead) ? 'read' : 'unread'"
+                         style="padding:10px 12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                        <span ng-click="markAsReadAndGo(n, $event)"
+                              style="cursor:pointer; flex:1; line-height:1.4;"
+                              ng-style="(n.IsRead || n.isRead) ? {'font-size':'13px','color':'#999','font-weight':'normal'} : {'font-size':'13px','color':'#333','font-weight':'600'}">
+                            <span ng-if="!(n.IsRead || n.isRead)" class="notif-unread-dot"></span>
+                            {{n.Message || n.message}}
+                        </span>
+                        <button ng-click="deleteNotification(n.NotificationId || n.notificationId, $event)"
+                                style="background:none; border:none; cursor:pointer; color:#aaa; font-size:16px; padding:0 0 0 6px; flex-shrink:0; line-height:1;">
+                            &times;
+                        </button>
                     </div>
                 </div>
             </div>
@@ -121,7 +148,7 @@
 </header>
 <div class="gallery-page-container"
      ng-controller="DestLoungeSalesandBookingController"
-     ng-init="setTab('gallery')">
+     ng-init="setTab('gallery'); loadPublicGallery()">
 
     <div class="gallery-hero">
         <h1 class="gallery-hero-title">Our Work &amp; Your Words</h1>
@@ -1218,22 +1245,9 @@
             function closeMenu() {
                 btn.classList.remove('open');
                 nav.classList.remove('open');
-
-                btn.classList.add('open');
-                nav.classList.add('open');
-                overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-
-            function closeMenu() {
-                btn.classList.remove('open');
-                nav.classList.remove('open');
                 overlay.classList.remove('active');
                 document.body.style.overflow = '';
             }
-                overlay.classList.remove('active');
-                document.body.style.overflow = '';
-            
 
             btn.addEventListener('click', function () {
                 nav.classList.contains('open') ? closeMenu() : openMenu();

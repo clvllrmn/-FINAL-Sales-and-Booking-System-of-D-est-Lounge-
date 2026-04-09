@@ -86,7 +86,11 @@
                 No recent activity.
             </p>
 
-            <div class="inbox-card" ng-repeat="item in inboxItems">
+            <div class="inbox-card" ng-repeat="item in inboxItems"
+                 ng-class="{
+       'inbox-card--pending': item.status === 'Pending',
+       'inbox-card--done': item.status !== 'Pending'
+     }">
                 <div class="inbox-row">
                     <div class="inbox-icon-circle">
                         <i class="fa-solid fa-user"></i>
@@ -309,6 +313,22 @@
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
+    .inbox-card--pending {
+        border-left: 4px solid #8b6f47;
+        background-color: #faf6f1;
+        box-shadow: 0 3px 12px rgba(139,111,71,0.18);
+    }
+
+    .inbox-card--done {
+        opacity: 0.65;
+        background-color: #eeebe7;
+        box-shadow: none;
+    }
+
+        .inbox-card--done:hover {
+            opacity: 0.85;
+            transition: opacity 0.2s;
+        }
     /* Inbox Row */
     .inbox-row {
         display: flex;

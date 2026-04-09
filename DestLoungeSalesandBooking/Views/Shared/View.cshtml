@@ -39,7 +39,8 @@
 
                     <a href="" ng-click="toggleNotif(); $event.preventDefault()">
                         <i class="fa-solid fa-bell"></i> Notifications
-                        <span ng-if="notifications.length > 0">({{notifications.length}})</span>
+                        <span ng-if="getUnreadCount() > 0"
+                      class="notif-badge">!</span>
                     </a>
 
                     <div ng-show="showNotif"
@@ -53,8 +54,9 @@
                         </div>
 
                         <div ng-repeat="n in notifications"
-                             style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
-                             ng-click="goToBooking()">
+                             class="notif-item"
+                             ng-class="(n.IsRead || n.isRead) ? 'read' : 'unread'"
+                             style="padding:10px 12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
                             {{n.Message || n.message}}
                         </div>
                     </div>
@@ -87,10 +89,8 @@
                         style="background:none; border:none; cursor:pointer; position:relative;">
                     <i class="fa-solid fa-bell"></i>
 
-                    <span ng-if="notifications.length > 0"
-                          style="position:absolute; top:-8px; right:-10px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:11px;">
-                        {{notifications.length}}
-                    </span>
+                    <span ng-if="getUnreadCount() > 0"
+                          class="notif-badge">!</span>
                 </button>
 
                 <div ng-show="showNotif"
@@ -104,8 +104,9 @@
                     </div>
 
                     <div ng-repeat="n in notifications"
-                         style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;"
-                         ng-click="goToBooking()">
+                         class="notif-item"
+                         ng-class="(n.IsRead || n.isRead) ? 'read' : 'unread'"
+                         style="padding:10px 12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
                         {{n.Message || n.message}}
                     </div>
                 </div>
