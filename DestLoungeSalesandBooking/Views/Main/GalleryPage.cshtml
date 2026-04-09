@@ -148,7 +148,7 @@
 </header>
 <div class="gallery-page-container"
      ng-controller="DestLoungeSalesandBookingController"
-     ng-init="setTab('gallery'); loadPublicGallery()">
+     ng-init="setTab('gallery'); loadPublicGallery(); loadReviews()">
 
     <div class="gallery-hero">
         <h1 class="gallery-hero-title">Our Work &amp; Your Words</h1>
@@ -205,26 +205,14 @@
         <!-- FILTERS -->
         <div class="reviews-filter-bar">
             <div class="star-filters">
-                <button class="star-filter-btn"
-                        ng-class="{'star-filter-active': reviewStarFilter === ''}"
-                        ng-click="clearReviewStarFilter()">
-                    All
-                </button>
-
-                <button class="star-filter-btn"
-                        ng-repeat="s in [5,4,3,2,1]"
-                        ng-class="{'star-filter-active': reviewStarFilter === s}"
-                        ng-click="setReviewStarFilter(s)">
+                <button class="star-filter-btn" ng-class="{'star-filter-active': reviewStarFilter === ''}" ng-click="clearReviewStarFilter()">All</button>
+                <button class="star-filter-btn" ng-repeat="s in [5,4,3,2,1]" ng-class="{'star-filter-active': reviewStarFilter === s}" ng-click="setReviewStarFilter(s)">
                     <i class="fa-solid fa-star"></i> {{s}}
                 </button>
             </div>
             <div class="review-search-wrap">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text"
-                       class="review-search-input"
-                       ng-model="reviewSearch"
-                       ng-change="reviewsPage = 1; updatePagedReviews()"
-                       placeholder="Search reviews...">
+                <input type="text" class="review-search-input" ng-model="reviewSearch" ng-change="reviewsPage = 1; updatePagedReviews()" placeholder="Search reviews...">
             </div>
         </div>
 
@@ -236,13 +224,20 @@
                     </div>
                     <span class="review-date">{{review.date | date:'MMMM d, yyyy'}}</span>
                 </div>
-                <p class="review-text">&ldquo;{{review.reviewText}}&rdquo;</p>
+                <p class="review-text">&ldquo;{{review.reviewText || 'No comment provided.'}}&rdquo;</p>
+
                 <div class="review-images-wrap" ng-if="review.images && review.images.length > 0">
-                    <img ng-repeat="img in review.images"
-                         ng-src="{{img}}"
-                         alt="Review Photo"
-                         class="review-image clickable-review-image"
-                         ng-click="openReviewLightbox(img); $event.stopPropagation();" />
+                    <div class="images-title">Attached Photos:</div>
+                    <div class="images-grid">
+                        <img ng-repeat="img in review.images"
+                             ng-src="{{img}}"
+                             alt="Review Photo"
+                             class="review-image clickable-review-image"
+                             ng-click="openReviewLightbox(img); $event.stopPropagation();" />
+                    </div>
+                </div>
+                <div ng-if="(!review.images || review.images.length === 0)" class="no-images">
+                    <small>No photos attached</small>
                 </div>
 
                 <div class="review-footer">
@@ -872,28 +867,53 @@
         }
 
     .review-images-wrap {
+        margin: 15px 0;
+        padding: 10px 0;
+        border-top: 1px solid #e7dfd6;
+        border-bottom: 1px solid #e7dfd6;
+    }
+
+    .images-title {
+        font-size: 12px;
+        color: #8b6f47;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .images-grid {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 10px;
+        gap: 8px;
     }
 
     .review-image {
-        width: 90px;
-        height: 90px;
-        border-radius: 12px;
+        width: 80px;
+        height: 80px;
         object-fit: cover;
-        display: block;
-        border: 1px solid #e7dfd6;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: 2px solid #d4c4b0;
     }
+
     .clickable-review-image {
         cursor: pointer;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
         .clickable-review-image:hover {
-            transform: scale(1.04);
+            transform: scale(1.05);
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+    .no-images {
+        margin: 10px 0;
+    }
+
+        .no-images small {
+            color: #a89585;
+            font-style: italic;
+            font-size: 12px;
         }
     /* =============================================
        DESKTOP (above 1024px)
@@ -1260,6 +1280,23 @@
             });
 
             
-       }) ();
+        })();
+
+
+        // Debug to check if reviews are loading
+        setTimeout(function () {
+            var scope = angular.element(document.querySelector('[ng-controller="DestLoungeSalesandBookingController"]')).scope();
+            if (scope) {
+                console.log('Active Tab:', scope.activeTab);
+                console.log('Reviews loaded:', scope.reviews ? scope.reviews.length : 0);
+                if (scope.reviews && scope.reviews.length > 0) {
+                    console.log('First review:', scope.reviews[0]);
+                    console.log('First review images:', scope.reviews[0].images);
+                }
+                scope.$apply();
+            } else {
+                console.log('Scope not found');
+            }
+        }, 2000);
     </script>
 }
