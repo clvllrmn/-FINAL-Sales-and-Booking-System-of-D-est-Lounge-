@@ -155,38 +155,28 @@
         <h2>Service Summary</h2>
 
         <div class="summary-box">
-            <div class="summary-row">
-                <span><i class="fa fa-user"></i> Nail Tech</span>
-                <strong>{{bookingSummary.nailTech}}</strong>
-            </div>
+            <div class="summary-meta">
+               
+                  
 
-            <div class="summary-row">
-                <span><i class="fa fa-calendar"></i> Date</span>
-                <strong>{{bookingSummary.bookingDate}}</strong>
-            </div>
+                    <div class="summary-item">
+                        <span class="summary-service-name">Service:    {{bookingSummary.serviceName}}</span>
+                        <span class="summary-service-price">₱{{bookingSummary.price | number:2}}</span>
+                    </div>
 
-            <div class="summary-row">
-                <span><i class="fa fa-clock"></i> Time</span>
-                <strong>{{bookingSummary.startTime}}</strong>
-            </div>
+                    <div class="summary-divider"></div>
 
-            <hr />
+                    <div class="summary-total-row">
+                        <span class="summary-total-label">Total:</span>
+                        <span class="summary-total-value">₱{{bookingSummary.total | number:2}}</span>
+                    </div>
 
-            <div class="service-line">
-                <span>{{bookingSummary.serviceName}}</span>
-                <strong>₱{{bookingSummary.price | number:2}}</strong>
+                    <div class="summary-downpayment-row">
+                        <span class="summary-dp-label">Downpayment (40%)</span>
+                        <span class="summary-dp-value">₱{{bookingSummary.downpayment | number:2}}</span>
+                    </div>
+                </div>
             </div>
-
-            <div class="total-line">
-                <span>Total</span>
-                <strong>₱{{bookingSummary.total | number:2}}</strong>
-            </div>
-
-            <div class="downpayment-line">
-                <span>Downpayment (40%)</span>
-                <strong>₱{{bookingSummary.downpayment | number:2}}</strong>
-            </div>
-        </div>
     </div>
 
     <div class="payment-form-card">
@@ -531,45 +521,124 @@
         }
 
     .service-summary-card {
-        width: 350px;
+        width: 320px;
+        background-color: #e7dfd6;
+        border-radius: 20px;
+        padding: 22px 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        height: fit-content;
     }
+
+        .service-summary-card h2 {
+            text-align: center;
+            color: #6b4423;
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0 0 16px 0;
+            padding-bottom: 14px;
+            border-bottom: 2px solid #cbb8a7;
+        }
 
     .summary-box {
-        background: #f8f8f8;
-        border-radius: 18px;
-        padding: 20px;
-        border: 1px solid #dbcaba;
+        background: #fff;
+        border-radius: 16px;
+        padding: 16px 18px;
     }
 
-    .summary-row,
-    .service-line,
-    .total-line,
-    .downpayment-line {
+    .summary-meta {
+        background: #faf7f4;
+        border: 1px solid #e3d7cb;
+        border-radius: 12px;
+        padding: 8px 14px;
+        margin-bottom: 16px;
+    }
+
+    .summary-meta-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 14px;
-        color: #6f4e37;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee2d7;
     }
 
-        .summary-row span,
-        .service-line span,
-        .total-line span,
-        .downpayment-line span {
-            font-size: 16px;
+        .summary-meta-row:last-child {
+            border-bottom: none;
         }
 
-    .total-line {
-        font-size: 24px;
-        font-weight: bold;
-        margin-top: 18px;
+    .summary-meta-label {
+        color: #8b6f47;
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
-    .downpayment-line {
-        border-top: 1px dashed #c9b5a4;
-        padding-top: 14px;
-        font-size: 20px;
-        font-weight: bold;
+    .summary-meta-value {
+        color: #6b4423;
+        font-size: 14px;
+        font-weight: 600;
+        text-align: right;
+    }
+
+    .summary-divider {
+        height: 1px;
+        background: #e6d8ca;
+        margin: 14px 0;
+    }
+
+    .summary-item,
+    .summary-total-row,
+    .summary-downpayment-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .summary-item {
+        padding: 2px 0;
+    }
+
+    .summary-service-name {
+        color: #6b4423;
+        font-size: 15px;
+        font-weight: 500;
+    }
+
+    .summary-service-price {
+        color: #6b4423;
+        font-size: 15px;
+        font-weight: 700;
+    }
+
+    .summary-total-label {
+        color: #6b4423;
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    .summary-total-value {
+        color: #6b4423;
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    .summary-downpayment-row {
+        margin-top: 12px;
+        padding-top: 10px;
+        border-top: 1px dashed #d8c2ae;
+    }
+
+    .summary-dp-label {
+        color: #8b6f47;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .summary-dp-value {
+        color: #6b4423;
+        font-size: 15px;
+        font-weight: 700;
     }
 
     /* ── Footer ── */
