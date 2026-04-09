@@ -93,6 +93,7 @@ app.controller("DestLoungeSalesandBookingController",
             $http.get(url)
                 .then(function (res) {
                     console.log("REVIEWS DATA:", res.data);
+                    console.log("First review images:", res.data[0] ? res.data[0].Images : 'no reviews');
 
                     $scope.reviews = (res.data || []).map(function (r) {
                         return {
@@ -109,6 +110,7 @@ app.controller("DestLoungeSalesandBookingController",
                         };
                     });
 
+                    console.log("Mapped reviews with images:", $scope.reviews); 
                     $scope.reviewsTotalPages = Math.ceil($scope.reviews.length / $scope.reviewsPerPage);
                     $scope.updatePagedReviews();
                 })
@@ -3040,7 +3042,10 @@ app.controller("DestLoungeSalesandBookingController",
             $scope.activeTab = tab;
 
             if (tab === 'reviews') {
-                $scope.loadReviews(); // 🔥 load only when clicked
+                if (!$scope.reviews || $scope.reviews.length === 0) {
+                    $scope.loadReviews(); // Load reviews if not already loaded
+                }
+                $scope.updatePagedReviews(); // Refresh pagination
             }
         };
       

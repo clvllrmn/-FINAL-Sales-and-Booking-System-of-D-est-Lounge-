@@ -647,6 +647,7 @@ namespace DestLoungeSalesandBooking.Controllers
         {
             var reviews = db.tbl_reviews
                 .Where(r => !r.IsArchived && !r.Flagged)
+                .OrderByDescending(r => r.CreatedAt)
                 .ToList()
                 .Select(r => new
                 {
@@ -654,6 +655,7 @@ namespace DestLoungeSalesandBooking.Controllers
                     r.Rating,
                     r.ReviewText,
                     r.CreatedAt,
+                    ServiceAvailed = GetServiceNameFromBooking(r.BookingId),
                     Flagged = r.Flagged,
                     FlagReason = r.FlagReason,
                     FlagNote = r.FlagNote,
@@ -661,10 +663,23 @@ namespace DestLoungeSalesandBooking.Controllers
                     Images = db.tbl_review_images
                         .Where(img => img.ReviewId == r.ReviewId)
                         .Select(img => img.ImageUrl)
-                        .ToList()
+                        .ToList()  // This should return the image URLs
                 }).ToList();
 
             return Json(reviews, JsonRequestBehavior.AllowGet);
+        }
+
+        private string GetServiceNameFromBooking(int bookingId)
+        {
+            var booking = db.tbl_bookings.FirstOrDefault(b => b.BookingId == bookingId);
+            if (booking != null && !string.IsNullOrEmpty(booking.Notes))
+            {
+                // Extract services from notes
+                var match = System.Text.RegularExpressions.Regex.Match(booking.Notes, @"Services:\s*([^|]+)");
+                if (match.Success)
+                    return match.Groups[1].Value.Trim();
+            }
+            return "Nail Service";
         }
 
         [HttpPost]
