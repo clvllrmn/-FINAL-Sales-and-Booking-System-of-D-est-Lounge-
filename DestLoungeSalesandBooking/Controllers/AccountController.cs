@@ -12,6 +12,7 @@ using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using System.Web.Mvc;
 using System.Web.Script.Serialization;
 using System.Web.Security;
@@ -126,7 +127,26 @@ namespace DestLoungeSalesandBooking.Controllers
                 }
                 // ─────────────────────────────────────────────────────────────
 
+                System.Web.HttpContext.Current = ((System.Web.HttpContextWrapper)this.HttpContext).ApplicationInstance.Context;
                 FormsAuthentication.SetAuthCookie(user.email, false);
+
+                // Replace FormsAuthentication.SetAuthCookie(user.email, false);
+                var ticket = new FormsAuthenticationTicket(
+                    1,
+                    user.email,
+                    DateTime.UtcNow,
+                    DateTime.UtcNow.Add(FormsAuthentication.Timeout),
+                    false,
+                    string.Empty,
+                    FormsAuthentication.FormsCookiePath);
+
+                var encTicket = FormsAuthentication.Encrypt(ticket);
+                var cookie = new HttpCookie(FormsAuthentication.FormsCookieName, encTicket)
+                {
+                    HttpOnly = true,
+                    Secure = Request.IsSecureConnection
+                };
+                this.HttpContext.Response.Cookies.Add(cookie);
 
                 Session["UserID"] = user.userID;
                 Session["UserEmail"] = user.email;
@@ -381,15 +401,23 @@ namespace DestLoungeSalesandBooking.Controllers
                     return Json(new { success = false, message = "Invalid Google token." });
                 }
 
-                var email = (payload.Email ?? "").Trim().ToLower();
+                // 🔒 Validate email first
+                if (string.IsNullOrWhiteSpace(payload.Email))
+                {
+                    return Json(new { success = false, message = "Google account has no email." });
+                }
 
+                var email = payload.Email.Trim().ToLower();
+
+                // 🔍 Find user
                 var user = db.tbl_users.FirstOrDefault(u => u.googleSub == payload.Subject);
 
-                if (user == null && !string.IsNullOrWhiteSpace(email))
+                if (user == null)
                 {
                     user = db.tbl_users.FirstOrDefault(u => u.email.ToLower() == email);
                 }
 
+                // 🆕 CREATE USER (FIRST TIME GOOGLE LOGIN)
                 if (user == null)
                 {
                     user = new tbl_users
@@ -407,27 +435,45 @@ namespace DestLoungeSalesandBooking.Controllers
                     };
 
                     db.tbl_users.Add(user);
+                    db.SaveChanges(); // 🔥 IMPORTANT FIX
                 }
                 else
                 {
                     if (string.IsNullOrWhiteSpace(user.googleSub))
                         user.googleSub = payload.Subject;
 
-                    if (string.IsNullOrWhiteSpace(user.firstname) && !string.IsNullOrWhiteSpace(payload.GivenName))
-                        user.firstname = payload.GivenName;
-
-                    if (string.IsNullOrWhiteSpace(user.lastname) && !string.IsNullOrWhiteSpace(payload.FamilyName))
-                        user.lastname = payload.FamilyName;
-
-                    if (string.IsNullOrWhiteSpace(user.email) && !string.IsNullOrWhiteSpace(email))
-                        user.email = email;
-
                     user.updatedAt = DateTime.Now;
+                    db.SaveChanges();
                 }
 
-                db.SaveChanges();
+                // 🛡️ FINAL SAFETY CHECK
+                if (user == null || string.IsNullOrWhiteSpace(user.email))
+                {
+                    return Json(new { success = false, message = "User creation failed." });
+                }
 
-                FormsAuthentication.SetAuthCookie(user.email, false);
+                // ✅ LOGIN
+                // Create and add forms-authentication cookie explicitly instead of
+                // using FormsAuthentication.SetAuthCookie which depends on
+                // HttpContext.Current and may be null after awaits.
+                var ticket = new FormsAuthenticationTicket(
+                    1,
+                    user.email,
+                    DateTime.UtcNow,
+                    DateTime.UtcNow.Add(FormsAuthentication.Timeout),
+                    false,
+                    string.Empty,
+                    FormsAuthentication.FormsCookiePath);
+
+                var encTicket = FormsAuthentication.Encrypt(ticket);
+                var cookie = new HttpCookie(FormsAuthentication.FormsCookieName, encTicket)
+                {
+                    HttpOnly = true,
+                    Secure = Request.IsSecureConnection
+                };
+                this.HttpContext.Response.Cookies.Add(cookie);
+
+                System.Diagnostics.Debug.WriteLine("Google Email: " + payload.Email);
 
                 Session["UserID"] = user.userID;
                 Session["UserEmail"] = user.email;
