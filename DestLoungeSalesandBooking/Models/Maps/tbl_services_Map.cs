@@ -24,10 +24,8 @@ namespace DestLoungeSalesandBooking.Models.Maps
                 .IsRequired();
 
             Property(t => t.description)
-                .HasColumnName("description")
-                .HasMaxLength(255)
-                .IsOptional();
-
+     .HasColumnName("description")
+     .IsOptional();  
             Property(t => t.price)
                 .HasColumnName("price")
                 .HasPrecision(10, 2)
