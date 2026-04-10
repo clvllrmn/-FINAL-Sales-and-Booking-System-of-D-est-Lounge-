@@ -227,13 +227,14 @@
                 <p class="review-text">&ldquo;{{review.reviewText || 'No comment provided.'}}&rdquo;</p>
 
                 <div class="review-images-wrap" ng-if="review.images && review.images.length > 0">
-                    <div class="images-title">Attached Photos:</div>
+                    <div class="images-title">Attached Photos ({{review.images.length}}):</div>
                     <div class="images-grid">
-                        <img ng-repeat="img in review.images"
+                        <img ng-repeat="img in review.images track by $index"
                              ng-src="{{img}}"
                              alt="Review Photo"
                              class="review-image clickable-review-image"
-                             ng-click="openReviewLightbox(img); $event.stopPropagation();" />
+                             ng-click="openReviewLightbox(img); $event.stopPropagation();"
+                             onerror="this.style.display='none'" />
                     </div>
                 </div>
                 <div ng-if="(!review.images || review.images.length === 0)" class="no-images">
@@ -915,6 +916,58 @@
             font-style: italic;
             font-size: 12px;
         }
+
+    .image-modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .image-modal-content {
+        position: relative;
+        max-width: 90vw;
+        max-height: 90vh;
+    }
+
+        .image-modal-content img {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+    .image-modal-close {
+        position: absolute;
+        top: -40px;
+        right: -40px;
+        color: white;
+        font-size: 35px;
+        font-weight: bold;
+        cursor: pointer;
+        background: rgba(0,0,0,0.5);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+        .image-modal-close:hover {
+            background: rgba(0,0,0,0.8);
+            transform: scale(1.1);
+        }
+
+
     /* =============================================
        DESKTOP (above 1024px)
     ============================================= */
@@ -1246,6 +1299,29 @@
                 font-size: 0.95rem;
             }
     }
+
+
+    /* Small MOBILE (max-width: 768px) */
+@@media (max-width: 768px) {
+    .review-image {
+        width: 60px;
+        height: 60px;
+    }
+
+    .images-grid {
+        gap: 6px;
+    }
+
+    .image-modal-close {
+        top: -38px;
+        right: 8px;
+        font-size: 38px;
+        width: 35px;
+        height: 35px;
+    }
+}
+
+
 </style>
 
 @section scripts {

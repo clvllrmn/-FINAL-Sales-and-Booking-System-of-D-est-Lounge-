@@ -560,23 +560,23 @@ namespace DestLoungeSalesandBooking.Controllers
                         r.Flagged,
                         r.FlagReason,
                         r.FlagNote,
-                        Images = db.tbl_review_images
-                            .Where(img => img.ReviewId == r.ReviewId)
-                            .Select(img => img.ImageUrl)
-                            .ToList(),
+                        images = db.tbl_review_images
+                        .Where(img => img.ReviewId == r.ReviewId)
+                        .Select(img => img.ImageUrl)
+                        .ToList(),
 
-                        Booking = db.tbl_bookings
-                            .Where(b => b.BookingId == r.BookingId)
-                            .Select(b => new
-                            {
-                                b.ReferenceNo,
-                                BookingDate = b.BookingDate,
-                                b.StartTime,
-                                b.EndTime,
-                                b.NailTech,
-                                b.Notes
-                            })
-                            .FirstOrDefault()
+                         booking = db.tbl_bookings
+                        .Where(b => b.BookingId == r.BookingId)
+                        .Select(b => new
+                        {
+                            referenceNo = b.ReferenceNo,
+                            bookingDate = b.BookingDate,
+                            startTime = b.StartTime,
+                            endTime = b.EndTime,
+                            nailTech = b.NailTech,
+                            notes = b.Notes
+                        })
+                        .FirstOrDefault()
                     })
                     .ToList();
 
@@ -649,23 +649,23 @@ namespace DestLoungeSalesandBooking.Controllers
             var reviews = db.tbl_reviews
                 .Where(r => !r.IsArchived && !r.Flagged)
                 .OrderByDescending(r => r.CreatedAt)
-                .ToList()
                 .Select(r => new
                 {
-                    r.ReviewId,
-                    r.Rating,
-                    r.ReviewText,
-                    r.CreatedAt,
-                    ServiceAvailed = GetServiceNameFromBooking(r.BookingId),
+                    ReviewId = r.ReviewId,
+                    Rating = r.Rating,
+                    ReviewText = r.ReviewText,
+                    CreatedAt = r.CreatedAt,
+                    
                     Flagged = r.Flagged,
                     FlagReason = r.FlagReason,
                     FlagNote = r.FlagNote,
                     IsArchived = r.IsArchived,
-                    Images = db.tbl_review_images
+                    images = db.tbl_review_images
                         .Where(img => img.ReviewId == r.ReviewId)
                         .Select(img => img.ImageUrl)
-                        .ToList()  // This should return the image URLs
-                }).ToList();
+                        .ToList()
+                })
+                .ToList();
 
             return Json(reviews, JsonRequestBehavior.AllowGet);
         }
@@ -712,7 +712,7 @@ namespace DestLoungeSalesandBooking.Controllers
                     r.Rating,
                     r.ReviewText,
                     r.CreatedAt,
-                    Images = db.tbl_review_images
+                    images = db.tbl_review_images
                         .Where(img => img.ReviewId == r.ReviewId)
                         .Select(img => img.ImageUrl)
                         .ToList()
@@ -979,7 +979,7 @@ namespace DestLoungeSalesandBooking.Controllers
                     r.Flagged,
                     r.FlagReason,
                     r.FlagNote,
-                    Images = db.tbl_review_images
+                    images = db.tbl_review_images
                         .Where(img => img.ReviewId == r.ReviewId)
                         .Select(img => img.ImageUrl)
                         .ToList()
@@ -1014,6 +1014,64 @@ namespace DestLoungeSalesandBooking.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
+        [HttpGet]
+        public JsonResult Analytics(string range = "week")
+        {
+            try
+            {
+                DateTime now = DateTime.Now;
+                DateTime startDate;
+
+                switch (range)
+                {
+                    case "today":
+                        startDate = now.Date;
+                        break;
+                    case "month":
+                        startDate = new DateTime(now.Year, now.Month, 1);
+                        break;
+                    default:
+                        startDate = now.AddMonths(-3);
+                        break;
+                }
+
+                // ✅ GET SALES (NOT BOOKINGS)
+                var sales = db.tbl_sales
+                .Where(s => s.Status == "Paid")
+                .ToList();
+
+                var totalRevenue = sales.Sum(s => s.Total);
+                var totalBookings = sales.Count; // or distinct bookingId if needed
+
+                var grouped = sales
+                    .GroupBy(s => s.CreatedAt.Date)
+                    .Select(g => new
+                    {
+                        label = g.Key.ToString("ddd"),
+                        value = g.Sum(x => x.Total)
+                    })
+                    .OrderBy(x => x.label)
+                    .ToList();
+
+                System.Diagnostics.Debug.WriteLine("StartDate: " + startDate);
+                System.Diagnostics.Debug.WriteLine("Now: " + DateTime.Now);
+
+                return Json(new
+                {
+                    totalRevenue,
+                    totalBookings,
+                    range,
+                    points = grouped
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+
+        }
+
     }
 
     }

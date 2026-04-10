@@ -36,14 +36,11 @@
                     </a>
                 }
 
-                <!-- NOTIFICATION (MOBILE) -->
                 <button type="button"
                         ng-click="toggleNotif($event)"
                         style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037;">
                     <i class="fa-solid fa-bell"></i>
-
-                    <span ng-if="getUnreadCount() > 0"
-                          class="notif-badge">!</span>
+                    <span ng-if="getUnreadCount() > 0" class="notif-badge">!</span>
                 </button>
 
                 <div ng-show="showNotif"
@@ -94,14 +91,11 @@
                 </a>
             }
 
-            <!-- NOTIFICATION (DESKTOP) -->
             <button type="button"
                     ng-click="toggleNotif($event)"
                     style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037;">
                 <i class="fa-solid fa-bell"></i>
-
-                <span ng-if="getUnreadCount() > 0"
-                      class="notif-badge">!</span>
+                <span ng-if="getUnreadCount() > 0" class="notif-badge">!</span>
             </button>
 
             <div ng-show="showNotif"
@@ -136,7 +130,6 @@
             </div>
         </div>
 
-        <!-- HAMBURGER -->
         <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
             <span></span>
             <span></span>
@@ -149,40 +142,75 @@
 
 <div class="payment-page-wrapper"
      ng-controller="DestLoungeSalesandBookingController"
-     ng-init="loadPaymentInfo(); loadPaymentSummary()">
+     ng-init="loadPaymentSummary(); loadPaymentInfo()">
 
-    <div class="service-summary-card">
+    <div class="service-summary-card" ng-if="bookingSummary">
         <h2>Service Summary</h2>
 
         <div class="summary-box">
+            <!-- Booking Details Section -->
             <div class="summary-meta">
-
-                <div class="summary-item">
-                    <span class="summary-service-name">
-                        Service: {{bookingSummary.serviceName || '—'}}
-                    </span>
-                    <span class="summary-service-price">
-                        ₱{{bookingSummary.price ? (bookingSummary.price | number:2) : '0.00'}}
-                    </span>
+                <div class="summary-meta-row" ng-if="bookingSummary.nailTech">
+                    <span class="summary-meta-label">Nail Tech:</span>
+                    <span class="summary-meta-value">{{bookingSummary.nailTech}}</span>
                 </div>
-
-                <div class="summary-divider"></div>
-
-                <div class="summary-total-row">
-                    <span class="summary-total-label">Total:</span>
-                    <span class="summary-total-value">
-                        ₱{{bookingSummary.total ? (bookingSummary.total | number:2) : '0.00'}}
-                    </span>
+                <div class="summary-meta-row" ng-if="bookingSummary.date">
+                    <span class="summary-meta-label">Date:</span>
+                    <span class="summary-meta-value">{{bookingSummary.date | date:'MMM dd, yyyy'}}</span>
                 </div>
-
-                <div class="summary-downpayment-row">
-                    <span class="summary-dp-label">Downpayment (40%)</span>
-                    <span class="summary-dp-value">
-                        ₱{{bookingSummary.downpayment ? (bookingSummary.downpayment | number:2) : '0.00'}}
-                    </span>
+                <div class="summary-meta-row" ng-if="bookingSummary.time">
+                    <span class="summary-meta-label">Time:</span>
+                    <span class="summary-meta-value">{{bookingSummary.time}}</span>
                 </div>
             </div>
+
+            <!-- Service Items -->
+            <div ng-repeat="service in bookingSummary.services" class="summary-item">
+                <span class="summary-service-name">{{service.name}}</span>
+                <span class="summary-service-price">₱{{service.price | number:2}}</span>
             </div>
+
+            <!-- Single Service (fallback) -->
+            <div ng-if="bookingSummary.serviceName && !bookingSummary.services" class="summary-item">
+                <span class="summary-service-name">{{bookingSummary.serviceName}}</span>
+                <span class="summary-service-price">₱{{bookingSummary.price | number:2}}</span>
+            </div>
+
+            <div class="summary-divider"></div>
+
+            <!-- Total -->
+            <div class="summary-total-row">
+                <span class="summary-total-label">Total:</span>
+                <span class="summary-total-value">₱{{bookingSummary.total | number:2}}</span>
+            </div>
+
+            <!-- Downpayment -->
+            <div class="summary-downpayment-row">
+                <span class="summary-dp-label">Downpayment (40%)</span>
+                <span class="summary-dp-value">₱{{bookingSummary.downpayment | number:2}}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="service-summary-card" ng-if="!bookingSummary && isLoading">
+        <h2>Service Summary</h2>
+        <div class="summary-box" style="text-align: center; padding: 40px;">
+            <i class="fa fa-spinner fa-spin" style="font-size: 24px; color: #6b4423;"></i>
+            <p style="margin-top: 10px; color: #6b4423;">Loading booking details...</p>
+        </div>
+    </div>
+
+    <!-- Error State -->
+    <div class="service-summary-card" ng-if="!bookingSummary && !isLoading && loadError">
+        <h2>Service Summary</h2>
+        <div class="summary-box" style="text-align: center; padding: 40px;">
+            <i class="fa fa-exclamation-triangle" style="font-size: 24px; color: #e74c3c;"></i>
+            <p style="margin-top: 10px; color: #e74c3c;">{{loadError}}</p>
+            <button ng-click="loadPaymentSummary()" style="margin-top: 10px; padding: 8px 16px; background: #6b4423; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                Retry
+            </button>
+        </div>
     </div>
 
     <div class="payment-form-card">
@@ -193,33 +221,39 @@
 
             <div class="gcash-box">
                 <strong>GCash</strong>
-                <p>{{paymentInfo.gcash}}</p>
+                <p>{{paymentInfo.gcashNumber || paymentInfo.gcash || '09394091925'}}</p>
             </div>
 
-            <div class="qr-section" ng-if="paymentInfo.qr">
-                <label>Scan QR Code: </label>
-                <img ng-src="{{paymentInfo.qr}}" alt="QR Code" class="qr-image" />
+            <div class="qr-section" ng-if="paymentInfo.qrCode || paymentInfo.qr">
+                <label>Scan QR Code:</label>
+                <img ng-src="{{paymentInfo.qrCode || paymentInfo.qr}}" alt="QR Code" class="qr-image" />
+            </div>
+
+            <!-- Fallback QR if not in paymentInfo -->
+            <div class="qr-section" ng-if="!(paymentInfo.qrCode || paymentInfo.qr)">
+                <label>Scan QR Code:</label>
+                <img src="~/Content/Pictures/gcash-qr-placeholder.png" alt="QR Code" class="qr-image" />
             </div>
 
             <div class="upload-section">
                 <label>Upload Receipt</label>
-                <input type="file" id="receiptUpload" file-model="bookingReceipt" />
+                <input type="file" id="receiptUpload" file-model="bookingReceipt" accept="image/*" />
+                <small style="color: #666; display: block; margin-top: 5px;">Accepted formats: JPG, PNG (Max 5MB)</small>
             </div>
 
-            <button type="button" class="submit-btn" ng-click="submitPayment()">
-                Submit Booking
+            <button type="button" class="submit-btn" ng-click="submitPayment()" ng-disabled="isSubmitting">
+                <span ng-if="!isSubmitting">Submit Booking</span>
+                <span ng-if="isSubmitting"><i class="fa fa-spinner fa-spin"></i> Submitting...</span>
             </button>
         </div>
     </div>
 </div>
 
-
-
 <footer>
     <div class="footer-container">
         <h2 class="footer-title">Follow our Socials!</h2>
         <div class="social-links">
-            <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank">
+            <a href="https://www.tiktok.com/destlounge" class="social-item" target="_blank">
                 <i class="fa-brands fa-tiktok"></i>
                 <span>destlounge</span>
             </a>
@@ -246,7 +280,6 @@
         padding: 0;
     }
 
-    /* ── Hamburger ── */
     .hamburger-btn {
         display: none;
         flex-direction: column;
@@ -285,7 +318,6 @@
             transform: translateY(-8px) rotate(-45deg);
         }
 
-    /* ── Nav Overlay ── */
     .nav-overlay {
         display: none;
         position: fixed;
@@ -306,145 +338,6 @@
         display: none;
     }
 
-    /* ── Payment Page ── */
-    .payment-container {
-        padding: 80px 40px;
-        background: #f5f0eb;
-        min-height: calc(100vh - 140px);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .payment-title {
-        font-size: 36px;
-        color: #6b5544;
-        margin-bottom: 30px;
-        font-family: 'Georgia', serif;
-        font-weight: 600;
-    }
-
-    .payment-card {
-        background: #e8ddd1;
-        padding: 40px;
-        border-radius: 25px;
-        width: 100%;
-        max-width: 500px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-
-    .payment-subtitle {
-        margin-bottom: 20px;
-        color: #5a4a3a;
-        font-size: 24px;
-        font-family: 'Georgia', serif;
-        font-weight: 600;
-    }
-
-    .payment-methods {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        margin-bottom: 25px;
-    }
-
-    .method-box {
-        background: #c9b5a3;
-        padding: 15px;
-        border-radius: 10px;
-    }
-
-        .method-box h3 {
-            margin: 0 0 8px 0;
-            color: #5a4a3a;
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .method-box p {
-            margin: 0;
-            color: #3d2a1c;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-    .qr-section {
-        margin-bottom: 25px;
-        text-align: center;
-    }
-
-        .qr-section h3 {
-            margin: 0 0 10px 0;
-            color: #5a4a3a;
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-    .qr-image {
-        width: 200px;
-        height: auto;
-        border: 2px solid #c9b5a3;
-        border-radius: 10px;
-        padding: 10px;
-        background: white;
-    }
-
-    .qr-section label {
-        display: block;
-        margin-bottom: 10px;
-        font-weight: 600;
-        color: #6f4e37;
-    }
-
-    .upload-section {
-        margin-bottom: 25px;
-    }
-
-        .upload-section label {
-            display: block;
-            margin-bottom: 8px;
-            color: #5a4a3a;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .upload-section input {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #c9b5a3;
-            border-radius: 10px;
-            background: white;
-            cursor: pointer;
-            box-sizing: border-box;
-        }
-
-            .upload-section input:hover {
-                border-color: #6b5544;
-            }
-
-    .btn-submit {
-        width: 100%;
-        padding: 15px;
-        background: #6b5544;
-        color: white;
-        border: none;
-        border-radius: 20px;
-        font-weight: 600;
-        cursor: pointer;
-        font-size: 16px;
-        transition: all 0.3s ease;
-    }
-
-        .btn-submit:hover {
-            background: #5a4635;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-
-        .btn-submit:active {
-            transform: translateY(0);
-        }
-
     .payment-page-wrapper {
         display: flex;
         gap: 30px;
@@ -452,6 +345,8 @@
         align-items: flex-start;
         flex-wrap: wrap;
         padding: 40px 20px;
+        max-width: 1400px;
+        margin: 0 auto;
     }
 
     .payment-form-card,
@@ -488,10 +383,24 @@
         color: #5b3d2e;
     }
 
+        .gcash-box p {
+            margin: 8px 0 0 0;
+            font-size: 18px;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
     .qr-section {
         text-align: center;
         margin-bottom: 20px;
     }
+
+        .qr-section label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #6f4e37;
+        }
 
     .qr-image {
         width: 190px;
@@ -511,6 +420,16 @@
             font-weight: 600;
         }
 
+        .upload-section input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #c9b5a3;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
     .submit-btn {
         width: 100%;
         background: #7a5a44;
@@ -521,14 +440,21 @@
         font-size: 18px;
         font-weight: bold;
         cursor: pointer;
+        transition: all 0.3s ease;
     }
 
-        .submit-btn:hover {
+        .submit-btn:hover:not(:disabled) {
             opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
     .service-summary-card {
-        width: 320px;
+        width: 380px;
         background-color: #e7dfd6;
         border-radius: 20px;
         padding: 22px 20px;
@@ -576,9 +502,6 @@
         color: #8b6f47;
         font-size: 14px;
         font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 8px;
     }
 
     .summary-meta-value {
@@ -603,7 +526,7 @@
     }
 
     .summary-item {
-        padding: 2px 0;
+        padding: 8px 0;
     }
 
     .summary-service-name {
@@ -648,7 +571,6 @@
         font-weight: 700;
     }
 
-    /* ── Footer ── */
     footer {
         background-color: #e7d7c8;
         border: 2px solid #d4c4b0;
@@ -700,9 +622,21 @@
             font-weight: 500;
         }
 
-    /* =============================================
-       DESKTOP (above 1024px)
-    ============================================= */
+    /* Loading spinner */
+    .fa-spinner {
+        animation: fa-spin 2s infinite linear;
+    }
+
+    @@keyframes fa-spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(359deg);
+        }
+    }
+
     @@media (min-width: 1025px) {
         .hamburger-btn {
             display: none !important;
@@ -722,37 +656,24 @@
 
         .main-nav {
             position: static !important;
-            top: auto !important;
-            right: auto !important;
-            left: auto !important;
             width: auto !important;
             height: auto !important;
             background: none !important;
-            background-color: transparent !important;
-            box-shadow: none !important;
             padding: 0 !important;
             margin-left: 3rem !important;
             margin-right: auto !important;
             display: flex !important;
             flex-direction: row !important;
-            align-items: center !important;
-            justify-content: flex-start !important;
             gap: 2.5rem !important;
-            overflow: visible !important;
             transform: none !important;
-            transition: none !important;
-            z-index: auto !important;
         }
 
             .main-nav a {
                 width: auto !important;
                 padding: 0 !important;
-                border-bottom: none !important;
                 font-size: 1.3rem !important;
                 font-weight: 600 !important;
                 color: #5d4037 !important;
-                letter-spacing: 0.5px !important;
-                display: inline !important;
             }
 
                 .main-nav a.nav-active {
@@ -762,9 +683,6 @@
                 }
     }
 
-    /* =============================================
-       TABLET + MOBILE (max-width: 1024px)
-    ============================================= */
     @@media (max-width: 1024px) {
         .hamburger-btn {
             display: flex;
@@ -782,23 +700,15 @@
             position: fixed !important;
             top: 0 !important;
             right: 0 !important;
-            left: auto !important;
             width: 280px !important;
             height: 100vh !important;
             background-color: #f5f0eb !important;
             z-index: 1000 !important;
             display: flex !important;
             flex-direction: column !important;
-            align-items: flex-start !important;
-            justify-content: flex-start !important;
             padding: 5rem 2rem 2rem 2rem !important;
-            gap: 0 !important;
-            box-shadow: -4px 0 20px rgba(0,0,0,0.15) !important;
             transform: translateX(100%) !important;
             transition: transform 0.35s cubic-bezier(0.4,0,0.2,1) !important;
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
-            margin: 0 !important;
         }
 
             .main-nav.open {
@@ -808,20 +718,8 @@
             .main-nav a {
                 width: 100% !important;
                 padding: 0.9rem 0 !important;
-                font-size: 1rem !important;
-                font-weight: 600 !important;
-                color: #5d4037 !important;
                 border-bottom: 1px solid #e0d5c8 !important;
-                letter-spacing: 0.05em !important;
-                display: block !important;
-                text-decoration: none !important;
-                background: none !important;
             }
-
-                .main-nav a.nav-active {
-                    color: #6b4423 !important;
-                    border-bottom: 1px solid #e0d5c8 !important;
-                }
 
         .mobile-nav-actions {
             display: flex !important;
@@ -830,155 +728,41 @@
             margin-top: 1.5rem;
             padding-top: 1.5rem;
             border-top: 2px solid #d4c4b0;
-            gap: 0;
         }
 
-            .mobile-nav-actions a {
-                display: flex !important;
-                align-items: center;
-                gap: 0.6rem;
-                padding: 0.75rem 0 !important;
-                font-size: 0.97rem !important;
-                color: #5d4037 !important;
-                border-bottom: 1px solid #e0d5c8 !important;
-                width: 100% !important;
-                font-weight: 600 !important;
-                text-decoration: none !important;
-                background: none !important;
-            }
-
-                .mobile-nav-actions a:last-child {
-                    border-bottom: none !important;
-                }
-
-        .payment-container {
-            padding: 50px 24px;
+        .payment-page-wrapper {
+            padding: 20px 15px;
+            gap: 20px;
         }
 
-        .payment-title {
-            font-size: 28px;
-            text-align: center;
+        .payment-form-card, .service-summary-card {
+            width: 100%;
+            max-width: 500px;
         }
 
-        .payment-card {
-            padding: 30px 24px;
+        .service-summary-card {
+            order: 2;
         }
 
-        .payment-subtitle {
-            font-size: 20px;
-        }
-
-        .qr-image {
-            width: 160px;
+        .payment-form-card {
+            order: 1;
         }
     }
 
-    /* =============================================
-       MOBILE (max-width: 768px)
-    ============================================= */
     @@media (max-width: 768px) {
-        .payment-container {
-            padding: 36px 16px;
-            min-height: calc(100vh - 120px);
-        }
-
-        .payment-title {
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-
-        .payment-card {
-            padding: 24px 18px;
-            border-radius: 18px;
-        }
-
-        .payment-subtitle {
-            font-size: 18px;
-            margin-bottom: 16px;
-        }
-
-        .method-box {
-            padding: 12px;
-        }
-
-            .method-box h3 {
-                font-size: 14px;
-            }
-
-            .method-box p {
-                font-size: 13px;
-            }
-
-        .qr-image {
-            width: 140px;
-        }
-
-        .upload-section label {
-            font-size: 13px;
-        }
-
-        .btn-submit {
-            padding: 13px;
-            font-size: 15px;
-        }
-
-        footer {
-            padding: 1.5rem 1rem;
+        .payment-form-card, .service-summary-card {
+            padding: 20px;
         }
 
         .footer-title {
             font-size: 1.5rem;
-            margin-bottom: 1.25rem;
         }
 
         .social-links {
             gap: 1.5rem;
         }
-
-        .social-item i {
-            font-size: 1.25rem;
-        }
-
-        .social-item span {
-            font-size: 0.8rem;
-        }
-    }
-
-    /* =============================================
-       SMALL MOBILE (max-width: 480px)
-    ============================================= */
-    @@media (max-width: 480px) {
-        .payment-container {
-            padding: 28px 12px;
-        }
-
-        .payment-title {
-            font-size: 22px;
-        }
-
-        .payment-card {
-            padding: 20px 14px;
-            border-radius: 14px;
-        }
-
-        .payment-subtitle {
-            font-size: 16px;
-        }
-
-        .qr-image {
-            width: 120px;
-        }
-
-        .btn-submit {
-            padding: 12px;
-            font-size: 14px;
-            border-radius: 14px;
-        }
     }
 </style>
-<script>
-    window.paymentBookingId = '@ViewBag.BookingId';
-</script>
 
 @section scripts {
     <script>
@@ -1001,16 +785,21 @@
                 document.body.style.overflow = '';
             }
 
-            btn.addEventListener('click', function () {
-                nav.classList.contains('open') ? closeMenu() : openMenu();
-            });
+            if (btn) {
+                btn.addEventListener('click', function () {
+                    nav.classList.contains('open') ? closeMenu() : openMenu();
+                });
+            }
 
-            overlay.addEventListener('click', closeMenu);
+            if (overlay) {
+                overlay.addEventListener('click', closeMenu);
+            }
 
-            nav.querySelectorAll('a').forEach(function (link) {
-                link.addEventListener('click', closeMenu);
-            });
+            if (nav) {
+                nav.querySelectorAll('a').forEach(function (link) {
+                    link.addEventListener('click', closeMenu);
+                });
+            }
         })();
     </script>
-  
 }

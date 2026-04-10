@@ -19,5 +19,6 @@ namespace DestLoungeSalesandBooking.Models
         public decimal price { get; set; }
         public sbyte is_active { get; set; }
         public string category { get; set; }
+        public decimal Price { get; set; }
     }
 }
