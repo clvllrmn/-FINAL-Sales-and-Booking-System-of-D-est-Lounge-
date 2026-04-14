@@ -98,6 +98,10 @@ namespace DestLoungeSalesandBooking.Controllers
         {
             return View();
         }
+        public ActionResult AdminDashboard()
+        {
+            return View();
+        }
 
         [SessionCheck]
         [NoCache]
