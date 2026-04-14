@@ -261,7 +261,8 @@
         <!-- TAB: MANAGE BOOKINGS -->
         <!-- ═══════════════════════════════════════════════════ -->
         <div class="tab-content" ng-show="dashTab === 'bookings'">
-            <h2 class="section-title">Salon's Analytics:</h2>
+            <h2 class="section-title">Manage Bookings</h2>
+
             <div class="filter-tabs">
                 <button class="tab-btn" ng-class="{'active': selectedFilter === 'all'}" ng-click="filterBookings('all')">All Bookings</button>
                 <button class="tab-btn" ng-class="{'active': selectedFilter === 'today'}" ng-click="filterBookings('today')">Today</button>
@@ -270,80 +271,95 @@
                 <button class="tab-btn" ng-class="{'active': selectedFilter === 'completed'}" ng-click="filterBookings('completed')">Completed</button>
                 <button class="tab-btn" ng-class="{'active': selectedFilter === 'cancelled'}" ng-click="filterBookings('cancelled')">Cancelled</button>
             </div>
-            <div class="bookings-grid">
-                <div class="booking-card" ng-repeat="booking in filteredBookings track by booking.bookingId">
-                    <div class="booking-info-row">
-                        <div class="info-icon"><i class="fa-solid fa-user"></i></div>
-                        <div class="info-content"><h3>Client:</h3><p>{{booking.clientName}}</p></div>
+
+            <div class="bookings-table-wrap">
+                <table class="bookings-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Client</th>
+                            <th>Service</th>
+                            <th>Date / Time</th>
+                            <th>Nail Tech</th>
+                            <th>Total Bill</th>
+                            <th>Downpayment</th>
+                            <th>Ref No.</th>
+                            <th>Status</th>
+                            <th>Receipt</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="booking in pagedBookings track by booking.bookingId">
+                            <td class="cell-num">{{(bookingsCurrentPage - 1) * bookingsPageSize + $index + 1}}</td>
+                            <td><strong class="cell-client">{{booking.clientName}}</strong></td>
+                            <td>{{booking.service}}</td>
+                            <td class="cell-date">{{booking.dateTime}}</td>
+                            <td class="cell-sm" ng-init="n = parseNotes(booking.notes)">{{n.nailtech || 'N/A'}}</td>
+                            <td>₱{{booking.totalBill | number:2}}</td>
+                            <td class="cell-down">₱{{booking.downpayment | number:2}}</td>
+                            <td class="cell-sm">{{booking.referenceNo || '—'}}</td>
+                            <td>
+                                <span class="bk-pill bk-pill-{{booking.status | lowercase}}"
+                                      ng-class="{
+                                'bk-pill-pending':   booking.status === 'Pending',
+                                'bk-pill-approved':  booking.status === 'Approved',
+                                'bk-pill-completed': booking.status === 'Completed',
+                                'bk-pill-cancelled': booking.status === 'Cancelled'
+                              }">
+                                    {{booking.status}}
+                                </span>
+                                <span class="bk-cancel-reason" ng-if="booking.status === 'Cancelled' && booking.cancelReason">
+                                    {{booking.cancelReason}}
+                                </span>
+                            </td>
+                            <td>
+                                <img ng-if="booking.receiptPath"
+                                     ng-src="{{booking.receiptPath}}"
+                                     class="bk-receipt-thumb clickable-review-image"
+                                     ng-click="openReviewLightbox(booking.receiptPath); $event.stopPropagation();"
+                                     alt="Receipt" />
+                                <span ng-if="!booking.receiptPath" class="cell-muted">—</span>
+                            </td>
+                            <td>
+                                <div ng-if="booking.status === 'Pending'" class="bk-action-group">
+                                    <button class="bk-btn bk-btn-approve" ng-click="updateBookingStatus(booking.bookingId, 'Approved')">Approve</button>
+                                    <button class="bk-btn bk-btn-cancel" ng-click="cancelBooking(booking.bookingId, $event)">Cancel</button>
+                                </div>
+                                <div ng-if="booking.status === 'Approved'" class="bk-action-group">
+                                    <button class="bk-btn bk-btn-complete" ng-click="updateBookingStatus(booking.bookingId, 'Completed')">Complete</button>
+                                    <button class="bk-btn bk-btn-cancel" ng-click="cancelBooking(booking.bookingId, $event)">Cancel</button>
+                                </div>
+                                <span ng-if="booking.status === 'Completed' || booking.status === 'Cancelled'" class="cell-muted">—</span>
+                            </td>
+                        </tr>
+                        <tr ng-if="pagedBookings.length === 0">
+                            <td colspan="11" class="bk-empty">No bookings found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Pagination -->
+                <div class="bk-pagination" ng-if="filteredBookings.length > 0">
+                    <span class="bk-pg-info">
+                        Showing {{(bookingsCurrentPage - 1) * bookingsPageSize + 1}}–{{[bookingsCurrentPage * bookingsPageSize, filteredBookings.length] | min}} of {{filteredBookings.length}}
+                    </span>
+                    <div class="bk-pg-btns">
+                        <button class="bk-pg-btn" ng-click="bookingsGoPage(bookingsCurrentPage - 1)" ng-disabled="bookingsCurrentPage === 1">&#8249;</button>
+                        <button class="bk-pg-btn"
+                                ng-repeat="p in bookingsPageNumbers"
+                                ng-class="{'bk-pg-active': p === bookingsCurrentPage}"
+                                ng-click="bookingsGoPage(p)">
+                            {{p}}
+                        </button>
+                        <button class="bk-pg-btn" ng-click="bookingsGoPage(bookingsCurrentPage + 1)" ng-disabled="bookingsCurrentPage === bookingsTotalPages">&#8250;</button>
                     </div>
-                    <div class="booking-divider"></div>
-                    <div class="booking-info-row">
-                        <div class="info-icon"><i class="fa-solid fa-heart"></i></div>
-                        <div class="info-content"><h3>Service:</h3><p>{{booking.service}}</p></div>
-                    </div>
-                    <div class="booking-divider"></div>
-                    <div class="booking-info-row">
-                        <div class="info-icon"><i class="fa-solid fa-calendar"></i></div>
-                        <div class="info-content"><h3>Date/Time:</h3><p>{{booking.dateTime}}</p></div>
-                    </div>
-                    <div class="booking-divider"></div>
-                    <div class="booking-info-row">
-                        <div class="info-icon"><i class="fa-solid fa-phone"></i></div>
-                        <div class="info-content"><h3>Contact:</h3><p>{{booking.contactNumber}}</p></div>
-                    </div>
-                    <div class="booking-divider"></div>
-                    <div class="booking-info-row">
-                        <div class="info-icon"><i class="fa-solid fa-envelope"></i></div>
-                        <div class="info-content"><h3>Email:</h3><p>{{booking.email}}</p></div>
-                    </div>
-                    <div class="booking-divider"></div>
-                    <div class="booking-info-row">
-                        <div class="info-icon"><i class="fa-solid fa-money-bill"></i></div>
-                        <div class="info-content"><h3>Total Bill:</h3><p>₱{{booking.totalBill | number:2}}</p></div>
-                    </div>
-                    <div class="booking-divider"></div>
-                    <div class="booking-info-row">
-                        <div class="info-icon"><i class="fa-solid fa-wallet"></i></div>
-                        <div class="info-content"><h3>Downpayment:</h3><p>₱{{booking.downpayment | number:2}}</p></div>
-                    </div>
-                    <div class="booking-divider"></div>
-                    <div class="booking-info-row">
-                        <div class="info-icon"><i class="fa-solid fa-note-sticky"></i></div>
-                        <div class="info-content">
-                            <h3>Notes:</h3>
-                            <div class="booking-details" ng-init="n = parseNotes(booking.notes)">
-                                <p><strong>Nail Tech:</strong> {{n.nailtech || 'N/A'}}</p>
-                                <p><strong>Reference No:</strong> {{booking.referenceNo}}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="booking-divider" ng-if="booking.receiptPath"></div>
-                    <div class="booking-info-row" ng-if="booking.receiptPath">
-                        <div class="info-icon"><i class="fa-solid fa-image"></i></div>
-                        <div class="info-content">
-                            <h3>Receipt:</h3>
-                            <div style="margin-top:10px;">
-                                <img ng-src="{{booking.receiptPath}}" alt="Receipt"
-                                     class="receipt-img clickable-review-image"
-                                     ng-click="openReviewLightbox(booking.receiptPath); $event.stopPropagation();" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="booking-actions">
-                        <div ng-if="booking.status === 'Pending'">
-                            <button class="approve-btn" ng-click="updateBookingStatus(booking.bookingId, 'Approved')">Approve</button>
-                            <button class="cancel-btn" ng-click="cancelBooking(booking.bookingId, $event)">Cancel</button>
-                        </div>
-                        <div ng-if="booking.status === 'Approved'">
-                            <button class="booking-complete-btn" ng-click="updateBookingStatus(booking.bookingId, 'Completed')">Booking Complete</button>
-                            <button class="cancel-btn" ng-click="cancelBooking(booking.bookingId, $event)">Cancel</button>
-                            <div class="status-pill approved">👍 Approved</div>
-                        </div>
-                    </div>
-                    <div class="status-pill completed" ng-if="booking.status === 'Completed'">✅ Completed</div>
-                    <div class="status-pill cancelled" ng-if="booking.status === 'Cancelled'">
-                        ❌ Cancelled <span ng-if="booking.cancelReason">— {{booking.cancelReason}}</span>
-                    </div>
+                    <select class="bk-pg-size admin-select" ng-model="bookingsPageSize" ng-change="bookingsOnPageSizeChange()">
+                        <option value="8">8 / page</option>
+                        <option value="15">15 / page</option>
+                        <option value="25">25 / page</option>
+                        <option value="50">50 / page</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -1836,6 +1852,251 @@
                 transform: scale(1.05);
                 box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             }
+        /* ── BOOKINGS TABLE ── */
+        .bookings-table-wrap {
+            background: white;
+            border-radius: 1rem;
+            border: 2px solid #d4c4b0;
+            overflow: hidden;
+            box-shadow: 2px 4px 12px rgba(0,0,0,0.07);
+        }
+
+        .bookings-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .83rem;
+        }
+
+            .bookings-table thead tr {
+                background: #6b4423;
+            }
+
+            .bookings-table th {
+                padding: .75rem 1rem;
+                text-align: left;
+                color: #fce8d5;
+                font-weight: 600;
+                font-size: .78rem;
+                letter-spacing: .04em;
+                white-space: nowrap;
+            }
+
+            .bookings-table td {
+                padding: .65rem 1rem;
+                color: #5a4a3a;
+                vertical-align: middle;
+                border-bottom: 1px solid #e7dfd6;
+            }
+
+            .bookings-table tbody tr:last-child td {
+                border-bottom: none;
+            }
+
+            .bookings-table tbody tr:hover {
+                background: #faf7f4;
+            }
+
+        .cell-num {
+            color: #a08060;
+            font-size: .75rem;
+        }
+
+        .cell-client {
+            color: #3d2817;
+        }
+
+        .cell-date {
+            white-space: nowrap;
+            font-size: .78rem;
+        }
+
+        .cell-sm {
+            font-size: .78rem;
+        }
+
+        .cell-down {
+            color: #8b6f47;
+        }
+
+        .cell-muted {
+            color: #c1b2a5;
+            font-size: .8rem;
+        }
+
+        .bk-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: .25rem .75rem;
+            border-radius: 20px;
+            font-size: .72rem;
+            font-weight: 700;
+        }
+
+        .bk-pill-pending {
+            background: #fff3e0;
+            color: #e67e22;
+        }
+
+        .bk-pill-approved {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .bk-pill-completed {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .bk-pill-cancelled {
+            background: #fce4ec;
+            color: #c62828;
+        }
+
+        .bk-cancel-reason {
+            display: block;
+            font-size: .7rem;
+            color: #c62828;
+            margin-top: .15rem;
+        }
+
+        .bk-receipt-thumb {
+            width: 36px;
+            height: 36px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #d4c4b0;
+            cursor: pointer;
+            transition: transform .2s;
+        }
+
+            .bk-receipt-thumb:hover {
+                transform: scale(1.08);
+            }
+
+        .bk-action-group {
+            display: flex;
+            gap: .35rem;
+            flex-wrap: wrap;
+        }
+
+        .bk-btn {
+            padding: .3rem .75rem;
+            border: none;
+            border-radius: 20px;
+            font-size: .75rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            transition: all .2s;
+            white-space: nowrap;
+        }
+
+        .bk-btn-approve {
+            background: #8b6f47;
+            color: #fff;
+        }
+
+            .bk-btn-approve:hover {
+                background: #6b4423;
+            }
+
+        .bk-btn-complete {
+            background: #4a7c59;
+            color: #fff;
+        }
+
+            .bk-btn-complete:hover {
+                background: #3a6049;
+            }
+
+        .bk-btn-cancel {
+            background: #c0392b;
+            color: #fff;
+        }
+
+            .bk-btn-cancel:hover {
+                background: #922b21;
+            }
+
+        .bk-empty {
+            text-align: center;
+            padding: 3rem;
+            color: #a08060;
+            font-style: italic;
+        }
+
+        /* Pagination bar */
+        .bk-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: .85rem 1rem;
+            background: #faf7f4;
+            border-top: 1px solid #e7dfd6;
+            flex-wrap: wrap;
+            gap: .5rem;
+        }
+
+        .bk-pg-info {
+            font-size: .8rem;
+            color: #8b6f47;
+        }
+
+        .bk-pg-btns {
+            display: flex;
+            gap: .3rem;
+            align-items: center;
+        }
+
+        .bk-pg-btn {
+            min-width: 2rem;
+            height: 2rem;
+            padding: 0 .4rem;
+            border: 1.5px solid #d4c4b0;
+            background: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: .8rem;
+            color: #6b4423;
+            font-family: 'Georgia', serif;
+            transition: all .15s;
+        }
+
+            .bk-pg-btn:hover:not([disabled]) {
+                background: #e7dfd6;
+            }
+
+            .bk-pg-btn.bk-pg-active {
+                background: #6b4423;
+                color: #fff;
+                border-color: #6b4423;
+            }
+
+            .bk-pg-btn[disabled] {
+                opacity: .4;
+                cursor: default;
+            }
+
+        .bk-pg-size {
+            font-size: .8rem;
+        }
+
+        @@media (max-width: 64rem) {
+            .bookings-table th:nth-child(7),
+            .bookings-table td:nth-child(7) {
+                display: none;
+            }
+        }
+
+        @@media (max-width: 48rem) {
+            .bookings-table-wrap {
+                overflow-x: auto;
+            }
+
+            .bookings-table {
+                min-width: 700px;
+            }
+        }
 
         /* ── STAFF ── */
         .stats-bar-row {
