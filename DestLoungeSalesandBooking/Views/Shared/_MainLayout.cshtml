@@ -120,7 +120,7 @@
         height: 5rem;
         width: auto;
     }
-    
+
     .main-nav {
         margin-left: 3rem;
         margin-right: auto;
@@ -392,7 +392,7 @@
         color: #8b6f47;
     }
 
-    
+
 
     .services-page-container {
         display: flex;
@@ -758,4 +758,81 @@
             background: #c4a882;
             border-radius: 10px;
         }
+        @@media (max-width: 1024px) {
+    /* Pull the notification bell div out of the mobile nav flow
+       and position it in the header, next to the hamburger */
+    .mobile-nav-actions > div[ng-controller] {
+        position: fixed !important;
+        top: 0 !important;
+        right: 52px !important; /* sits just left of the hamburger button */
+        height: 60px !important; /* match your header height */
+        display: flex !important;
+        align-items: center !important;
+        z-index: 1100 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: none !important;
+        width: auto !important;
+    }
+
+    /* Style the bell anchor/button inside it */
+    .mobile-nav-actions > div[ng-controller] > a {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 20px !important;
+        color: #5d4037 !important;
+        padding: 6px !important;
+        width: auto !important;
+        border-bottom: none !important;
+        background: none !important;
+        gap: 0 !important;
+    }
+
+    /* Hide the "Notifications" text label, keep only the icon */
+    .mobile-nav-actions > div[ng-controller] > a > .fa-bell {
+        font-size: 20px !important;
+    }
+
+    .mobile-nav-actions > div[ng-controller] > a span:not(.notif-badge) {
+        display: none !important;
+    }
+
+    /* Keep the dropdown anchored correctly */
+    .mobile-nav-actions > div[ng-controller] > div[ng-show] {
+        position: fixed !important;
+        top: 60px !important; /* below header */
+        right: 10px !important;
+        left: auto !important;
+        width: 280px !important;
+    }
+}
+        /* ── MOBILE: Hide bell from inside hamburger menu ── */
+@@media (max-width: 1024px) {
+
+    /* 1. Hide the bell container that's inside the mobile nav */
+    .mobile-nav-actions .notif-wrapper {
+        display: none !important;
+    }
+
+    /* 2. Show a separate bell that lives OUTSIDE the hamburger,
+          fixed in the header next to it */
+    .header-bell-fixed {
+        display: flex !important;
+        position: fixed;
+        top: 0;
+        right: 52px; /* adjust if your hamburger button width differs */
+        height: 60px; /* match your header height */
+        align-items: center;
+        z-index: 1100;
+    }
+}
+
+/* On desktop, hide the fixed-position duplicate */
+@@media (min-width: 1025px) {
+    .header-bell-fixed {
+        display: none !important;
+    }
+}
 </style>
