@@ -1046,8 +1046,8 @@ namespace DestLoungeSalesandBooking.Controllers
 
             // ✅ GET SALES (THIS IS THE FIX)
             var sales = db.tbl_sales
-    .Where(s => s.Status == "Paid")
-    .ToList();
+            .Where(s => s.Status == "Paid")
+            .ToList();
 
             // ✅ GROUP BY DATE
             var byDay = sales
