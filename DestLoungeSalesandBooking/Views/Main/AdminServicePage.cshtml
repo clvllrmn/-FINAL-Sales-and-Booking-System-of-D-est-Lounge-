@@ -2,7 +2,7 @@
     Layout = "~/Views/Shared/_MainLayout.cshtml";
 }
 
-<!-- Sidebar Navigation -->
+ Sidebar Navigation 
 <aside class="sidebar">
     <div class="logo-container">
         <a href="@Url.Action("AdminHomepage","Main")">
@@ -40,7 +40,7 @@
     </div>
 </aside>
 
-<!-- Mobile Top Bar -->
+ Mobile Top Bar 
 <div class="mobile-topbar">
     <a href="@Url.Action("AdminHomepage","Main")">
         <img src="~/Content/Pictures/DestLogo.png" alt="D'est Lounge">
@@ -50,10 +50,10 @@
     </button>
 </div>
 
-<!-- Mobile Nav Overlay -->
+ Mobile Nav Overlay 
 <div class="mobile-nav-overlay" id="mobileOverlay" onclick="toggleMobileNav()"></div>
 
-<!-- Mobile Nav Drawer -->
+ Mobile Nav Drawer 
 <div class="mobile-nav-drawer" id="mobileDrawer">
     <nav class="sidebar-nav">
         <a href="@Url.Action("AdminHomepage","Main")" class="nav-item">HOME</a>
@@ -74,11 +74,11 @@
     </div>
 </div>
 
-<!-- Main Content Area -->
+ Main Content Area 
 <div class="main-content" ng-controller="DestLoungeSalesandBookingController">
     @Html.AntiForgeryToken()
 
-    <!-- Services Section -->
+     Services Section 
     <div class="services-page-container">
         <div class="services-sidebar">
             <h2 class="services-sidebar-title">Services</h2>
@@ -119,14 +119,14 @@
         </div>
     </div>
 
-    <!-- Add Service Button -->
+     Add Service Button 
     <div class="add-service-container">
         <button class="add-service-button" ng-click="openAddServiceModal()">
             <i class="fa-solid fa-plus"></i> Add Service
         </button>
     </div>
 
-    <!-- Trash Toggle Button -->
+     Trash Toggle Button 
     <div style="text-align:center; padding: 0 0 1.5rem 0; background-color:#f5f0eb;">
         <button class="add-service-button"
                 style="background-color:#8b4513;"
@@ -136,7 +136,7 @@
         </button>
     </div>
 
-    <!-- Deleted Services Panel -->
+     Deleted Services Panel 
     <div ng-show="showServiceTrash">
         <div ng-repeat="s in deletedServices"
              style="display:flex; justify-content:space-between; align-items:center;
@@ -167,7 +167,7 @@
 
 
 
-    <!-- Add/Edit Service Modal -->
+     Add/Edit Service Modal 
     <div class="modal-overlay" ng-show="showServiceModal" ng-click="closeServiceModal()">
         <div class="service-modal" ng-click="$event.stopPropagation()">
             <h2 class="modal-title">{{isEditMode ? 'Edit Service' : 'Add New Service'}}</h2>
@@ -202,7 +202,7 @@
                     </span>
                 </div>
 
-                <!-- ── Description Field ── -->
+                 ── Description Field ── 
                 <div class="form-group">
                     <label for="serviceDescription">Description</label>
                     <textarea id="serviceDescription" name="serviceDescription" class="form-input form-textarea"
@@ -235,7 +235,7 @@
         </div>
     </div>
 
-    <!-- Footer -->
+     Footer 
     <footer>
         <div class="footer-container">
             <h2 class="footer-title">Follow our Socials!</h2>

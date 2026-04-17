@@ -2,7 +2,7 @@
     Layout = "~/Views/Shared/_MainLayout.cshtml";
 }
 
-<!-- Sidebar Navigation -->
+ Sidebar Navigation 
 <aside class="sidebar">
     <div class="logo-container">
         <a href="@Url.Action("AdminDashboard","Main")">
@@ -21,7 +21,7 @@
     </div>
 </aside>
 
-<!-- Mobile Top Bar -->
+ Mobile Top Bar 
 <div class="mobile-topbar">
     <a href="@Url.Action("AdminDashboard","Main")">
         <img src="~/Content/Pictures/DestLogo.png" alt="D'est Lounge">
@@ -31,10 +31,10 @@
     </button>
 </div>
 
-<!-- Mobile Nav Overlay -->
+ Mobile Nav Overlay 
 <div class="mobile-nav-overlay" id="mobileOverlay" onclick="toggleMobileNav()"></div>
 
-<!-- Mobile Nav Drawer -->
+ Mobile Nav Drawer 
 <div class="mobile-nav-drawer" id="mobileDrawer">
     <nav class="sidebar-nav">
         <a href="@Url.Action("AdminDashboard","Main")" class="nav-item">DASHBOARD</a>
@@ -48,17 +48,17 @@
     </div>
 </div>
 
-<!-- Main Content Area -->
+ Main Content Area 
 <div class="main-content" ng-controller="DestLoungeSalesandBookingController">
     <div class="bookings-container">
 
         <h1 class="bookings-title">Salon's Analytics</h1>
         <p class="page-subtitle">Track revenue, appointments, and service performance</p>
 
-        <!-- Filter Bar -->
+         Filter Bar 
         <div class="filter-bar-card">
 
-            <!-- Range Tabs -->
+             Range Tabs 
             <div class="filter-row-top">
                 <span class="filter-label">Range:</span>
                 <div class="filter-tabs">
@@ -71,7 +71,7 @@
                 </div>
             </div>
 
-            <!-- Custom Date Range -->
+             Custom Date Range 
             <div class="filter-row-bottom" ng-show="salesRange === 'custom'">
                 <span class="filter-label">From:</span>
                 <input type="date" class="date-input" ng-model="customFrom" ng-change="applyCustomRange()" />
@@ -84,7 +84,7 @@
 
         </div>
 
-        <!-- KPI Cards -->
+         KPI Cards 
         <div class="sales-kpis">
             <div class="kpi-card">
                 <div class="kpi-icon"><i class="fa-solid fa-peso-sign"></i></div>
@@ -108,7 +108,7 @@
             </div>
         </div>
 
-        <!-- Chart -->
+         Chart 
         <div class="chart-wrap">
             <div class="chart-header">
                 <div>
@@ -121,7 +121,7 @@
             </div>
         </div>
 
-        <!-- Service Performance -->
+         Service Performance 
         <div class="service-section">
             <div class="section-header-row">
                 <div>
@@ -130,7 +130,7 @@
                 </div>
             </div>
 
-            <!-- Service Filter Pills -->
+             Service Filter Pills 
             <div class="service-filter-bar">
                 <button class="svc-pill" ng-class="{'active': selectedService === 'all'}" ng-click="filterByService('all')">All Services</button>
                 <button class="svc-pill"
@@ -142,7 +142,7 @@
                 </button>
             </div>
 
-            <!-- Service Table -->
+             Service Table 
             <div class="service-table-wrap">
                 <table class="service-table">
                     <thead>
@@ -184,7 +184,7 @@
             </div>
         </div>
 
-        <!-- Report Generator -->
+         Report Generator 
         <div class="report-section">
             <div class="section-header-row">
                 <div>
@@ -225,7 +225,7 @@
                 </button>
             </div>
 
-            <!-- Report Preview -->
+             Report Preview 
             <div class="report-preview-wrap" ng-show="reportGenerated">
                 <div class="report-preview-label">REPORT PREVIEW</div>
                 <div class="report-preview-box" id="printableReport">
@@ -297,7 +297,7 @@
 
     </div>
 
-    <!-- Footer -->
+     Footer 
     <footer>
         <div class="footer-container">
             <h2 class="footer-title">Follow our Socials!</h2>
@@ -1348,7 +1348,7 @@
     }
 </style>
 
-<!-- Chart.js -->
+ Chart.js 
 <script src="~/Scripts/chart.js"></script>
 
 <script>

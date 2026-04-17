@@ -50,32 +50,29 @@
         </div>
     </div>
 
+    <script>
+        window.isAdminPage = true;
+    </script>
+
     <!-- Main Content -->
     <div class="main-content">
 
         <!-- Dashboard Header -->
         <div class="dashboard-header">
             <h1 class="dashboard-title">DASHBOARD</h1>
-            <a href="@Url.Action("Index","Main")" class="view-public-btn" target="_blank">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i> View Public Page
-            </a>
         </div>
 
         <!-- Top Tabs -->
         <div class="tab-bar">
             <button class="tab-btn" ng-class="{'tab-active': dashTab === 'analytics'}" ng-click="dashTab = 'analytics'">Analytics</button>
-            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'bookings'}" ng-click="dashTab = 'bookings'">Manage Booking</button>
+            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'bookings'}" ng-click="dashTab = 'bookings'; loadBookings()">Manage Booking</button>
             <button class="tab-btn" ng-class="{'tab-active': dashTab === 'staffs'}" ng-click="dashTab = 'staffs'; loadTechs()">Manage Staffs</button>
-            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'gallery'}" ng-click="dashTab = 'gallery'">Gallery</button>
-            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'services'}" ng-click="dashTab = 'services'">Services</button>
-            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'faqs'}" ng-click="dashTab = 'faqs'">FAQs</button>
-            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'contact'}" ng-click="dashTab = 'contact'">Contact</button>
+            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'gallery'}" ng-click="dashTab = 'gallery'; loadGalleryPhotos(); loadReviews(); loadArchivedReviews()">Gallery</button>
+            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'services'}" ng-click="dashTab = 'services'; loadServices()">Services</button>
+            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'faqs'}" ng-click="dashTab = 'faqs'; loadFAQs()">FAQs</button>
+            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'contact'}" ng-click="dashTab = 'contact'; loadContactInfo()">Contact</button>
             <button class="tab-btn" ng-class="{'tab-active': dashTab === 'homepage'}" ng-click="dashTab = 'homepage'">Homepage</button>
-            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'inbox'}" ng-click="dashTab = 'inbox'; loadAdminInboxCount()">
-                Inbox
-                <span class="inbox-badge-tab" ng-if="adminInboxCount > 0">{{adminInboxCount}}</span>
-            </button>
-            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'payment'}" ng-click="dashTab = 'payment'">Payment</button>
+            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'payment'}" ng-click="dashTab = 'payment'; loadPaymentInfo()">Payment</button>
         </div>
 
         <!-- ═══════════════════════════════════════════════════ -->
@@ -119,7 +116,22 @@
                     </div>
                 </div>
             </div>
-
+            <div class="analytics-section-card" ng-if="flaggedCount() > 0">
+                <div class="analytics-section-header" style="color:#e67e22;">
+                    <span><i class="fa-solid fa-flag"></i> Flagged Reviews Need Attention</span>
+                    <a href="#" ng-click="dashTab = 'gallery'; adminTab = 'reviews'"
+                       class="admin-btn admin-btn-flag admin-btn-sm">
+                        Review Now
+                    </a>
+                </div>
+                <div class="mini-review-list">
+                    <div class="mini-review-row flagged-row"
+                         ng-repeat="review in reviews | filter:{flagged: true} | limitTo:3">
+                        <span class="mini-review-text">{{review.reviewText | limitTo:60}}...</span>
+                        <span style="font-size:0.75rem; color:#e67e22;">{{review.flagReason}}</span>
+                    </div>
+                </div>
+            </div>
             <!-- Manage Active Reviews (inline) -->
             <div class="analytics-section-card">
                 <div class="analytics-section-header">
@@ -138,125 +150,33 @@
                 </div>
             </div>
 
-            <!-- Manage FAQs (inline) -->
             <div class="analytics-section-card">
                 <div class="analytics-section-header">
-                    <span>Manage FAQs</span>
-                    <button class="admin-btn admin-btn-primary admin-btn-sm" ng-click="openFaqModal()">
-                        <i class="fa-solid fa-plus"></i> Add New FAQ
-                    </button>
-                </div>
-                <div class="mini-list">
-                    <div class="mini-list-row" ng-repeat="faq in faqs | limitTo:5">
-                        <span class="mini-list-label">{{faq.question | limitTo:50}}...</span>
-                        <div class="mini-list-actions">
-                            <button class="mini-btn mini-btn-edit" ng-click="openEditFaqModal(faq, $index)">Edit</button>
-                            <button class="mini-btn mini-btn-delete" ng-click="deleteFaq($index)">Delete</button>
-                        </div>
-                    </div>
-                    <div ng-if="faqs.length === 0" class="empty-mini">No FAQs yet.</div>
-                </div>
-            </div>
-
-            <!-- Manage Services (inline) -->
-            <div class="analytics-section-card">
-                <div class="analytics-section-header">
-                    <span>Manage Services</span>
-                    <button class="admin-btn admin-btn-primary admin-btn-sm" ng-click="openAddServiceModal()">
-                        <i class="fa-solid fa-plus"></i> Add New Service
-                    </button>
-                </div>
-                <div class="mini-list">
-                    <div class="mini-list-row" ng-repeat="service in services | limitTo:5">
-                        <span class="mini-list-label">{{service.name}} — ₱{{service.price}}</span>
-                        <div class="mini-list-actions">
-                            <button class="mini-btn mini-btn-edit" ng-click="editService(service)">Edit</button>
-                            <button class="mini-btn mini-btn-delete" ng-click="deleteService(service)">Delete</button>
-                        </div>
-                    </div>
-                    <div ng-if="services.length === 0" class="empty-mini">No services yet.</div>
-                </div>
-            </div>
-
-            <!-- Manage Gallery (inline) -->
-            <div class="analytics-section-card">
-                <div class="analytics-section-header">
-                    <span>Manage Gallery</span>
-                    <button class="admin-btn admin-btn-primary admin-btn-sm" ng-click="dashTab = 'gallery'">
-                        <i class="fa-solid fa-plus"></i> Add New Photo
-                    </button>
-                </div>
-                <div class="mini-gallery-grid">
-                    <div class="mini-gallery-item" ng-repeat="photo in galleryPhotos | limitTo:4">
-                        <img ng-src="{{photo.imageUrl}}" alt="{{photo.caption}}">
-                    </div>
-                    <div class="mini-gallery-placeholder" ng-if="galleryPhotos.length === 0">
-                        <i class="fa-solid fa-image"></i>
-                        <span>Add Photo</span>
-                    </div>
-                </div>
-                <div class="mini-list" style="margin-top:0.75rem;">
-                    <div class="mini-list-row" ng-repeat="photo in galleryPhotos | limitTo:5">
-                        <span class="mini-list-label">{{photo.caption | limitTo:40}}...</span>
-                        <div class="mini-list-actions">
-                            <button class="mini-btn mini-btn-edit" ng-click="startEditPhoto(photo)">Edit</button>
-                            <button class="mini-btn mini-btn-delete" ng-click="confirmDeletePhoto(photo)">Archive</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Manage Bookings (inline) -->
-            <div class="analytics-section-card">
-                <div class="analytics-section-header">
-                    <span>Manage Bookings</span>
-                    <a href="#" ng-click="dashTab = 'bookings'" class="admin-btn admin-btn-primary admin-btn-sm">
-                        <i class="fa-solid fa-calendar"></i> View All Bookings
+                    <span>Recent Bookings</span>
+                    <a href="#" ng-click="dashTab = 'bookings'; loadBookings()"
+                       class="admin-btn admin-btn-primary admin-btn-sm">
+                        View All
                     </a>
                 </div>
-                <div ng-repeat="booking in filteredBookings | limitTo:3" class="mini-booking-card">
+                <div ng-repeat="booking in bookings | limitTo:5" class="mini-booking-card">
                     <div class="mini-booking-row">
                         <i class="fa-solid fa-user"></i>
-                        <span><strong>Client:</strong> {{booking.clientName}}</span>
-                    </div>
-                    <div class="mini-booking-row">
-                        <i class="fa-solid fa-heart"></i>
-                        <span><strong>Service:</strong> {{booking.service}}</span>
+                        <span><strong>{{booking.clientName}}</strong> — {{booking.service}}</span>
                     </div>
                     <div class="mini-booking-row">
                         <i class="fa-solid fa-calendar"></i>
-                        <span><strong>Date/Time:</strong> {{booking.dateTime}}</span>
-                    </div>
-                    <div class="mini-booking-row">
-                        <i class="fa-solid fa-phone"></i>
-                        <span><strong>Contact:</strong> {{booking.contactNumber}}</span>
-                    </div>
-                    <div class="mini-booking-row">
-                        <i class="fa-solid fa-envelope"></i>
-                        <span><strong>Email:</strong> {{booking.email}}</span>
+                        <span>{{booking.dateTime}}</span>
+                        <span class="bk-pill" ng-class="{
+                'bk-pill-pending': booking.status === 'Pending',
+                'bk-pill-approved': booking.status === 'Approved',
+                'bk-pill-completed': booking.status === 'Completed',
+                'bk-pill-cancelled': booking.status === 'Cancelled'
+            }">{{booking.status}}</span>
                     </div>
                 </div>
-                <div ng-if="filteredBookings.length === 0" class="empty-mini">No bookings found.</div>
-            </div>
-
-            <!-- Staffs (inline) -->
-            <div class="analytics-section-card">
-                <div class="analytics-section-header">
-                    <span>Staffs</span>
-                </div>
-                <div class="mini-list">
-                    <div class="mini-list-row" ng-repeat="tech in activeTechs | limitTo:5">
-                        <span class="mini-list-label">{{tech.name}} — {{tech.specialization || 'Nail Technician'}}</span>
-                        <div class="mini-list-actions">
-                            <button class="mini-btn mini-btn-edit" ng-click="openEditTechModal(tech)">Edit</button>
-                            <button class="mini-btn mini-btn-delete" ng-click="deactivateTech(tech)">Deactivate</button>
-                        </div>
-                    </div>
-                    <div ng-if="activeTechs.length === 0" class="empty-mini">No active staff.</div>
-                </div>
+                <div ng-if="bookings.length === 0" class="empty-mini">No bookings yet.</div>
             </div>
         </div>
-
         <!-- ═══════════════════════════════════════════════════ -->
         <!-- TAB: MANAGE BOOKINGS -->
         <!-- ═══════════════════════════════════════════════════ -->
@@ -300,7 +220,7 @@
                             <td class="cell-down">₱{{booking.downpayment | number:2}}</td>
                             <td class="cell-sm">{{booking.referenceNo || '—'}}</td>
                             <td>
-                                <span class="bk-pill bk-pill-{{booking.status | lowercase}}"
+                                <span class="bk-pill"
                                       ng-class="{
                                 'bk-pill-pending':   booking.status === 'Pending',
                                 'bk-pill-approved':  booking.status === 'Approved',
@@ -309,7 +229,8 @@
                               }">
                                     {{booking.status}}
                                 </span>
-                                <span class="bk-cancel-reason" ng-if="booking.status === 'Cancelled' && booking.cancelReason">
+                                <span class="bk-cancel-reason"
+                                      ng-if="booking.status === 'Cancelled' && booking.cancelReason">
                                     {{booking.cancelReason}}
                                 </span>
                             </td>
@@ -323,14 +244,27 @@
                             </td>
                             <td>
                                 <div ng-if="booking.status === 'Pending'" class="bk-action-group">
-                                    <button class="bk-btn bk-btn-approve" ng-click="updateBookingStatus(booking.bookingId, 'Approved')">Approve</button>
-                                    <button class="bk-btn bk-btn-cancel" ng-click="cancelBooking(booking.bookingId, $event)">Cancel</button>
+                                    <button class="bk-btn bk-btn-approve"
+                                            ng-click="updateBookingStatus(booking.bookingId, 'Approved')">
+                                        Approve
+                                    </button>
+                                    <button class="bk-btn bk-btn-cancel"
+                                            ng-click="cancelBooking(booking.bookingId, $event)">
+                                        Cancel
+                                    </button>
                                 </div>
                                 <div ng-if="booking.status === 'Approved'" class="bk-action-group">
-                                    <button class="bk-btn bk-btn-complete" ng-click="updateBookingStatus(booking.bookingId, 'Completed')">Complete</button>
-                                    <button class="bk-btn bk-btn-cancel" ng-click="cancelBooking(booking.bookingId, $event)">Cancel</button>
+                                    <button class="bk-btn bk-btn-complete"
+                                            ng-click="updateBookingStatus(booking.bookingId, 'Completed')">
+                                        Complete
+                                    </button>
+                                    <button class="bk-btn bk-btn-cancel"
+                                            ng-click="cancelBooking(booking.bookingId, $event)">
+                                        Cancel
+                                    </button>
                                 </div>
-                                <span ng-if="booking.status === 'Completed' || booking.status === 'Cancelled'" class="cell-muted">—</span>
+                                <span ng-if="booking.status === 'Completed' || booking.status === 'Cancelled'"
+                                      class="cell-muted">—</span>
                             </td>
                         </tr>
                         <tr ng-if="pagedBookings.length === 0">
@@ -342,19 +276,29 @@
                 <!-- Pagination -->
                 <div class="bk-pagination" ng-if="filteredBookings.length > 0">
                     <span class="bk-pg-info">
-                        Showing {{(bookingsCurrentPage - 1) * bookingsPageSize + 1}}–{{[bookingsCurrentPage * bookingsPageSize, filteredBookings.length] | min}} of {{filteredBookings.length}}
+                        Showing {{(bookingsCurrentPage - 1) * bookingsPageSize + 1}}–{{bookingsCurrentPage * bookingsPageSize > filteredBookings.length ? filteredBookings.length : bookingsCurrentPage * bookingsPageSize}} of {{filteredBookings.length}}
                     </span>
                     <div class="bk-pg-btns">
-                        <button class="bk-pg-btn" ng-click="bookingsGoPage(bookingsCurrentPage - 1)" ng-disabled="bookingsCurrentPage === 1">&#8249;</button>
+                        <button class="bk-pg-btn"
+                                ng-click="bookingsGoPage(bookingsCurrentPage - 1)"
+                                ng-disabled="bookingsCurrentPage === 1">
+                            &#8249;
+                        </button>
                         <button class="bk-pg-btn"
                                 ng-repeat="p in bookingsPageNumbers"
                                 ng-class="{'bk-pg-active': p === bookingsCurrentPage}"
                                 ng-click="bookingsGoPage(p)">
                             {{p}}
                         </button>
-                        <button class="bk-pg-btn" ng-click="bookingsGoPage(bookingsCurrentPage + 1)" ng-disabled="bookingsCurrentPage === bookingsTotalPages">&#8250;</button>
+                        <button class="bk-pg-btn"
+                                ng-click="bookingsGoPage(bookingsCurrentPage + 1)"
+                                ng-disabled="bookingsCurrentPage === bookingsTotalPages">
+                            &#8250;
+                        </button>
                     </div>
-                    <select class="bk-pg-size admin-select" ng-model="bookingsPageSize" ng-change="bookingsOnPageSizeChange()">
+                    <select class="bk-pg-size admin-select"
+                            ng-model="bookingsPageSize"
+                            ng-change="bookingsOnPageSizeChange()">
                         <option value="8">8 / page</option>
                         <option value="15">15 / page</option>
                         <option value="25">25 / page</option>
@@ -492,28 +436,38 @@
                 </div>
             </div>
         </div>
-
         <!-- ═══════════════════════════════════════════════════ -->
         <!-- TAB: GALLERY -->
         <!-- ═══════════════════════════════════════════════════ -->
+
         <div class="tab-content" ng-show="dashTab === 'gallery'">
+
+            <!-- Sub-Tab Bar -->
             <div class="sub-tab-bar">
                 <button class="tab-btn" ng-class="{'tab-active': adminTab === 'gallery'}" ng-click="adminTab = 'gallery'">
-                    <i class="fa-solid fa-images"></i> Gallery <span class="tab-count">{{galleryPhotos.length}}</span>
+                    <i class="fa-solid fa-images"></i> Gallery
+                    <span class="tab-count">{{galleryPhotos.length}}</span>
                 </button>
-                <button class="tab-btn" ng-class="{'tab-active': adminTab === 'archivedGallery'}" ng-click="adminTab = 'archivedGallery'; loadArchivedGallery()">
-                    <i class="fa-solid fa-box-archive"></i> Archived <span class="tab-count tab-count-warn">{{archivedGalleryPhotos.length}}</span>
+                <button class="tab-btn" ng-class="{'tab-active': adminTab === 'archivedGallery'}"
+                        ng-click="adminTab = 'archivedGallery'; loadArchivedGallery()">
+                    <i class="fa-solid fa-box-archive"></i> Archived Photos
+                    <span class="tab-count tab-count-warn">{{archivedGalleryPhotos.length}}</span>
                 </button>
                 <button class="tab-btn" ng-class="{'tab-active': adminTab === 'reviews'}" ng-click="adminTab = 'reviews'">
-                    <i class="fa-solid fa-star"></i> Reviews <span class="tab-count">{{reviews.length}}</span>
+                    <i class="fa-solid fa-star"></i> Reviews
+                    <span class="tab-count">{{reviews.length}}</span>
                 </button>
                 <button class="tab-btn" ng-class="{'tab-active': adminTab === 'archived'}" ng-click="adminTab = 'archived'">
-                    <i class="fa-solid fa-box-archive"></i> Archived Reviews <span class="tab-count tab-count-warn">{{archivedReviews.length}}</span>
+                    <i class="fa-solid fa-box-archive"></i> Archived Reviews
+                    <span class="tab-count tab-count-warn">{{archivedReviews.length}}</span>
                 </button>
             </div>
 
-            <!-- Gallery Upload -->
-            <div ng-show="adminTab === 'gallery'">
+            <!-- SUB-TAB: Gallery -->
+            <div ng-show="adminTab === 'gallery'" class="sub-tab-content">
+                <a href="@Url.Action("GalleryPage","Main")" class="view-public-btn" target="_blank">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Show Public View
+                </a>
                 <div class="upload-card">
                     <h3><i class="fa-solid fa-cloud-arrow-up"></i> Upload New Photo</h3>
                     <div class="upload-form">
@@ -521,21 +475,25 @@
                             <i class="fa-solid fa-image"></i>
                             <p>Click to select a photo</p>
                             <span>JPG, PNG, WEBP supported</span>
-                            <input type="file" id="photoFileInput" accept="image/*" onchange="angularFileChange(this)" style="display:none">
+                            <input type="file" id="photoFileInput" accept="image/*"
+                                   onchange="angularFileChange(this)" style="display:none">
                         </div>
                         <div class="upload-fields">
                             <div class="field-grp">
                                 <label>Caption</label>
-                                <input type="text" class="admin-input" ng-model="newPhoto.caption" placeholder="e.g. Gel Manicure - Nude Pink">
+                                <input type="text" class="admin-input" ng-model="newPhoto.caption"
+                                       placeholder="e.g. Gel Manicure - Nude Pink">
                             </div>
                             <div class="field-grp">
                                 <label>Description</label>
-                                <textarea class="admin-input" ng-model="newPhoto.description" placeholder="Description..." rows="3" style="resize:vertical;"></textarea>
+                                <textarea class="admin-input" ng-model="newPhoto.description"
+                                          placeholder="Description..." rows="3" style="resize:vertical;"></textarea>
                             </div>
                             <div class="upload-preview-wrap" ng-show="newPhoto.previewUrl">
                                 <img ng-src="{{newPhoto.previewUrl}}" class="upload-preview-img" alt="Preview">
                             </div>
-                            <button class="admin-btn admin-btn-primary" ng-click="uploadPhoto()" ng-disabled="!newPhoto.file || !newPhoto.caption">
+                            <button class="admin-btn admin-btn-primary" ng-click="uploadPhoto()"
+                                    ng-disabled="!newPhoto.file || !newPhoto.caption">
                                 <i class="fa-solid fa-plus"></i> Add to Gallery
                             </button>
                         </div>
@@ -547,50 +505,76 @@
                         <div class="gallery-overlay">
                             <span class="gallery-caption">{{photo.caption}}</span>
                             <div class="gallery-item-actions">
-                                <button class="item-action-btn item-edit" ng-click="startEditPhoto(photo); $event.stopPropagation()" title="Edit"><i class="fa-solid fa-pen"></i></button>
-                                <button class="item-action-btn item-archive" ng-click="confirmDeletePhoto(photo); $event.stopPropagation()" title="Archive"><i class="fa-solid fa-box-archive"></i></button>
+                                <button class="item-action-btn item-edit"
+                                        ng-click="startEditPhoto(photo); $event.stopPropagation()" title="Edit">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button class="item-action-btn item-archive"
+                                        ng-click="confirmDeletePhoto(photo); $event.stopPropagation()" title="Archive">
+                                    <i class="fa-solid fa-box-archive"></i>
+                                </button>
                             </div>
                         </div>
                         <div class="inline-edit-overlay" ng-show="photo.editing" ng-click="$event.stopPropagation()">
                             <input type="text" class="admin-input" ng-model="photo.editCaption" placeholder="Caption">
-                            <textarea class="admin-input" ng-model="photo.editDescription" placeholder="Description" rows="2" style="resize:none; margin-top:0.5rem;"></textarea>
+                            <textarea class="admin-input" ng-model="photo.editDescription"
+                                      placeholder="Description" rows="2" style="resize:none; margin-top:0.5rem;"></textarea>
                             <div class="inline-edit-actions">
-                                <button class="admin-btn admin-btn-primary" ng-click="saveEditPhoto(photo)"><i class="fa-solid fa-check"></i> Save</button>
+                                <button class="admin-btn admin-btn-primary" ng-click="saveEditPhoto(photo)">
+                                    <i class="fa-solid fa-check"></i> Save
+                                </button>
                                 <button class="admin-btn admin-btn-secondary" ng-click="cancelEditPhoto(photo)">Cancel</button>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="empty-state" ng-show="galleryPhotos.length === 0"><i class="fa-regular fa-image"></i><p>No photos yet.</p></div>
+                <div class="empty-state" ng-show="galleryPhotos.length === 0">
+                    <i class="fa-regular fa-image"></i>
+                    <p>No photos yet. Upload one above.</p>
+                </div>
             </div>
 
-            <!-- Archived Gallery -->
-            <div ng-show="adminTab === 'archivedGallery'">
+            <!-- SUB-TAB: Archived Photos -->
+            <div ng-show="adminTab === 'archivedGallery'" class="sub-tab-content">
                 <div class="gallery-grid" ng-show="archivedGalleryPhotos.length > 0">
                     <div class="gallery-item" ng-repeat="photo in archivedGalleryPhotos">
                         <img ng-src="{{photo.imageUrl}}" alt="{{photo.caption}}">
                         <div class="gallery-overlay" style="opacity:1; background:rgba(61,40,23,0.85);">
                             <span class="gallery-caption">{{photo.caption}}</span>
                             <div class="gallery-item-actions">
-                                <button class="item-action-btn item-edit" ng-click="restoreGalleryPhoto(photo)" title="Restore"><i class="fa-solid fa-rotate-left"></i></button>
-                                <button class="item-action-btn item-delete" ng-click="confirmPermanentDelete(photo)" title="Delete permanently"><i class="fa-solid fa-trash"></i></button>
+                                <button class="item-action-btn item-edit"
+                                        ng-click="restoreGalleryPhoto(photo); $event.stopPropagation()" title="Restore">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                </button>
+                                <button class="item-action-btn item-delete"
+                                        ng-click="confirmPermanentDelete(photo); $event.stopPropagation()"
+                                        title="Delete permanently">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="empty-state" ng-show="archivedGalleryPhotos.length === 0"><i class="fa-solid fa-box-archive"></i><p>No archived photos.</p></div>
+                <div class="empty-state" ng-show="archivedGalleryPhotos.length === 0">
+                    <i class="fa-solid fa-box-archive"></i>
+                    <p>No archived photos.</p>
+                </div>
             </div>
 
-            <!-- Reviews -->
-            <div ng-show="adminTab === 'reviews'">
-                <div class="stats-bar-row" style="margin-bottom:1rem;">
+            <!-- SUB-TAB: Reviews -->
+            <div ng-show="adminTab === 'reviews'" class="sub-tab-content">
+                <a href="@Url.Action("GalleryPage","Main")" class="view-public-btn" target="_blank">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Show Public View
+                </a>
+                <div class="stats-bar-row">
                     <div class="stat-card-sm"><span class="stat-num-sm">{{reviews.length}}</span><span class="stat-lbl-sm">Active</span></div>
                     <div class="stat-card-sm"><span class="stat-num-sm">{{averageRating()}}</span><span class="stat-lbl-sm">Avg Rating</span></div>
                     <div class="stat-card-sm stat-warn-sm"><span class="stat-num-sm">{{flaggedCount()}}</span><span class="stat-lbl-sm">Flagged</span></div>
                     <div class="stat-card-sm stat-muted-sm"><span class="stat-num-sm">{{archivedReviews.length}}</span><span class="stat-lbl-sm">Archived</span></div>
                 </div>
                 <div class="filter-row">
-                    <select class="admin-select" ng-model="reviewStarFilter" ng-change="reviewsPage = 1; updatePagedReviews()">
+                    <select class="admin-select" ng-model="reviewStarFilter"
+                            ng-change="reviewsPage = 1; updatePagedReviews()">
                         <option value="">All Ratings</option>
                         <option value="5">★★★★★ 5 Stars</option>
                         <option value="4">★★★★☆ 4 Stars</option>
@@ -598,127 +582,188 @@
                         <option value="2">★★☆☆☆ 2 Stars</option>
                         <option value="1">★☆☆☆☆ 1 Star</option>
                     </select>
-                    <input type="text" class="admin-search" ng-model="reviewSearch" ng-change="reviewsPage = 1; updatePagedReviews()" placeholder="Search reviews...">
+                    <input type="text" class="admin-search" ng-model="reviewSearch"
+                           ng-change="reviewsPage = 1; updatePagedReviews()" placeholder="Search reviews...">
                 </div>
                 <div class="reviews-list">
-                    <div class="review-admin-card" ng-repeat="review in reviews | filter:reviewSearchFilter" ng-class="{'flagged-card': review.flagged}">
+                    <div class="review-admin-card" ng-repeat="review in reviews | filter:reviewSearchFilter"
+                         ng-class="{'flagged-card': review.flagged}">
                         <div class="rac-top">
-                            <div class="rac-stars"><i ng-repeat="s in [1,2,3,4,5]" class="fa-star" ng-class="s <= review.rating ? 'fa-solid' : 'fa-regular'"></i></div>
+                            <div class="rac-stars">
+                                <i ng-repeat="s in [1,2,3,4,5]" class="fa-star"
+                                   ng-class="s <= review.rating ? 'fa-solid' : 'fa-regular'"></i>
+                            </div>
                             <span class="rac-service"><i class="fa-solid fa-spa"></i> {{review.serviceAvailed}}</span>
                             <span class="rac-date">{{review.date | date:'MMM d, yyyy'}}</span>
                             <span class="flag-badge" ng-show="review.flagged"><i class="fa-solid fa-flag"></i> Flagged</span>
                         </div>
                         <p class="rac-text">&ldquo;{{review.reviewText}}&rdquo;</p>
                         <div class="rac-images" ng-if="review.images && review.images.length > 0">
-                            <img ng-repeat="img in review.images" ng-src="{{img}}" class="rac-image clickable-review-image" ng-click="openReviewLightbox(img); $event.stopPropagation();" />
+                            <img ng-repeat="img in review.images" ng-src="{{img}}"
+                                 class="rac-image clickable-review-image"
+                                 ng-click="openReviewLightbox(img); $event.stopPropagation();" />
                         </div>
                         <div class="rac-actions">
-                            <button class="admin-btn admin-btn-flag" ng-show="!review.flagged" ng-click="openFlagModal(review)"><i class="fa-solid fa-flag"></i> Flag</button>
-                            <button class="admin-btn admin-btn-unflag" ng-show="review.flagged" ng-click="unflagReview(review)"><i class="fa-solid fa-flag-checkered"></i> Unflag</button>
-                            <button class="admin-btn admin-btn-archive" ng-click="archiveReview(review.reviewId)"><i class="fa-solid fa-box-archive"></i> Archive</button>
+                            <button class="admin-btn admin-btn-flag" ng-show="!review.flagged"
+                                    ng-click="openFlagModal(review)">
+                                <i class="fa-solid fa-flag"></i> Flag
+                            </button>
+                            <button class="admin-btn admin-btn-unflag" ng-show="review.flagged"
+                                    ng-click="unflagReview(review)">
+                                <i class="fa-solid fa-flag-checkered"></i> Unflag
+                            </button>
+                            <button class="admin-btn admin-btn-archive" ng-click="archiveReview(review.reviewId)">
+                                <i class="fa-solid fa-box-archive"></i> Archive
+                            </button>
                         </div>
                     </div>
-                    <div class="empty-state" ng-show="(reviews | filter:reviewSearchFilter).length === 0"><i class="fa-regular fa-star"></i><p>No reviews match your filter.</p></div>
-                </div>
-            </div>
-
-            <!-- Archived Reviews -->
-            <div ng-show="adminTab === 'archived'">
-                <div class="reviews-list">
-                    <div class="review-admin-card archived-card" ng-repeat="review in archivedReviews | filter:archivedSearch">
-                        <div class="rac-top">
-                            <div class="rac-stars"><i ng-repeat="s in [1,2,3,4,5]" class="fa-star" ng-class="s <= review.rating ? 'fa-solid' : 'fa-regular'"></i></div>
-                            <span class="rac-service"><i class="fa-solid fa-spa"></i> {{review.serviceAvailed}}</span>
-                            <span class="rac-date">{{review.date | date:'MMM d, yyyy'}}</span>
-                            <span class="archived-badge"><i class="fa-solid fa-box-archive"></i> Archived</span>
-                        </div>
-                        <p class="rac-text">&ldquo;{{review.reviewText}}&rdquo;</p>
-                        <div class="rac-actions">
-                            <button class="admin-btn admin-btn-restore" ng-click="restoreReview(review.reviewId)"><i class="fa-solid fa-rotate-left"></i> Restore</button>
-                        </div>
-                    </div>
-                    <div class="empty-state" ng-show="archivedReviews.length === 0"><i class="fa-solid fa-box-archive"></i><p>No archived reviews.</p></div>
-                </div>
-            </div>
-
-            <!-- Flag Modal -->
-            <div class="modal-overlay" ng-show="flagModal.show === true" ng-click="closeFlagModal()">
-                <div class="modal-card" ng-click="$event.stopPropagation()" style="max-width:500px;">
-                    <div class="modal-icon-plain" style="color:#f39c12;"><i class="fa-solid fa-flag"></i></div>
-                    <h3>Flag Review</h3>
-                    <p style="margin:10px 0 18px; color:#6b4423;">Select the reason why this review is being flagged.</p>
-                    <div class="field-grp" style="margin-bottom:14px;">
-                        <label>Reason</label>
-                        <select class="admin-input" ng-model="flagModal.reason">
-                            <option value="">-- Select a reason --</option>
-                            <option value="Inappropriate language">Inappropriate language</option>
-                            <option value="Spam or irrelevant content">Spam or irrelevant content</option>
-                            <option value="Offensive or abusive content">Offensive or abusive content</option>
-                            <option value="False or misleading review">False or misleading review</option>
-                            <option value="Contains sensitive/private information">Contains sensitive/private information</option>
-                        </select>
-                    </div>
-                    <div class="field-grp">
-                        <label>Additional note (optional)</label>
-                        <textarea class="admin-input" rows="3" ng-model="flagModal.note" placeholder="Add more details if needed..."></textarea>
-                    </div>
-                    <div class="modal-actions" style="margin-top:18px;">
-                        <button class="admin-btn admin-btn-secondary" ng-click="closeFlagModal()">Cancel</button>
-                        <button class="admin-btn admin-btn-flag" ng-click="submitFlagReview()" ng-disabled="!flagModal.reason"><i class="fa-solid fa-flag"></i> Confirm Flag</button>
+                    <div class="empty-state" ng-show="(reviews | filter:reviewSearchFilter).length === 0">
+                        <i class="fa-regular fa-star"></i>
+                        <p>No reviews match your filter.</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Edit Photo Modal -->
-            <div class="modal-overlay" ng-show="editModal.show">
-                <div class="modal-card" style="max-width:500px;" ng-click="$event.stopPropagation()">
-                    <div class="modal-icon-plain" style="font-size:2rem; color:#6b4423;"><i class="fa-solid fa-pen"></i></div>
-                    <h3 style="margin-bottom:1.5rem;">Edit Photo Details</h3>
-                    <div style="margin-bottom:0.8rem; border-radius:10px; overflow:hidden; border:2px solid #d4c4b0; max-height:180px;">
-                        <img ng-src="{{editModal.newImagePreview || editModal.photo.imageUrl}}" style="width:100%; max-height:180px; object-fit:cover; display:block;">
+            <!-- SUB-TAB: Archived Reviews -->
+            <div class="reviews-list">
+                <div class="review-admin-card archived-card"
+                     ng-repeat="review in archivedReviews | filter:archivedSearch">
+                    <div class="rac-top">
+                        <div class="rac-stars">
+                            <i ng-repeat="s in [1,2,3,4,5]" class="fa-star"
+                               ng-class="s <= review.rating ? 'fa-solid' : 'fa-regular'"></i>
+                        </div>
+                        <span class="rac-service"><i class="fa-solid fa-spa"></i> {{review.serviceAvailed}}</span>
+                        <span class="rac-date">{{review.date | date:'MMM d, yyyy'}}</span>
+                        <span class="archived-badge"><i class="fa-solid fa-box-archive"></i> Archived</span>
                     </div>
-                    <button type="button" class="admin-btn admin-btn-secondary" style="width:100%; justify-content:center; margin-bottom:1rem;" onclick="document.getElementById('editImageInput').click()">
-                        <i class="fa-solid fa-image"></i> Replace Image
+                    <p class="rac-text">&ldquo;{{review.reviewText}}&rdquo;</p>
+                    <div class="rac-actions">
+                        <button class="admin-btn admin-btn-restore" ng-click="restoreReview(review.reviewId)">
+                            <i class="fa-solid fa-rotate-left"></i> Restore
+                        </button>
+                    </div>
+                </div>
+                <div class="empty-state" ng-show="archivedReviews.length === 0">
+                    <i class="fa-solid fa-box-archive"></i>
+                    <p>No archived reviews.</p>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- MODAL: Flag Review -->
+        <div class="modal-overlay" ng-show="flagModal.show === true" ng-click="closeFlagModal()">
+            <div class="modal-card" ng-click="$event.stopPropagation()" style="max-width:500px;">
+                <div class="modal-icon-plain" style="color:#f39c12;"><i class="fa-solid fa-flag"></i></div>
+                <h3>Flag Review</h3>
+                <p style="margin:10px 0 18px; color:#6b4423;">Select the reason why this review is being flagged.</p>
+                <div class="field-grp" style="margin-bottom:14px;">
+                    <label>Reason</label>
+                    <select class="admin-input" ng-model="flagModal.reason">
+                        <option value="">-- Select a reason --</option>
+                        <option value="Inappropriate language">Inappropriate language</option>
+                        <option value="Spam or irrelevant content">Spam or irrelevant content</option>
+                        <option value="Offensive or abusive content">Offensive or abusive content</option>
+                        <option value="False or misleading review">False or misleading review</option>
+                        <option value="Contains sensitive/private information">Contains sensitive/private information</option>
+                    </select>
+                </div>
+                <div class="field-grp">
+                    <label>Additional note (optional)</label>
+                    <textarea class="admin-input" rows="3" ng-model="flagModal.note"
+                              placeholder="Add more details if needed..."></textarea>
+                </div>
+                <div class="modal-actions" style="margin-top:18px;">
+                    <button class="admin-btn admin-btn-secondary" ng-click="closeFlagModal()">Cancel</button>
+                    <button class="admin-btn admin-btn-flag" ng-click="submitFlagReview()"
+                            ng-disabled="!flagModal.reason">
+                        <i class="fa-solid fa-flag"></i> Confirm Flag
                     </button>
-                    <input type="file" id="editImageInput" accept="image/*" onchange="angularFileChange(this)" style="display:none">
-                    <span ng-show="editModal.newImagePreview" style="font-size:0.78rem; color:#27ae60; margin-bottom:1rem; display:block;"><i class="fa-solid fa-circle-check"></i> New image selected — save to apply</span>
-                    <div class="field-grp" style="margin-bottom:1rem; text-align:left;">
-                        <label>Caption</label>
-                        <input type="text" class="admin-input" ng-model="editModal.caption" placeholder="e.g. Gel Manicure">
-                    </div>
-                    <div class="field-grp" style="text-align:left;">
-                        <label>Description</label>
-                        <textarea class="admin-input" ng-model="editModal.description" placeholder="No description yet..." rows="4" style="resize:vertical;"></textarea>
-                    </div>
-                    <div class="modal-actions" style="margin-top:1.8rem;">
-                        <button class="admin-btn admin-btn-secondary" ng-click="editModal.show = false">Cancel</button>
-                        <button class="admin-btn admin-btn-primary" ng-click="saveEditPhoto(editModal.photo)"><i class="fa-solid fa-check"></i> Save Changes</button>
-                    </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Delete/Archive Modals -->
-            <div class="modal-overlay" ng-show="deleteModal.show">
-                <div class="modal-card">
-                    <div class="modal-icon-plain"><i class="fa-solid fa-box-archive"></i></div>
-                    <h3>Archive Photo?</h3>
-                    <p>&ldquo;{{deleteModal.photo.caption}}&rdquo; will be moved to Archived Photos. You can restore it later.</p>
-                    <div class="modal-actions">
-                        <button class="admin-btn admin-btn-secondary" ng-click="deleteModal.show = false">Cancel</button>
-                        <button class="admin-btn admin-btn-archive" ng-click="deletePhoto()"><i class="fa-solid fa-box-archive"></i> Archive</button>
-                    </div>
+        <!-- MODAL: Edit Photo -->
+        <div class="modal-overlay" ng-show="editModal.show">
+            <div class="modal-card" style="max-width:500px;" ng-click="$event.stopPropagation()">
+                <div class="modal-icon-plain" style="font-size:2rem; color:#6b4423;"><i class="fa-solid fa-pen"></i></div>
+                <h3 style="margin-bottom:1.5rem;">Edit Photo Details</h3>
+                <div style="margin-bottom:0.8rem; border-radius:10px; overflow:hidden; border:2px solid #d4c4b0; max-height:180px;">
+                    <img ng-src="{{editModal.newImagePreview || editModal.photo.imageUrl}}"
+                         style="width:100%; max-height:180px; object-fit:cover; display:block;">
+                </div>
+                <button type="button" class="admin-btn admin-btn-secondary"
+                        style="width:100%; justify-content:center; margin-bottom:1rem;"
+                        onclick="document.getElementById('editImageInput').click()">
+                    <i class="fa-solid fa-image"></i> Replace Image
+                </button>
+                <input type="file" id="editImageInput" accept="image/*"
+                       onchange="angularFileChange(this)" style="display:none">
+                <span ng-show="editModal.newImagePreview"
+                      style="font-size:0.78rem; color:#27ae60; margin-bottom:1rem; display:block;">
+                    <i class="fa-solid fa-circle-check"></i> New image selected — save to apply
+                </span>
+                <div class="field-grp" style="margin-bottom:1rem; text-align:left;">
+                    <label>Caption</label>
+                    <input type="text" class="admin-input" ng-model="editModal.caption"
+                           placeholder="e.g. Gel Manicure">
+                </div>
+                <div class="field-grp" style="text-align:left;">
+                    <label>Description</label>
+                    <textarea class="admin-input" ng-model="editModal.description"
+                              placeholder="No description yet..." rows="4" style="resize:vertical;"></textarea>
+                </div>
+                <div class="modal-actions" style="margin-top:1.8rem;">
+                    <button class="admin-btn admin-btn-secondary" ng-click="editModal.show = false">Cancel</button>
+                    <button class="admin-btn admin-btn-primary" ng-click="saveEditPhoto(editModal.photo)">
+                        <i class="fa-solid fa-check"></i> Save Changes
+                    </button>
                 </div>
             </div>
-            <div class="modal-overlay" ng-show="permanentDeleteModal.show">
-                <div class="modal-card">
-                    <div class="modal-icon-plain"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                    <h3>Permanently Delete?</h3>
-                    <p>This will <strong>permanently remove</strong> &ldquo;{{permanentDeleteModal.photo.caption}}&rdquo; from the server. This <strong>cannot be undone</strong>.</p>
-                    <div class="modal-actions">
-                        <button class="admin-btn admin-btn-secondary" ng-click="permanentDeleteModal.show = false">Cancel</button>
-                        <button class="admin-btn admin-btn-danger" ng-click="permanentDeletePhoto()"><i class="fa-solid fa-trash"></i> Delete Forever</button>
-                    </div>
+        </div>
+
+        <!-- MODAL: Archive Photo -->
+        <div class="modal-overlay" ng-show="deleteModal.show">
+            <div class="modal-card">
+                <div class="modal-icon-plain"><i class="fa-solid fa-box-archive"></i></div>
+                <h3>Archive Photo?</h3>
+                <p>&ldquo;{{deleteModal.photo.caption}}&rdquo; will be moved to Archived Photos. You can restore it later.</p>
+                <div class="modal-actions">
+                    <button class="admin-btn admin-btn-secondary" ng-click="deleteModal.show = false">Cancel</button>
+                    <button class="admin-btn admin-btn-archive" ng-click="deletePhoto()">
+                        <i class="fa-solid fa-box-archive"></i> Archive
+                    </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- MODAL: Permanent Delete -->
+        <div class="modal-overlay" ng-show="permanentDeleteModal.show">
+            <div class="modal-card">
+                <div class="modal-icon-plain"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <h3>Permanently Delete?</h3>
+                <p>
+                    This will <strong>permanently remove</strong>
+                    &ldquo;{{permanentDeleteModal.photo.caption}}&rdquo;
+                    from the server. This <strong>cannot be undone</strong>.
+                </p>
+                <div class="modal-actions">
+                    <button class="admin-btn admin-btn-secondary" ng-click="permanentDeleteModal.show = false">Cancel</button>
+                    <button class="admin-btn admin-btn-danger" ng-click="permanentDeletePhoto()">
+                        <i class="fa-solid fa-trash"></i> Delete Forever
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- LIGHTBOX: Review Image -->
+        <div class="lightbox-overlay" ng-show="lightboxPhoto" ng-click="closeLightbox()">
+            <div class="lightbox-card" ng-click="$event.stopPropagation()">
+                <button class="lightbox-close" ng-click="closeLightbox()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <img ng-src="{{lightboxPhoto}}" class="lightbox-img" alt="Review photo">
             </div>
         </div>
 
@@ -726,6 +771,10 @@
         <!-- TAB: SERVICES -->
         <!-- ═══════════════════════════════════════════════════ -->
         <div class="tab-content" ng-show="dashTab === 'services'">
+            <a href="@Url.Action("ServicePage","Main")" class="view-public-btn" target="_blank">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> View Public Page
+            </a>
+
             <div class="services-layout">
                 <div class="services-sidebar-mini">
                     <h3>Services</h3>
@@ -738,7 +787,7 @@
                         <h2 class="section-title">Manage Services</h2>
                         <button class="add-btn" ng-click="openAddServiceModal()"><i class="fa-solid fa-plus"></i> Add Service</button>
                     </div>
-                    <div class="services-content-grid" ng-show="!showServiceTrash">
+                    <div class="services-content-grid">
                         <div class="service-card" ng-repeat="service in services | filter:categoryFilter">
                             <div class="admin-controls-abs">
                                 <button class="edit-btn-sm" ng-click="editService(service)"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -750,21 +799,29 @@
                             <div class="service-price">₱{{service.price}}</div>
                         </div>
                     </div>
-                    <div style="text-align:center; padding: 1rem 0;">
-                        <button class="admin-btn admin-btn-secondary" ng-click="toggleServiceTrash()">
-                            <i class="fa-solid fa-trash-can"></i> {{showServiceTrash ? 'Hide Deleted Services' : 'View Deleted Services'}}
+                    <div class="trash-container-mini">
+                        <button class="trash-toggle-btn" ng-click="showServiceTrash = !showServiceTrash; loadDeletedServices()">
+                            <i class="fa-solid fa-trash-can-arrow-up"></i>
+                            {{ showServiceTrash ? 'Hide Deleted Services' : 'View Deleted Services' }}
+                            <span class="trash-count" ng-if="deletedServices.length > 0">{{deletedServices.length}}</span>
                         </button>
-                    </div>
-                    <div ng-show="showServiceTrash">
-                        <div ng-repeat="s in deletedServices" style="display:flex; justify-content:space-between; align-items:center; padding:0.8rem 1rem; border-bottom:1px solid #e0d5cb;">
-                            <div>
-                                <strong style="color:#3d2817;">{{s.name}}</strong>
-                                <span style="color:#888; margin-left:1rem;">₱{{s.price}}</span>
-                                <p style="margin:0.2rem 0 0; font-size:0.85rem; color:#777;">{{s.description}}</p>
-                            </div>
-                            <div style="display:flex; gap:0.5rem;">
-                                <button class="admin-btn admin-btn-restore" ng-click="restoreService(s.serviceId)"><i class="fa-solid fa-rotate-left"></i> Restore</button>
-                                <button class="admin-btn admin-btn-danger" ng-click="permanentDeleteService(s.serviceId)"><i class="fa-solid fa-trash-can"></i> Delete</button>
+                        <div class="trash-panel" ng-show="showServiceTrash">
+                            <h3 class="trash-title">Deleted Services</h3>
+                            <p class="trash-empty" ng-if="deletedServices.length === 0">No deleted services found.</p>
+                            <div class="deleted-faq-card" ng-repeat="s in deletedServices">
+                                <div class="deleted-faq-info">
+                                    <h3>{{s.name}}</h3>
+                                    <p>{{s.category | capitalize}} &bull; ₱{{s.price}}</p>
+                                    <p ng-if="s.description" style="margin-top:0.2rem;">{{s.description}}</p>
+                                </div>
+                                <div class="deleted-faq-actions">
+                                    <button class="restore-btn" ng-click="restoreService(s.serviceId)">
+                                        <i class="fa-solid fa-rotate-left"></i> Restore
+                                    </button>
+                                    <button class="perm-delete-btn" ng-click="permanentDeleteService(s.serviceId)">
+                                        <i class="fa-solid fa-trash"></i> Delete Forever
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -977,13 +1034,25 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="modal-preview" ng-if="formData.label || formData.value">
+                            <div class="preview-label">Preview</div>
+                            <div class="preview-card">
+                                <div class="preview-icon"><i ng-class="formData.icon"></i></div>
+                                <div class="preview-content">
+                                    <div class="preview-title">{{ formData.label || 'Label not set' }}</div>
+                                    <div class="preview-value">{{ formData.value || 'Details not set' }}</div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="field-grp">
                             <label class="field-lbl">Display Label</label>
                             <input class="field-inp" type="text" ng-model="formData.label" placeholder="e.g. Customer Hotline" />
+                            <span class="field-hint">Shown as the card title</span>
                         </div>
                         <div class="field-grp">
                             <label class="field-lbl">Contact Details</label>
                             <input type="text" ng-model="formData.value" ng-keypress="formData.infoType === 'phone' && numbersOnly($event)" ng-attr-maxlength="{{formData.infoType === 'phone' ? 11 : undefined}}" placeholder="{{contactPlaceholder}}" class="field-inp" />
+                            <span class="field-hint">{{ contactHint }}</span>
                         </div>
                     </div>
                     <div class="modal-ftr">
@@ -1086,68 +1155,61 @@
         </div>
 
         <!-- ═══════════════════════════════════════════════════ -->
-        <!-- TAB: INBOX -->
-        <!-- ═══════════════════════════════════════════════════ -->
-        <div class="tab-content" ng-show="dashTab === 'inbox'">
-            <h2 class="section-title">Inbox</h2>
-            <div class="inbox-list" ng-if="adminInboxMessages && adminInboxMessages.length > 0">
-                <div class="inbox-card" ng-repeat="msg in adminInboxMessages">
-                    <div class="inbox-card-header">
-                        <span class="inbox-sender"><i class="fa-solid fa-user"></i> {{msg.senderName}}</span>
-                        <span class="inbox-date">{{msg.dateSent | date:'MMM d, yyyy h:mm a'}}</span>
-                    </div>
-                    <p class="inbox-subject"><strong>{{msg.subject}}</strong></p>
-                    <p class="inbox-preview">{{msg.message}}</p>
-                    <div class="inbox-actions">
-                        <button class="admin-btn admin-btn-primary admin-btn-sm" ng-click="markInboxRead(msg.messageId)"><i class="fa-solid fa-check"></i> Mark Read</button>
-                        <button class="admin-btn admin-btn-secondary admin-btn-sm" ng-click="deleteInboxMessage(msg.messageId)"><i class="fa-solid fa-trash"></i> Delete</button>
-                    </div>
-                </div>
-            </div>
-            <div class="empty-state" ng-if="!adminInboxMessages || adminInboxMessages.length === 0">
-                <i class="fa-solid fa-inbox"></i>
-                <p>No inbox messages.</p>
-            </div>
-        </div>
-
-        <!-- ═══════════════════════════════════════════════════ -->
         <!-- TAB: PAYMENT -->
         <!-- ═══════════════════════════════════════════════════ -->
-        <div class="tab-content" ng-show="dashTab === 'payment'">
+        <div class="tab-content" ng-show="dashTab === 'payment'" ng-init="dashTab === 'payment' && loadPaymentInfo()">
             <h2 class="section-title">Payment Settings</h2>
+
             <div class="payment-content">
-                <!-- Reuse your existing AdminPaymentSetting content here -->
-                <p style="color:#8b6f47; font-style:italic; text-align:center; padding:3rem;">Payment settings content goes here — wire up your existing AdminPaymentSetting controller/partial as needed.</p>
-            </div>
-        </div>
+                <div class="settings-card">
 
-        <!-- Shared Lightbox -->
-        <div class="lightbox-overlay" ng-show="lightboxPhoto" ng-click="closeLightbox()">
-            <div class="lightbox-card" ng-click="$event.stopPropagation()">
-                <button class="lightbox-close" ng-click="closeLightbox()"><i class="fa-solid fa-xmark"></i></button>
-                <img ng-src="{{lightboxPhoto.imageUrl || lightboxPhoto}}" class="lightbox-img" alt="Photo">
-                <p class="lightbox-caption" ng-if="lightboxPhoto.caption">{{lightboxPhoto.caption}}</p>
-            </div>
-        </div>
+                    <!-- GCash Number -->
+                    <div class="form-group">
+                        <label>GCash Number</label>
+                        <input type="text"
+                               name="gcashNumber"
+                               ng-model="payment.gcash"
+                               maxlength="11"
+                               inputmode="numeric"
+                               pattern="[0-9]*"
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                               placeholder="09XXXXXXXXX"
+                               class="form-input" />
+                    </div>
 
-        <!-- Shared Toast -->
-        <div class="toast" ng-show="toast.show" ng-class="toast.type">
-            <i class="fa-solid" ng-class="toast.type === 'toast-success' ? 'fa-circle-check' : 'fa-circle-exclamation'"></i>
-            {{toast.message}}
-        </div>
+                    <!-- QR Upload -->
+                    <div class="form-group">
+                        <label>Upload QR Code</label>
+                        <input type="file" id="qrUpload" accept="image/png, image/jpeg, image/jpg" />
+                        <small class="help-text">Upload QR code for GCash payments (PNG, JPG, JPEG)</small>
+                    </div>
 
-        <!-- Footer -->
-        <footer>
-            <div class="footer-container">
-                <h2 class="footer-title">Follow our Socials!</h2>
-                <div class="social-links">
-                    <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank"><i class="fa-brands fa-tiktok"></i><span>destlounge</span></a>
-                    <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank"><i class="fa-brands fa-facebook"></i><span>D'est Lounge</span></a>
-                    <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank"><i class="fa-brands fa-instagram"></i><span>destlounge</span></a>
+                    <!-- Current QR Preview -->
+                    <div class="qr-preview" ng-if="paymentInfo.qr">
+                        <label>Current QR Code:</label>
+                        <img ng-src="{{paymentInfo.qr}}" alt="QR Code" class="qr-image" />
+                    </div>
+
+                    <button class="btn-save" ng-click="savePayment()">
+                        Save Settings
+                    </button>
+
                 </div>
             </div>
-        </footer>
+        </div>
     </div>
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <h2 class="footer-title">Follow our Socials!</h2>
+            <div class="social-links">
+                <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank"><i class="fa-brands fa-tiktok"></i><span>destlounge</span></a>
+                <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank"><i class="fa-brands fa-facebook"></i><span>D'est Lounge</span></a>
+                <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank"><i class="fa-brands fa-instagram"></i><span>destlounge</span></a>
+            </div>
+        </div>
+    </footer>
+</div>
 
     <style>
         * {
@@ -1279,6 +1341,111 @@
             .view-public-btn:hover {
                 background-color: #8b6f47;
                 color: white;
+            }
+
+
+        /* Payment Tab */
+        .payment-content {
+            display: flex;
+            justify-content: flex-start;
+            padding: 1rem 0;
+        }
+
+        .settings-card {
+            background: #e8ddd1;
+            padding: 2.5rem;
+            border-radius: 25px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+            .settings-card .form-group {
+                margin-bottom: 1.25rem;
+                display: flex;
+                flex-direction: column;
+            }
+
+                .settings-card .form-group label {
+                    margin-bottom: 0.5rem;
+                    font-weight: 600;
+                    color: #5a4a3a;
+                    font-size: 0.875rem;
+                }
+
+            .settings-card .form-input,
+            .settings-card input[type="file"] {
+                width: 100%;
+                padding: 0.75rem;
+                border-radius: 10px;
+                border: 1px solid #cbb9a6;
+                font-size: 0.875rem;
+                outline: none;
+                background: white;
+                box-sizing: border-box;
+                font-family: 'Georgia', serif;
+            }
+
+                .settings-card .form-input:focus {
+                    border-color: #6b5544;
+                }
+
+            .settings-card .help-text {
+                display: block;
+                margin-top: 0.3125rem;
+                font-size: 0.75rem;
+                color: #8b6f47;
+                font-style: italic;
+            }
+
+        .qr-preview {
+            margin-bottom: 1.25rem;
+            text-align: center;
+            padding: 0.9375rem;
+            background: #c9b5a3;
+            border-radius: 10px;
+        }
+
+            .qr-preview label {
+                display: block;
+                margin-bottom: 0.625rem;
+                font-weight: 600;
+                color: #5a4a3a;
+                font-size: 0.875rem;
+            }
+
+        .qr-image {
+            width: 150px;
+            height: auto;
+            border: 2px solid white;
+            border-radius: 10px;
+            padding: 5px;
+            background: white;
+        }
+
+        .btn-save {
+            width: 100%;
+            padding: 0.875rem;
+            background: #6b5544;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Georgia', serif;
+        }
+
+            .btn-save:hover:not([disabled]) {
+                background: #5a4635;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            }
+
+            .btn-save[disabled] {
+                opacity: 0.7;
+                cursor: not-allowed;
             }
 
         /* ── TAB BAR ── */
@@ -3943,6 +4110,78 @@
             outline: none;
         }
 
+        .sub-tab-bar {
+            display: flex;
+            background-color: #faf8f5;
+            border-bottom: 2px solid #d4c4b0;
+            padding: 0 1.5rem;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+            .sub-tab-bar .tab-btn {
+                padding: 0.7rem 1.4rem;
+                font-size: 0.85rem;
+                border-bottom: 3px solid transparent;
+                margin-bottom: -2px;
+                white-space: nowrap;
+            }
+
+                .sub-tab-bar .tab-btn.tab-active {
+                    color: #6b4423;
+                    border-bottom-color: #6b4423;
+                    background-color: #faf8f5;
+                }
+
+        .sub-tab-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            padding: 0 0.5rem;
+        }
+
+        .stats-bar-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card-sm {
+            flex: 1;
+            min-width: 90px;
+            background: white;
+            border: 2px solid #d4c4b0;
+            border-radius: 10px;
+            padding: 0.9rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        .stat-num-sm {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #6b4423;
+        }
+
+        .stat-lbl-sm {
+            font-size: 0.75rem;
+            color: #8b6f47;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-warn-sm .stat-num-sm {
+            color: #e67e22;
+        }
+
+        .stat-muted-sm .stat-num-sm {
+            color: #7f8c8d;
+        }
         /* ── SHARED MODALS ── */
         .modal-backdrop {
             position: fixed;
@@ -4566,6 +4805,62 @@
                 font-weight: 500;
             }
 
+
+        .service-image img[src=""],
+        .service-image img:not([src]),
+        .service-image img[src="/Content/Pictures/DestLogo.png"] {
+            display: none;
+        }
+
+        .service-image:has(img[src="/Content/Pictures/DestLogo.png"]),
+        .service-image:has(img[src=""]) {
+            background: #e8dfd5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .service-image:has(img[src="/Content/Pictures/DestLogo.png"])::after,
+            .service-image:has(img[src=""])::after {
+                content: '\f03e';
+                font-family: 'Font Awesome 6 Free';
+                font-weight: 900;
+                font-size: 3rem;
+                color: #c1b2a5;
+            }
+
+        .polaroid-placeholder {
+            width: 100%;
+            height: 100%;
+            background: #e8dfd5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            color: #c1b2a5;
+        }
+
+            .polaroid-placeholder i {
+                font-size: 2rem;
+            }
+
+            .polaroid-placeholder span {
+                font-size: 0.75rem;
+                font-weight: 600;
+            }
+
+        .gallery-broken-placeholder {
+            width: 100%;
+            height: 100%;
+            background: #e8dfd5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #c1b2a5;
+            font-size: 3rem;
+        }
+
         /* ── MOBILE TOP BAR ── */
         .mobile-topbar {
             display: none;
@@ -4762,6 +5057,7 @@
             }
         }
 
+
         @@media (max-width: 30rem) {
             .sidebar {
                 display: none;
@@ -4831,7 +5127,7 @@
             }
         }
     </style>
-</div>
+
 
 <script>
     /* ── Homepage edit modal helpers (vanilla JS, used in homepage tab) ── */
@@ -4907,17 +5203,74 @@
 
 @section scripts {
     <script>
-        /* Init default tab */
-        angular.element(document).ready(function() {
+        angular.element(document).ready(function () {
             var scope = angular.element(document.querySelector('[ng-controller]')).scope();
             if (scope && !scope.dashTab) {
-                scope.$apply(function() {
+                scope.$apply(function () {
                     scope.dashTab = 'analytics';
                     scope.adminTab = 'gallery';
                     scope.filterBookings('all');
+                    scope.loadReviews();
+                    scope.loadArchivedReviews();
+                    scope.loadServices();
+                    scope.loadDeletedServices();
+                    scope.loadGalleryPhotos();
+                    scope.loadFAQs();
+                    scope.loadContactInfo();
+                    scope.loadTechs && scope.loadTechs();
+                });
+
+                // Load reviews with admin URL directly (bypasses the path check)
+                scope.$apply(function () {
+                    scope.$http = scope.$http || angular.element(document.querySelector('[ng-controller]')).injector().get('$http');
+                });
+
+                // Use $http directly to force admin reviews endpoint
+                var injector = angular.element(document.querySelector('[ng-app]')).injector();
+                var $http = injector.get('$http');
+                $http.get('/Main/GetAdminReviews').then(function (res) {
+                    scope.$apply(function () {
+                        scope.reviews = (res.data || []).map(function (r) {
+                            return {
+                                reviewId: r.ReviewId || r.reviewId,
+                                rating: Number(r.Rating || r.rating || 0),
+                                reviewText: r.ReviewText || r.reviewText || 'No comment provided.',
+                                serviceAvailed: r.ServiceAvailed || r.serviceAvailed || 'Nail Service',
+                                date: r.date ? new Date(r.date) : (r.CreatedAt ? new Date(r.CreatedAt) : new Date()),
+                                images: r.images || [],
+                                flagged: r.Flagged || r.flagged || false,
+                                flagReason: r.FlagReason || r.flagReason || '',
+                                flagNote: r.FlagNote || r.flagNote || ''
+                            };
+                        });
+                    });
+                });
+
+                scope.loadBookings().then(function () {
+                    // Delay to ensure DOM (canvas) is rendered before drawing chart
+                    setTimeout(function () {
+                        scope.$applyAsync(function () {
+                            scope.loadAnalytics();
+                        });
+
+                        // Load nail techs from child scope
+                        var techEl = document.querySelector('[ng-controller="NailTechController"]');
+                        if (techEl) {
+                            var techScope = angular.element(techEl).scope();
+                            if (techScope && techScope.loadTechs) techScope.loadTechs();
+                        }
+                    }, 300);
                 });
             }
         });
+
+        angular.module('DestLoungeSalesandBooking')
+            .filter('capitalize', function () {
+                return function (input) {
+                    if (!input) return '';
+                    return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
+                };
+            });
 
         /* NailTech sub-controller wired into dashboard staffs tab */
         angular.module('DestLoungeSalesandBooking')
@@ -4933,7 +5286,9 @@
                 $scope.loadTechs = function() {
                     $http.get('/Main/GetNailTechs').then(function(res) {
                         $scope.activeTechs = res.data.filter(function(t) { return t.status !== 'inactive'; });
-                        $scope.inactiveTechs = res.data.filter(function(t) { return t.status === 'inactive'; });
+                        $scope.inactiveTechs = res.data.filter(function (t) { return t.status === 'inactive'; });
+                        $scope.$parent.activeTechs = $scope.activeTechs;
+                        $scope.$parent.inactiveTechs = $scope.inactiveTechs;
                     });
                 };
                 $scope.loadTechs();

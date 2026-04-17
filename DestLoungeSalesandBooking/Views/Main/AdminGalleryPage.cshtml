@@ -2,7 +2,7 @@
     Layout = "~/Views/Shared/_MainLayout.cshtml";
 }
 
-<!-- Sidebar Navigation -->
+ Sidebar Navigation 
 <aside class="sidebar">
     <div class="logo-container">
         <a href="@Url.Action("AdminHomepage","Main")">
@@ -101,7 +101,7 @@
         </button>
     </div>
 
-    <!-- GALLERY TAB -->
+     GALLERY TAB 
     <div ng-show="adminTab === 'gallery'" class="tab-content">
         <div class="upload-card">
             <h3><i class="fa-solid fa-cloud-arrow-up"></i> Upload New Photo</h3>
@@ -172,7 +172,7 @@
         </div>
     </div>
 
-    <!-- ARCHIVED GALLERY TAB -->
+     ARCHIVED GALLERY TAB 
     <div ng-show="adminTab === 'archivedGallery'" class="tab-content">
         <div class="gallery-grid" ng-show="archivedGalleryPhotos.length > 0">
             <div class="gallery-item" ng-repeat="photo in archivedGalleryPhotos">
@@ -200,7 +200,7 @@
         </div>
     </div>
 
-    <!-- REVIEWS TAB -->
+     REVIEWS TAB 
     <div ng-show="adminTab === 'reviews'" class="tab-content">
         <div class="stats-bar">
             <div class="stat-card"><span class="stat-num">{{reviews.length}}</span><span class="stat-label">Active</span></div>
@@ -265,7 +265,7 @@
         </div>
     </div>
 
-    <!-- FLAG MODAL -->
+     FLAG MODAL 
     <div class="modal-overlay"
          ng-show="flagModal.show === true"
          ng-click="closeFlagModal()">
@@ -306,7 +306,7 @@
         </div>
     </div>
 
-    <!-- ARCHIVED TAB -->
+     ARCHIVED TAB 
     <div ng-show="adminTab === 'archived'" class="tab-content">
         <div class="reviews-list">
             <div class="review-admin-card archived-card" ng-repeat="review in archivedReviews | filter:archivedSearch">
@@ -332,7 +332,7 @@
         </div>
     </div>
 
-    <!-- EDIT MODAL -->
+     EDIT MODAL 
     <div class="modal-overlay" ng-show="editModal.show">
         <div class="modal-card" style="max-width:500px;" ng-click="$event.stopPropagation()">
             <div class="modal-icon" style="font-size:2rem; color:#6b4423;">
@@ -381,7 +381,7 @@
         </div>
     </div>
 
-    <!-- REVIEW IMAGE LIGHTBOX -->
+     REVIEW IMAGE LIGHTBOX 
     <div class="lightbox-overlay" ng-show="lightboxPhoto" ng-click="closeLightbox()">
         <div class="lightbox-card" ng-click="$event.stopPropagation()">
             <button class="lightbox-close" ng-click="closeLightbox()">
@@ -391,7 +391,7 @@
         </div>
     </div>
 
-    <!-- DELETE MODAL -->
+     DELETE MODAL 
     <div class="modal-overlay" ng-show="deleteModal.show">
         <div class="modal-card">
             <div class="modal-icon"><i class="fa-solid fa-box-archive"></i></div>
@@ -409,7 +409,7 @@
         </div>
     </div>
 
-    <!-- PERMANENT DELETE MODAL -->
+     PERMANENT DELETE MODAL 
     <div class="modal-overlay" ng-show="permanentDeleteModal.show">
         <div class="modal-card">
             <div class="modal-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
@@ -428,7 +428,7 @@
         </div>
     </div>
 
-    <!-- TOAST -->
+     TOAST 
     <div class="toast" ng-show="toast.show" ng-class="toast.type">
         <i class="fa-solid" ng-class="toast.type === 'toast-success' ? 'fa-circle-check' : 'fa-circle-exclamation'"></i>
         {{toast.message}}

@@ -2,7 +2,7 @@
     Layout = "~/Views/Shared/_MainLayout.cshtml";
 }
 
-<!-- Sidebar Navigation -->
+ Sidebar Navigation 
 <aside class="sidebar">
     <div class="logo-container">
         <a href="@Url.Action("AdminHomepage","Main")">
@@ -40,7 +40,7 @@
     </div>
 </aside>
 
-<!-- Mobile Top Bar -->
+ Mobile Top Bar 
 <div class="mobile-topbar">
     <a href="@Url.Action("AdminHomepage","Main")">
         <img src="~/Content/Pictures/DestLogo.png" alt="D'est Lounge">
@@ -50,10 +50,10 @@
     </button>
 </div>
 
-<!-- Mobile Nav Overlay -->
+ Mobile Nav Overlay 
 <div class="mobile-nav-overlay" id="mobileOverlay" onclick="toggleMobileNav()"></div>
 
-<!-- Mobile Nav Drawer -->
+ Mobile Nav Drawer 
 <div class="mobile-nav-drawer" id="mobileDrawer">
     <nav class="sidebar-nav">
         <a href="@Url.Action("AdminHomepage","Main")" class="nav-item">HOME</a>
@@ -74,7 +74,7 @@
     </div>
 </div>
 
-<!-- Main Content Area -->
+ Main Content Area 
 <div class="main-content">
 
     <div class="inbox-page-container">
@@ -151,7 +151,7 @@
                     </button>
                 </div>
 
-                <!-- Expanded Detail -->
+                 Expanded Detail 
                 <div class="inbox-expanded-detail" ng-show="item.expanded">
                     <hr class="inbox-divider">
                     <div class="inbox-expanded-actions" ng-if="item.status === 'Pending'">
@@ -171,7 +171,7 @@
         </div>
     </div>
 
-    <!-- Footer -->
+     Footer 
     <footer>
         <div class="footer-container">
             <h2 class="footer-title">Follow our Socials!</h2>

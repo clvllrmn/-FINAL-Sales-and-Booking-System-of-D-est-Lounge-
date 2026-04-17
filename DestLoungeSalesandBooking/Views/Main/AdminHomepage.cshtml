@@ -5,7 +5,7 @@
 <div ng-app="DestLoungeSalesandBookingModule" ng-controller="DestLoungeSalesandBookingController">
     @Html.AntiForgeryToken()
 
-    <!-- Edit Modal -->
+     Edit Modal 
     <div class="edit-modal-overlay" id="editModal" style="display:none;">
         <div class="edit-modal">
             <div class="modal-header">
@@ -23,7 +23,7 @@
         </div>
     </div>
 
-    <!-- Sidebar Navigation -->
+     Sidebar Navigation 
     <aside class="sidebar">
         <div class="logo-container">
             <a href="@Url.Action("AdminHomepage","Main")">
@@ -61,7 +61,7 @@
         </div>
     </aside>
 
-    <!-- Mobile Top Bar -->
+     Mobile Top Bar 
     <div class="mobile-topbar">
         <a href="@Url.Action("AdminHomepage","Main")">
             <img src="~/Content/Pictures/DestLogo.png" alt="D'est Lounge">
@@ -71,10 +71,10 @@
         </button>
     </div>
 
-    <!-- Mobile Nav Overlay -->
+     Mobile Nav Overlay 
     <div class="mobile-nav-overlay" id="mobileOverlay" onclick="toggleMobileNav()"></div>
 
-    <!-- Mobile Nav Drawer -->
+     Mobile Nav Drawer 
     <div class="mobile-nav-drawer" id="mobileDrawer">
         <nav class="sidebar-nav">
             <a href="@Url.Action("AdminHomepage","Main")" class="nav-item active">HOME</a>
@@ -95,10 +95,10 @@
         </div>
     </div>
 
-    <!-- Main Content Area -->
+     Main Content Area 
     <div class="main-content">
 
-        <!-- Banner Section -->
+         Banner Section 
         <div class="banner-container">
             <div class="banner-text">
                 <div class="editable-block">
@@ -128,7 +128,7 @@
             </div>
         </div>
 
-        <!-- Services Section -->
+         Services Section 
         <div class="services-intro">
             <div class="divider-line"></div>
             <div class="service-text">
@@ -147,7 +147,7 @@
             </div>
         </div>
 
-        <!-- Polaroid Images Section -->
+         Polaroid Images Section 
         <div class="polaroid-section">
             <div class="polaroid-card" ng-repeat="slot in [1,2,3]">
                 <div class="admin-controls">
@@ -169,7 +169,7 @@
             </div>
         </div>
 
-        <!-- D'est Description Box -->
+         D'est Description Box 
         <div class="dest-description">
             <div class="description-header">
                 <div class="editable-block centered">
@@ -187,7 +187,7 @@
             </div>
         </div>
 
-        <!-- Footer -->
+         Footer 
         <footer>
             <div class="footer-container">
                 <h2 class="footer-title">Follow our Socials!</h2>

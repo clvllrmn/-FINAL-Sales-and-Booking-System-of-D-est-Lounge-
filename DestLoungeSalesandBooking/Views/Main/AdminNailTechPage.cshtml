@@ -6,7 +6,7 @@
 
 <div ng-app="DestLoungeSalesandBooking" ng-controller="NailTechController">
 
-    <!-- Sidebar Navigation -->
+     Sidebar Navigation 
     <aside class="sidebar">
         <div class="logo-container">
             <a href="@Url.Action("AdminHomepage","Main")">
@@ -44,7 +44,7 @@
         </div>
     </aside>
 
-    <!-- Main Content Area -->
+     Main Content Area 
     <div class="main-content">
         <div class="nailtech-container">
             <div class="page-header">
@@ -54,7 +54,7 @@
                 </button>
             </div>
 
-            <!-- Stats Bar -->
+             Stats Bar 
             <div class="stats-bar">
                 <div class="stat-pill">
                     <i class="fa-solid fa-users"></i>
@@ -66,7 +66,7 @@
                 </div>
             </div>
 
-            <!-- Active Techs -->
+             Active Techs 
             <div class="section-label" ng-if="activeTechs.length > 0">
                 <i class="fa-solid fa-circle-check"></i> Active Staff
             </div>
@@ -102,7 +102,7 @@
                 </div>
             </div>
 
-            <!-- Inactive / Former Techs -->
+             Inactive / Former Techs 
             <div class="inactive-section" ng-if="inactiveTechs.length > 0">
                 <button class="inactive-toggle-btn" ng-click="showInactive = !showInactive">
                     <i class="fa-solid fa-user-slash"></i>
@@ -133,7 +133,7 @@
             </div>
         </div>
 
-        <!-- Footer -->
+         Footer 
         <footer>
             <div class="footer-container">
                 <h2 class="footer-title">Follow our Socials!</h2>
@@ -152,7 +152,7 @@
         </footer>
     </div>
 
-    <!-- ADD / EDIT MODAL -->
+     ADD / EDIT MODAL 
     <div class="modal-backdrop" ng-show="showModal" ng-click="closeModalBackdrop($event)">
         <div class="modal" ng-click="$event.stopPropagation()">
             <div class="modal-header">
@@ -204,7 +204,7 @@
                               placeholder="Any additional notes about this nail tech..." rows="3"></textarea>
                 </div>
 
-                <!-- Live Preview -->
+                 Live Preview 
                 <div class="modal-preview" ng-if="techForm.name">
                     <div class="preview-label">Preview</div>
                     <div class="preview-card">
@@ -228,7 +228,7 @@
         </div>
     </div>
 
-    <!-- DELETE CONFIRM MODAL -->
+     DELETE CONFIRM MODAL 
     <div class="modal-backdrop modal-backdrop--confirm" ng-show="showConfirmModal" ng-click="closeConfirmModal()">
         <div class="confirm-modal" ng-click="$event.stopPropagation()">
             <div class="confirm-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
@@ -241,7 +241,7 @@
         </div>
     </div>
 
-    <!-- Mobile Top Bar -->
+     Mobile Top Bar 
     <div class="mobile-topbar">
         <a href="@Url.Action("AdminHomepage","Main")">
             <img src="~/Content/Pictures/DestLogo.png" alt="D'est Lounge">

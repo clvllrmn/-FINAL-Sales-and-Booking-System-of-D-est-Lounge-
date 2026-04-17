@@ -6,7 +6,7 @@
 
 <div ng-app="DestLoungeSalesandBooking" ng-controller="DestLoungeSalesandBookingController">
 
-    <!-- Sidebar Navigation -->
+     Sidebar Navigation 
     <aside class="sidebar">
         <div class="logo-container">
             <a href="@Url.Action("AdminHomepage","Main")">
@@ -44,7 +44,7 @@
         </div>
     </aside>
 
-    <!-- Main Content Area -->
+     Main Content Area 
     <div class="main-content">
         <div class="faqs-container">
             <div class="page-header">
@@ -79,7 +79,7 @@
                 </div>
             </div>
 
-            <!-- Trash Panel -->
+             Trash Panel 
             <div class="trash-container">
                 <button class="trash-toggle-btn" ng-click="toggleFaqTrash()">
                     <i class="fa-solid fa-trash-can-arrow-up"></i>
@@ -107,7 +107,7 @@
             </div>
         </div>
 
-        <!-- Footer -->
+         Footer 
         <footer>
             <div class="footer-container">
                 <h2 class="footer-title">Follow our Socials!</h2>
@@ -126,7 +126,7 @@
         </footer>
     </div>
 
-    <!-- FAQ MODAL -->
+     FAQ MODAL 
     <div class="faq-modal-backdrop" ng-show="showFaqModal" ng-click="closeFaqModalBackdrop($event)">
         <div class="faq-modal" ng-click="$event.stopPropagation()">
             <div class="faq-modal-header">
@@ -176,7 +176,7 @@
         </div>
     </div>
 
-    <!-- Mobile Top Bar -->
+     Mobile Top Bar 
     <div class="mobile-topbar">
         <a href="@Url.Action("AdminHomepage","Main")">
             <img src="~/Content/Pictures/DestLogo.png" alt="D'est Lounge">

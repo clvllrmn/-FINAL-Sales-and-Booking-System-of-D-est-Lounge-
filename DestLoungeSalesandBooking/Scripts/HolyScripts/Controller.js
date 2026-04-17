@@ -614,7 +614,7 @@ app.controller("DestLoungeSalesandBookingController",
                                 description: s.description,
                                 price: s.price,
                                 category: s.category || 'manicure',
-                                image: s.image + '?t=' + Date.now()
+                                image: (s.image && s.image.trim() !== '') ? s.image + '?t=' + Date.now() : '/Content/Pictures/DestLogo.png'
                             };
                         });
                     }
@@ -732,6 +732,7 @@ app.controller("DestLoungeSalesandBookingController",
                     if (response.data.success) {
                         alert('Service deleted.');
                         $scope.loadServices();
+                        $scope.loadDeletedServices();
                     } else {
                         alert('Error: ' + response.data.message);
                     }
@@ -1439,6 +1440,9 @@ app.controller("DestLoungeSalesandBookingController",
                         };
                     });
                     $scope.filterBookings($scope.selectedFilter);
+                    $scope.pendingBookingsCount = $scope.bookings.filter(function (b) {
+                        return b.status === 'Pending';
+                    }).length;
                 })
                 .catch(function (err) {
                     console.error("loadBookings error:", err);
@@ -1446,53 +1450,101 @@ app.controller("DestLoungeSalesandBookingController",
                 });
         };
 
-        $scope.filterBookings = function (filter) {
-            $scope.selectedFilter = filter;
-            var today = new Date();
-            today.setHours(0, 0, 0, 0);
+        $scope.analyticsFilter = 'week';
+        var analyticsChartInstance = null;
 
-            function parseCardDateTime(card) {
-                if (!card || !card.dateTime || card.dateTime === "N/A") return null;
-                var datePart = card.dateTime.split(" ")[0];
-                var parts = datePart.split("/");
-                if (parts.length !== 3) return null;
-                var mm = parseInt(parts[0], 10);
-                var dd = parseInt(parts[1], 10);
-                var yy = parseInt(parts[2], 10);
-                var d = new Date(yy, mm - 1, dd);
-                d.setHours(0, 0, 0, 0);
-                return d;
-            }
-
-            if (filter === 'all') {
-                $scope.filteredBookings = $scope.bookings;
-            } else if (filter === 'today') {
-                $scope.filteredBookings = $scope.bookings.filter(function (b) {
-                    var d = parseCardDateTime(b);
-                    return d && d.getTime() === today.getTime();
+        $scope.loadAnalytics = function () {
+            $http.get('/Main/Analytics', { params: { range: $scope.analyticsFilter } })
+                .then(function (res) {
+                    var data = res.data || {};
+                    $scope.pendingBookingsCount = $scope.bookings.filter(function (b) {
+                        return b.status === 'Pending';
+                    }).length;
+                    $timeout(function () {         // <-- wrap in $timeout
+                        renderAnalyticsChart(data.points || []);
+                    }, 100);
+                })
+                .catch(function (err) {
+                    console.error('Analytics error:', err);
                 });
-            } else if (filter === 'upcoming') {
-                $scope.filteredBookings = $scope.bookings.filter(function (b) {
-                    var d = parseCardDateTime(b);
-                    return d && d.getTime() > today.getTime() && b.status !== 'Cancelled';
-                });
-            } else if (filter === 'completed') {
-                $scope.filteredBookings = $scope.bookings.filter(function (b) {
-                    return b.status === 'Completed';
-                });
-            } else if (filter === 'cancelled') {
-                $scope.filteredBookings = $scope.bookings.filter(function (b) {
-                    return b.status === 'Cancelled';
-                });
-            } else if (filter === 'pending') {
-                $scope.filteredBookings = $scope.bookings.filter(function (b) {
-                    return b.status === 'Pending';
-                });
-            } else {
-                $scope.filteredBookings = $scope.bookings;
-            }
-            console.log("FILTERED bookings:", $scope.filteredBookings);
         };
+
+        function renderAnalyticsChart(points) {
+            if (!window.Chart) return;
+            var canvas = document.getElementById('analyticsChart');
+            if (!canvas) return;
+            var existing = Chart.getChart(canvas);
+            if (existing) existing.destroy();
+            new Chart(canvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: points.map(function (p) { return p.label; }),
+                    datasets: [{
+                        label: 'Bookings',
+                        data: points.map(function (p) { return p.value; }),
+                        backgroundColor: 'rgba(107,68,35,0.7)',
+                        borderColor: '#6b4423',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+        }
+        // REPLACE filterBookings entirely (no patching)
+$scope.filterBookings = function (filter) {
+    $scope.selectedFilter = filter;
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    function parseCardDateTime(card) {
+        if (!card || !card.dateTime || card.dateTime === "N/A") return null;
+        var datePart = card.dateTime.split(" ")[0];
+        var parts = datePart.split("/");
+        if (parts.length !== 3) return null;
+        var d = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }
+
+    if (filter === 'all') {
+        $scope.filteredBookings = $scope.bookings;
+    } else if (filter === 'today') {
+        $scope.filteredBookings = $scope.bookings.filter(function (b) {
+            var d = parseCardDateTime(b);
+            return d && d.getTime() === today.getTime();
+        });
+    } else if (filter === 'upcoming') {
+        $scope.filteredBookings = $scope.bookings.filter(function (b) {
+            var d = parseCardDateTime(b);
+            return d && d.getTime() > today.getTime() && b.status !== 'Cancelled';
+        });
+    } else if (filter === 'completed') {
+        $scope.filteredBookings = $scope.bookings.filter(function (b) {
+            return b.status === 'Completed';
+        });
+    } else if (filter === 'cancelled') {
+        $scope.filteredBookings = $scope.bookings.filter(function (b) {
+            return b.status === 'Cancelled';
+        });
+    } else if (filter === 'pending') {
+        $scope.filteredBookings = $scope.bookings.filter(function (b) {
+            return b.status === 'Pending';
+        });
+    } else {
+        $scope.filteredBookings = $scope.bookings;
+    }
+
+    // Always update paging after filtering
+    $scope.bookingsCurrentPage = 1;
+    $scope.bookingsUpdatePaging();
+};
 
         if (window.location.pathname.toLowerCase().indexOf("adminbookingpage") !== -1) {
             console.log("Admin booking page detected");
@@ -2377,12 +2429,49 @@ app.controller("DestLoungeSalesandBookingController",
             });
         };
 
+        // ===== BOOKINGS TAB PAGINATION =====
+        $scope.bookingsPageSize = 8;
+        $scope.bookingsCurrentPage = 1;
+        $scope.bookingsTotalPages = 1;
+        $scope.bookingsPageNumbers = [];
+        $scope.pagedBookings = [];
+
+        $scope.bookingsUpdatePaging = function () {
+            var size = parseInt($scope.bookingsPageSize, 10);
+            var total = $scope.filteredBookings.length;
+            $scope.bookingsTotalPages = Math.max(1, Math.ceil(total / size));
+
+            // Clamp current page
+            if ($scope.bookingsCurrentPage > $scope.bookingsTotalPages) {
+                $scope.bookingsCurrentPage = $scope.bookingsTotalPages;
+            }
+
+            // Build page number array
+            $scope.bookingsPageNumbers = [];
+            for (var i = 1; i <= $scope.bookingsTotalPages; i++) {
+                $scope.bookingsPageNumbers.push(i);
+            }
+
+            // Slice the current page
+            var start = ($scope.bookingsCurrentPage - 1) * size;
+            $scope.pagedBookings = $scope.filteredBookings.slice(start, start + size);
+        };
+
+        $scope.bookingsGoPage = function (page) {
+            if (page < 1 || page > $scope.bookingsTotalPages) return;
+            $scope.bookingsCurrentPage = page;
+            $scope.bookingsUpdatePaging();
+        };
+
+        $scope.bookingsOnPageSizeChange = function () {
+            $scope.bookingsCurrentPage = 1;
+            $scope.bookingsUpdatePaging();
+        };
         // ── GALLERY (admin tab) ──────────────────────────────────────────────────
         $scope.galleryPhotos = [];
         $scope.adminTab = 'gallery';
 
         $scope.newPhoto = { file: null, caption: '', description: '', previewUrl: '' };
-
         $scope.onFileSelected = function (input) {
             var file = input.files[0];
             if (!file) return;
