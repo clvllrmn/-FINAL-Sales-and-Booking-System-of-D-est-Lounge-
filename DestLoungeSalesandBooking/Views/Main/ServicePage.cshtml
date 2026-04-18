@@ -140,44 +140,85 @@
 </header>
 
 <!-- Services Section -->
-<div class="services-page-container" ng-controller="DestLoungeSalesandBookingController">
-    <div class="services-sidebar">
-        <h2 class="services-sidebar-title">Services</h2>
-        <div class="service-category"
-             ng-class="{'active': selectedCategory === 'all'}"
-             ng-click="filterServices('all')">
-            <h3>All Services</h3>
-        </div>
-        <div class="service-category"
-             ng-class="{'active': selectedCategory === 'manicure'}"
-             ng-click="filterServices('manicure')">
-            <h3>Manicure</h3>
-        </div>
-        <div class="service-category"
-             ng-class="{'active': selectedCategory === 'pedicure'}"
-             ng-click="filterServices('pedicure')">
-            <h3>Pedicure</h3>
-        </div>
-    </div>
+<div ng-controller="DestLoungeSalesandBookingController">
 
-    <div class="services-content">
-        <div class="service-card"
-             ng-repeat="service in services | filter:categoryFilter">
-            <div class="service-image">
-                <img ng-src="{{service.image}}" alt="{{service.name}}">
+    <div class="services-page-container">
+        <div class="services-sidebar">
+            <h2 class="services-sidebar-title">Services</h2>
+
+            <div class="service-category"
+                 ng-class="{'active': selectedCategory === 'all'}"
+                 ng-click="filterServices('all')">
+                <h3>All Services</h3>
             </div>
-            <div class="service-name">{{service.name}}</div>
-            <div class="service-description" ng-if="service.description">{{service.description}}</div>
-            <div class="service-price">₱{{service.price}}</div>
+
+            <div class="service-category"
+                 ng-class="{'active': selectedCategory === 'manicure'}"
+                 ng-click="filterServices('manicure')">
+                <h3>Manicure</h3>
+            </div>
+
+            <div class="service-category"
+                 ng-class="{'active': selectedCategory === 'pedicure'}"
+                 ng-click="filterServices('pedicure')">
+                <h3>Pedicure</h3>
+            </div>
+        </div>
+
+        <div class="services-content">
+            <div class="service-card"
+                 ng-repeat="service in services | filter:categoryFilter"
+                 ng-click="!isCategoryBlocked(service) && toggleService(service)"
+                 ng-class="{
+        'selected-service': isSelected(service),
+        'blocked-service': isCategoryBlocked(service)
+     }">
+                <div class="service-image">
+                    <img ng-src="{{service.image}}" alt="{{service.name}}">
+                </div>
+                <div class="service-name">{{service.name}}</div>
+                <div class="service-description" ng-if="service.description">{{service.description}}</div>
+                <div class="service-price">₱{{service.price}}</div>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Book Now Button -->
-<div class="book-now-container">
-    <button class="book-now-button" onclick="window.location.href='@Url.Action("BookingPage","Main")'">
-        Book Now
-    </button>
+    <!-- CART SUMMARY -->
+    <div class="cart-summary-container" ng-if="selectedServices && selectedServices.length > 0">
+        <h3 class="cart-summary-title">Selected Services</h3>
+
+        <div class="cart-summary-list">
+            <div class="cart-summary-item" ng-repeat="service in selectedServices track by $index">
+                <div class="cart-summary-left">
+                    <div class="cart-service-name">{{service.name}}</div>
+                    <div class="cart-service-description" ng-if="service.description">{{service.description}}</div>
+                </div>
+                <div class="cart-summary-right">
+                    ₱{{service.price}}
+                </div>
+            </div>
+        </div>
+
+        <div class="cart-summary-footer">
+            <div class="cart-summary-count">
+                {{selectedServices.length}} service<span ng-if="selectedServices.length > 1">s</span> selected
+            </div>
+            <div class="cart-summary-total">
+                Total: ₱{{getSelectedServicesTotal()}}
+            </div>
+        </div>
+    </div>
+
+    <div class="cart-summary-empty" ng-if="selectedServices && selectedServices.length === 0">
+        No services selected yet.
+    </div>
+
+    <div class="book-now-container">
+        <button class="book-now-button" ng-click="bookNow()">
+            Book Now
+        </button>
+    </div>
+
 </div>
 
 <footer>
@@ -659,6 +700,12 @@
             white-space: nowrap;
         }
 
+        .selected-service {
+            border: 3px solid #6b5544;
+            box-shadow: 0 0 12px rgba(107, 85, 68, 0.4);
+            transform: scale(1.02);
+        }
+
         .service-category {
             width: 100%;
             padding: 12px 16px;
@@ -788,6 +835,116 @@
             font-size: 0.8rem;
         }
     }
+    .cart-summary-container {
+        width: calc(100% - 40px);
+        max-width: 1000px;
+        margin: 10px auto 0 auto;
+        background-color: #fffaf5;
+        border: 2px solid #d4c4b0;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    }
+
+    .cart-summary-title {
+        margin: 0 0 18px 0;
+        font-size: 24px;
+        font-weight: 700;
+        color: #6b4423;
+    }
+
+    .cart-summary-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .cart-summary-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 14px 0;
+        border-bottom: 1px solid #eadfd2;
+    }
+
+        .cart-summary-item:last-child {
+            border-bottom: none;
+        }
+
+    .cart-summary-left {
+        flex: 1;
+    }
+
+    .cart-service-name {
+        font-size: 16px;
+        font-weight: 700;
+        color: #5d4037;
+        margin-bottom: 4px;
+    }
+
+    .cart-service-description {
+        font-size: 13px;
+        color: #8a7060;
+        line-height: 1.4;
+    }
+
+    .cart-summary-right {
+        font-size: 16px;
+        font-weight: 700;
+        color: #6b4423;
+        white-space: nowrap;
+    }
+
+    .cart-summary-footer {
+        margin-top: 20px;
+        padding-top: 18px;
+        border-top: 2px solid #d4c4b0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .cart-summary-count {
+        font-size: 15px;
+        color: #6b5544;
+        font-weight: 500;
+    }
+
+    .cart-summary-total {
+        font-size: 20px;
+        font-weight: 800;
+        color: #6b4423;
+    }
+
+    .cart-summary-empty {
+        width: calc(100% - 40px);
+        max-width: 1000px;
+        margin: 10px auto 0 auto;
+        text-align: center;
+        padding: 20px;
+        color: #8a7060;
+        font-size: 15px;
+    }
+    .blocked-service {
+        opacity: 0.45;
+        filter: grayscale(100%);
+        cursor: not-allowed !important;
+        pointer-events: auto;
+    }
+
+        .blocked-service:hover {
+            transform: none !important;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important;
+        }
+
+    .selected-service {
+        border: 3px solid #8b5e34;
+        box-shadow: 0 0 12px rgba(139, 94, 52, 0.25);
+        transform: translateY(-3px);
+    }
 
     /* =============================================
        SMALL MOBILE (max-width: 480px)
@@ -831,6 +988,30 @@
             font-size: 15px;
         }
     }
+    @@media (max-width: 768px) {
+        .cart-summary-container,
+        .cart-summary-empty {
+            width: calc(100% - 24px);
+            padding: 18px;
+        }
+
+        .cart-summary-title {
+            font-size: 20px;
+        }
+
+        .cart-summary-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .cart-summary-right {
+            font-size: 15px;
+        }
+
+        .cart-summary-total {
+            font-size: 18px;
+        }
+    }
 </style>
 
 @section scripts {
@@ -864,5 +1045,8 @@
                 link.addEventListener('click', closeMenu);
             });
         })();
+    </script>
+    <script>
+    window.isLoggedIn = @(Session["UserID"] != null ? "true" : "false");
     </script>
 }

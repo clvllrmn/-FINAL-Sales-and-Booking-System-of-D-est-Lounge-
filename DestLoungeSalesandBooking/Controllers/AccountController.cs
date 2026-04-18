@@ -45,7 +45,7 @@ namespace DestLoungeSalesandBooking.Controllers
         // POST: Account/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Login(string email, string password)
+        public ActionResult Login(string email, string password, string returnUrl)
         {
             try
             {
@@ -155,6 +155,13 @@ namespace DestLoungeSalesandBooking.Controllers
                 Session["RoleID"] = user.roleID;
                 Session["FullName"] = user.firstname + " " + user.lastname;
 
+                // 🔥 PRIORITY: returnUrl (for booking flow)
+                if (!string.IsNullOrEmpty(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
+
+                // fallback
                 if (user.roleID == 1)
                     return RedirectToAction("AdminHomepage", "Main");
                 else

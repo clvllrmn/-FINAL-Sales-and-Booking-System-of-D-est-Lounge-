@@ -211,48 +211,19 @@
     <!-- Booking Form -->
     <div class="booking-form">
         <div class="form-group">
-            <label>Choose Nail Tech</label>
-            <select ng-model="booking.nailTech" class="form-select" ng-change="checkAvailability()" required>
-                <option value="">Select Nail Tech</option>
-                <option ng-repeat="tech in nailTechs" value="{{tech.name}}">{{tech.name}}</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Choose Date</label>
-            <input type="date" ng-model="booking.date" class="form-select"
-                   min="{{minDate}}" max="{{maxDate}}" ng-change="checkAvailability()" required>
-            <span class="error-message" ng-show="dateFullyBooked">
-                This date is fully booked. Please choose another date.
-            </span>
-        </div>
-        <div class="form-group">
-            <label>Choose Time</label>
-            <select ng-model="booking.time" class="form-select" required>
-                <option ng-repeat="t in availableTimes"
-                        value="{{t}}"
-                        ng-disabled="isTimeDisabled(t)">
-                    {{
-        isPast24HourCutoff(booking.date, t)
-            ? (t + ' - Not Available (24-hour rule)')
-            : (isTimeDisabled(t) ? (t + ' - Not Available') : t)
-                    }}
-                </option>
-            </select>
-        </div>
-        <div class="form-group">
             <label>Choose Services</label>
             <div class="services-checklist">
                 <div class="service-category">
                     <h4>Nail Care Services</h4>
 
-                    <!-- ✅ SHOW THIS WHEN NO SERVICES -->
                     <div ng-if="bookingServices.length === 0" class="no-services-message">
                         No services found.
                     </div>
 
-                    <!-- ✅ SHOW SERVICES WHEN AVAILABLE -->
                     <label class="service-checkbox" ng-repeat="service in bookingServices">
-                        <input type="checkbox" ng-model="service.selected" ng-change="updateSelectedServices()">
+                        <input type="checkbox"
+                               ng-model="service.selected"
+                               ng-change="updateSelectedServices(); onServicesChanged()">
                         <span class="service-label">
                             <span class="service-name-check">{{service.name}}</span>
                             <span class="service-price-check">₱{{service.price}}</span>
@@ -260,6 +231,55 @@
                     </label>
                 </div>
             </div>
+        </div>
+
+        <div class="form-group">
+            <label>Choose Date</label>
+            <input type="date"
+                   ng-model="booking.date"
+                   class="form-select"
+                   min="{{minDate}}"
+                   max="{{maxDate}}"
+                   ng-change="onDateChanged()"
+                   ng-disabled="booking.selectedServices.length === 0"
+                   required>
+            <span class="error-message" ng-show="dateFullyBooked">
+                This date is fully booked. Please choose another date.
+            </span>
+        </div>
+
+        <div class="form-group">
+            <label>Choose Time</label>
+            <select ng-model="booking.time"
+                    class="form-select"
+                    ng-change="onTimeChanged()"
+                    ng-disabled="booking.selectedServices.length === 0 || !booking.date"
+                    required>
+                <option value="">Select Time</option>
+                <option ng-repeat="t in availableTimes"
+                        value="{{t}}"
+                        ng-disabled="isPast24HourCutoff(booking.date, t)">
+                    {{
+                    isPast24HourCutoff(booking.date, t)
+                        ? (t + ' - Not Available (24-hour rule)')
+                        : t
+                    }}
+                </option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Choose Nail Tech</label>
+            <select ng-model="booking.nailTech"
+                    class="form-select"
+                    ng-change="checkAvailability()"
+                    ng-disabled="booking.selectedServices.length === 0 || !booking.date || !booking.time"
+                    required>
+                <option value="">Select Nail Tech</option>
+                <option ng-repeat="tech in nailTechs" value="{{tech.name}}">
+                    {{tech.name}}
+                </option>
+            </select>
         </div>
 
         <button type="button" class="book-now-btn" ng-click="submitBooking()" ng-disabled="!isBookingValid()">

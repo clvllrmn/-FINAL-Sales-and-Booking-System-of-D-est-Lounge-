@@ -44,15 +44,21 @@ namespace DestLoungeSalesandBooking.Controllers
 
 
         [NoCache]
-        public ActionResult LoginPage()
+        public ActionResult LoginPage(string returnUrl)
         {
-            // If already logged in, redirect away from login page
+            // If already logged in, redirect properly
             if (Session["UserID"] != null)
             {
+                if (!string.IsNullOrWhiteSpace(returnUrl))
+                    return Redirect(returnUrl);
+
                 if (Session["RoleID"] != null && (int)Session["RoleID"] == 1)
                     return RedirectToAction("AdminHomepage", "Main");
+
                 return RedirectToAction("Homepage", "Main");
             }
+
+            ViewBag.ReturnUrl = returnUrl;
             return View();
         }
 
@@ -777,13 +783,30 @@ namespace DestLoungeSalesandBooking.Controllers
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(model.name))
+                {
+                    return Json(new { success = false, message = "Full name is required." });
+                }
+
+                model.name = (model.name ?? "").Trim();
+                model.specialization = (model.specialization ?? "").Trim();
+                model.contact = (model.contact ?? "").Trim();
+                model.status = string.IsNullOrWhiteSpace(model.status) ? "active" : model.status.Trim();
+                model.notes = (model.notes ?? "").Trim();
+
+                if (string.IsNullOrWhiteSpace(model.contact) ||
+                    !System.Text.RegularExpressions.Regex.IsMatch(model.contact, @"^09\d{9}$"))
+                {
+                    return Json(new { success = false, message = "Contact number must be exactly 11 digits and start with 09." });
+                }
+
                 var tech = new tbl_nailtech
                 {
-                    name = model.name?.Trim(),
-                    specialization = model.specialization?.Trim(),
-                    contact = model.contact?.Trim(),
-                    status = string.IsNullOrEmpty(model.status) ? "active" : model.status,
-                    notes = model.notes?.Trim(),
+                    name = model.name,
+                    specialization = model.specialization,
+                    contact = model.contact,
+                    status = model.status,
+                    notes = model.notes,
                     createdAt = DateTime.Now,
                     updatedAt = DateTime.Now,
                     isDeleted = false
@@ -806,15 +829,37 @@ namespace DestLoungeSalesandBooking.Controllers
         {
             try
             {
+                if (model == null || model.nailTechId <= 0)
+                {
+                    return Json(new { success = false, message = "Invalid nail tech." });
+                }
+
+                if (string.IsNullOrWhiteSpace(model.name))
+                {
+                    return Json(new { success = false, message = "Full name is required." });
+                }
+
+                model.name = (model.name ?? "").Trim();
+                model.specialization = (model.specialization ?? "").Trim();
+                model.contact = (model.contact ?? "").Trim();
+                model.status = (model.status ?? "").Trim();
+                model.notes = (model.notes ?? "").Trim();
+
+                if (string.IsNullOrWhiteSpace(model.contact) ||
+                    !System.Text.RegularExpressions.Regex.IsMatch(model.contact, @"^09\d{9}$"))
+                {
+                    return Json(new { success = false, message = "Contact number must be exactly 11 digits and start with 09." });
+                }
+
                 var tech = db.tbl_nailtech.FirstOrDefault(t => t.nailTechId == model.nailTechId && !t.isDeleted);
                 if (tech == null)
                     return Json(new { success = false, message = "Nail tech not found." });
 
-                tech.name = model.name?.Trim();
-                tech.specialization = model.specialization?.Trim();
-                tech.contact = model.contact?.Trim();
-                tech.status = string.IsNullOrEmpty(model.status) ? tech.status : model.status;
-                tech.notes = model.notes?.Trim();
+                tech.name = model.name;
+                tech.specialization = model.specialization;
+                tech.contact = model.contact;
+                tech.status = string.IsNullOrWhiteSpace(model.status) ? tech.status : model.status;
+                tech.notes = model.notes;
                 tech.updatedAt = DateTime.Now;
 
                 db.SaveChanges();
@@ -825,7 +870,6 @@ namespace DestLoungeSalesandBooking.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
-
         // ── POST: /Main/DeactivateNailTech ──
         [HttpPost]
         public JsonResult DeactivateNailTech(int nailTechId)

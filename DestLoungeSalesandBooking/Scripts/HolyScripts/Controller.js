@@ -603,6 +603,97 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.isEditMode = false;
         $scope.currentService = {};
 
+        // ===== SERVICE SELECTION =====
+        // ===== SERVICE SELECTION =====
+        $scope.selectedServices = JSON.parse(sessionStorage.getItem("selectedServices")) || [];
+
+        $scope.toggleService = function (service) {
+            var existingSameServiceIndex = $scope.selectedServices.findIndex(function (s) {
+                return s.serviceId === service.serviceId;
+            });
+
+            // If same exact service is clicked again, unselect it
+            if (existingSameServiceIndex > -1) {
+                $scope.selectedServices.splice(existingSameServiceIndex, 1);
+                sessionStorage.setItem("selectedServices", JSON.stringify($scope.selectedServices));
+                return;
+            }
+
+            // Remove existing selected service from the same category
+            $scope.selectedServices = $scope.selectedServices.filter(function (s) {
+                return (s.category || '').toLowerCase() !== (service.category || '').toLowerCase();
+            });
+
+            // Add the new selected service
+            $scope.selectedServices.push({
+                serviceId: service.serviceId,
+                name: service.name,
+                price: service.price,
+                image: service.image,
+                description: service.description,
+                category: service.category
+            });
+
+            sessionStorage.setItem("selectedServices", JSON.stringify($scope.selectedServices));
+        };
+
+        $scope.isSelected = function (service) {
+            return $scope.selectedServices.some(function (s) {
+                return s.serviceId === service.serviceId;
+            });
+        };
+        $scope.isCategoryBlocked = function (service) {
+            if (!service || !service.category) return false;
+
+            var selectedInSameCategory = $scope.selectedServices.find(function (s) {
+                return (s.category || '').toLowerCase() === (service.category || '').toLowerCase();
+            });
+
+            // block only if there is already a selected service in the same category
+            // and this current card is NOT the selected one
+            return selectedInSameCategory && selectedInSameCategory.serviceId !== service.serviceId;
+        };
+        $scope.getSelectedServicesTotal = function () {
+            var total = 0;
+
+            angular.forEach($scope.selectedServices, function (service) {
+                total += parseFloat(service.price || 0);
+            });
+
+            return total.toFixed(2);
+        };
+
+        $scope.bookNow = function () {
+            if (!$scope.selectedServices || $scope.selectedServices.length === 0) {
+                alert("Please select at least one service first.");
+                return;
+            }
+
+            sessionStorage.setItem("selectedServices", JSON.stringify($scope.selectedServices));
+
+            if (window.isLoggedIn) {
+                window.location.href = "/Main/BookingPage";
+            } else {
+                window.location.href = "/Main/LoginPage?returnUrl=/Main/BookingPage";
+            }
+        };
+
+        // ===== BOOK NOW FUNCTION =====
+        $scope.bookNow = function () {
+            if (!$scope.selectedServices || $scope.selectedServices.length === 0) {
+                alert("Please select at least one service first.");
+                return;
+            }
+
+            sessionStorage.setItem("selectedServices", JSON.stringify($scope.selectedServices));
+
+            if (window.isLoggedIn) {
+                window.location.href = "/Main/BookingPage";
+            } else {
+                window.location.href = "/Main/LoginPage?returnUrl=/Main/BookingPage";
+            }
+        };
+
         $scope.loadServices = function () {
             $http.get('/Service/GetAllServices')
                 .then(function (response) {
@@ -850,6 +941,20 @@ app.controller("DestLoungeSalesandBookingController",
                                 selected: false
                             };
                         });
+
+                        var saved = JSON.parse(sessionStorage.getItem("selectedServices")) || [];
+
+                        saved.forEach(function (savedService) {
+                            var match = $scope.bookingServices.find(function (service) {
+                                return service.serviceId === savedService.serviceId;
+                            });
+
+                            if (match) {
+                                match.selected = true;
+                            }
+                        });
+
+                        $scope.updateSelectedServices();
                     } else {
                         $scope.bookingServices = [];
                     }
@@ -975,9 +1080,6 @@ app.controller("DestLoungeSalesandBookingController",
                 $scope.availableTimes = angular.copy($scope.weekdayTimes);
             }
             if (!$scope.booking.nailTech) {
-                if ($scope.booking.time && $scope.availableTimes.indexOf($scope.booking.time) === -1) {
-                    $scope.booking.time = '';
-                }
                 return;
             }
             var year = selectedDate.getFullYear();
@@ -1020,6 +1122,27 @@ app.controller("DestLoungeSalesandBookingController",
                     });
                 }
             });
+        };
+
+        $scope.onServicesChanged = function () {
+            $scope.booking.date = "";
+            $scope.booking.time = "";
+            $scope.booking.nailTech = "";
+            $scope.availableTimes = [];
+            $scope.takenTimes = [];
+            $scope.dateFullyBooked = false;
+        };
+
+        $scope.onDateChanged = function () {
+            $scope.booking.time = "";
+            $scope.booking.nailTech = "";
+            $scope.takenTimes = [];
+            $scope.dateFullyBooked = false;
+            $scope.checkAvailability();
+        };
+
+        $scope.onTimeChanged = function () {
+            $scope.booking.nailTech = "";
         };
 
         $scope.calculateTotal = function () {

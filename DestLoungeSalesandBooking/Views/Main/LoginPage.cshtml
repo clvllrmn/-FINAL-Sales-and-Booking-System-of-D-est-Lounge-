@@ -85,6 +85,7 @@
 
     <form method="post" action="@Url.Action("Login","Account")">
         @Html.AntiForgeryToken()
+        <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
 
         <div class="form-group">
             <input type="email" name="email" class="form-input" placeholder="Email" maxlength="50" required>
