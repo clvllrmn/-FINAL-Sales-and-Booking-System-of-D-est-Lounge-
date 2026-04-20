@@ -586,7 +586,12 @@ namespace DestLoungeSalesandBooking.Controllers
             " on " + booking.BookingDate.ToString("MMMM dd, yyyy") +
             " at " + DateTime.Today.Add(booking.StartTime).ToString("h:mm tt"));
 
-                return Json(new { success = true, message = "Booking successful!", referenceNo = booking.ReferenceNo });
+                return Json(new
+                {
+                    success = true,
+                    message = "Payment received! Your booking is pending approval. Please expect confirmation within 1 hour.",
+                    referenceNo = booking.ReferenceNo
+                });
             }
             catch (Exception ex)
             {

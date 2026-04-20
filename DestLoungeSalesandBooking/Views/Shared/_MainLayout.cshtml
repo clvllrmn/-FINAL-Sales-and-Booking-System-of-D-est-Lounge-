@@ -45,13 +45,7 @@
 </head>
 <body ng-app="DestLoungeSalesandBooking">
 
-    <!-- 🔥 LOAD SCRIPTS FIRST -->
-    <script src="/Scripts/angular.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-sanitize.min.js"></script>
 
-    <script src="/Scripts/HolyScripts/Module.js"></script>
-    <script src="/Scripts/HolyScripts/Service.js"></script>
-    <script src="/Scripts/HolyScripts/Controller.js"></script>
 
     <!-- THEN LOAD PAGE -->
     <div>
@@ -60,8 +54,16 @@
     </div>
 
     <script>
-    window.loggedInUserId = @(Session["UserID"] != null ? Session["UserID"].ToString() : "null");
+    window.loggedInUserId = '@(Session["UserId"] != null ? Session["UserId"].ToString() : "null")';
     </script>
+
+
+    <script src="/Scripts/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-sanitize.min.js"></script>
+    <script src="/Scripts/HolyScripts/Module.js"></script>
+    <script src="/Scripts/HolyScripts/Service.js"></script>
+    <script src="/Scripts/HolyScripts/Controller.js?v=2"></script>
+
     @RenderSection("scripts", required: false)
 
 

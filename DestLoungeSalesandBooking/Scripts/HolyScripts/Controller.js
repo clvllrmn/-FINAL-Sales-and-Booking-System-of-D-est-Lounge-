@@ -1,15 +1,43 @@
 ﻿// Controller.js
-var app = angular.module("DestLoungeSalesandBooking");
-console.log("CONTROLLER FILE LOADED, app:", app);
-var _currentContentType = null;
+var app = angular.module("DestLoungeSalesandBooking", ['ngSanitize']);
+
 
 app.controller("DestLoungeSalesandBookingController",
     function ($scope, $window, $http, $sce, $httpParamSerializerJQLike, $timeout) {
-
-        console.log("CONTROLLER REGISTERED");
+        console.log("🔥 SUBMIT PAYMENT FUNCTION TRIGGERED");
+        
+        console.log("CONTROLLER RUNNING");
 
         $scope.test = "Working";
         $scope.myReviews = [];
+
+        // ===== SALES VARIABLES =====
+        $scope.isLoadingSales = false;
+        $scope.salesLoaded = false;
+
+        $scope.sales = {
+            totalRevenue: 0,
+            totalBookings: 0,
+            topService: "-",
+            range: "today"
+        };
+
+        $scope.servicePerformance = [];
+        $scope.filteredServicePerformance = [];
+        $scope.selectedService = 'all';
+        $scope.salesRange = 'today';
+        $scope.reportGenerated = false;
+        $scope.reportDate = new Date().toLocaleString();
+        $scope.reportOptions = {
+            revenue: true,
+            bookings: true,
+            services: true,
+            blockbusters: false,
+            period: true,
+            top5: false
+        };
+        $scope.customFrom = null;
+        $scope.customTo = null;
 
         // ===== PAYMENT PAGE VARIABLES =====
         $scope.bookingSummary = null;
@@ -90,7 +118,7 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.reviewsPerPage = 6;
         $scope.reviewStarFilter = '';
         $scope.reviewSearch = '';
-
+            
         $scope.loadReviews = function () {
             var path = window.location.pathname.toLowerCase();
             var url = path.indexOf('admingallerypage') !== -1
@@ -101,7 +129,6 @@ app.controller("DestLoungeSalesandBookingController",
                 .then(function (res) {
                     console.log("REVIEWS DATA:", res.data);
                     $scope.reviews = (res.data || []).map(function (r) {
-                        // Ensure images is always an array
                         var images = r.images || [];
                         if (typeof images === 'string') {
                             try {
@@ -110,7 +137,6 @@ app.controller("DestLoungeSalesandBookingController",
                                 images = [];
                             }
                         }
-                        // Handle date properly
                         var reviewDate = r.date ? new Date(r.date) : (r.CreatedAt ? new Date(r.CreatedAt) : new Date());
 
                         return {
@@ -210,19 +236,10 @@ app.controller("DestLoungeSalesandBookingController",
             return Math.round($scope.averageRating());
         };
 
-
-        $scope.openReviewLightbox = function (imgUrl) {
-            console.log("Opening lightbox with image:", imgUrl);
-            $scope.selectedImage = imgUrl;
-            $scope.showImageModal = true;
-            $scope.$applyAsync();
-        };
-
         $scope.closeImageModal = function () {
             $scope.showImageModal = false;
             $scope.selectedImage = null;
         };
-
 
         // ===== LOAD HOMEPAGE CONTENT FROM DATABASE =====
         $scope.loadHomepageContent = function () {
@@ -603,8 +620,6 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.isEditMode = false;
         $scope.currentService = {};
 
-        // ===== SERVICE SELECTION =====
-        // ===== SERVICE SELECTION =====
         $scope.selectedServices = JSON.parse(sessionStorage.getItem("selectedServices")) || [];
 
         $scope.toggleService = function (service) {
@@ -612,19 +627,16 @@ app.controller("DestLoungeSalesandBookingController",
                 return s.serviceId === service.serviceId;
             });
 
-            // If same exact service is clicked again, unselect it
             if (existingSameServiceIndex > -1) {
                 $scope.selectedServices.splice(existingSameServiceIndex, 1);
                 sessionStorage.setItem("selectedServices", JSON.stringify($scope.selectedServices));
                 return;
             }
 
-            // Remove existing selected service from the same category
             $scope.selectedServices = $scope.selectedServices.filter(function (s) {
                 return (s.category || '').toLowerCase() !== (service.category || '').toLowerCase();
             });
 
-            // Add the new selected service
             $scope.selectedServices.push({
                 serviceId: service.serviceId,
                 name: service.name,
@@ -642,24 +654,20 @@ app.controller("DestLoungeSalesandBookingController",
                 return s.serviceId === service.serviceId;
             });
         };
+
         $scope.isCategoryBlocked = function (service) {
             if (!service || !service.category) return false;
-
             var selectedInSameCategory = $scope.selectedServices.find(function (s) {
                 return (s.category || '').toLowerCase() === (service.category || '').toLowerCase();
             });
-
-            // block only if there is already a selected service in the same category
-            // and this current card is NOT the selected one
             return selectedInSameCategory && selectedInSameCategory.serviceId !== service.serviceId;
         };
+
         $scope.getSelectedServicesTotal = function () {
             var total = 0;
-
             angular.forEach($scope.selectedServices, function (service) {
                 total += parseFloat(service.price || 0);
             });
-
             return total.toFixed(2);
         };
 
@@ -668,25 +676,7 @@ app.controller("DestLoungeSalesandBookingController",
                 alert("Please select at least one service first.");
                 return;
             }
-
             sessionStorage.setItem("selectedServices", JSON.stringify($scope.selectedServices));
-
-            if (window.isLoggedIn) {
-                window.location.href = "/Main/BookingPage";
-            } else {
-                window.location.href = "/Main/LoginPage?returnUrl=/Main/BookingPage";
-            }
-        };
-
-        // ===== BOOK NOW FUNCTION =====
-        $scope.bookNow = function () {
-            if (!$scope.selectedServices || $scope.selectedServices.length === 0) {
-                alert("Please select at least one service first.");
-                return;
-            }
-
-            sessionStorage.setItem("selectedServices", JSON.stringify($scope.selectedServices));
-
             if (window.isLoggedIn) {
                 window.location.href = "/Main/BookingPage";
             } else {
@@ -1496,7 +1486,13 @@ app.controller("DestLoungeSalesandBookingController",
 
                     if (res.data && res.data.success) {
                         var refNo = res.data.referenceNo || "N/A";
-                        alert("Booking successful! Reference #: " + refNo);
+
+                        alert(
+                            "Booking successful!\n\n" +
+                            "Reference #: " + refNo +
+                            "\n\nPlease expect approval within 1 hour."
+                        );
+
                         sessionStorage.removeItem("pendingBooking");
                         window.location.href = "/Main/CurrentBookingPage";
                     } else {
@@ -1583,7 +1579,7 @@ app.controller("DestLoungeSalesandBookingController",
                     $scope.pendingBookingsCount = $scope.bookings.filter(function (b) {
                         return b.status === 'Pending';
                     }).length;
-                    $timeout(function () {         // <-- wrap in $timeout
+                    $timeout(function () {
                         renderAnalyticsChart(data.points || []);
                     }, 100);
                 })
@@ -1620,54 +1616,53 @@ app.controller("DestLoungeSalesandBookingController",
                 }
             });
         }
-        // REPLACE filterBookings entirely (no patching)
-$scope.filterBookings = function (filter) {
-    $scope.selectedFilter = filter;
-    var today = new Date();
-    today.setHours(0, 0, 0, 0);
 
-    function parseCardDateTime(card) {
-        if (!card || !card.dateTime || card.dateTime === "N/A") return null;
-        var datePart = card.dateTime.split(" ")[0];
-        var parts = datePart.split("/");
-        if (parts.length !== 3) return null;
-        var d = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
-        d.setHours(0, 0, 0, 0);
-        return d;
-    }
+        $scope.filterBookings = function (filter) {
+            $scope.selectedFilter = filter;
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
 
-    if (filter === 'all') {
-        $scope.filteredBookings = $scope.bookings;
-    } else if (filter === 'today') {
-        $scope.filteredBookings = $scope.bookings.filter(function (b) {
-            var d = parseCardDateTime(b);
-            return d && d.getTime() === today.getTime();
-        });
-    } else if (filter === 'upcoming') {
-        $scope.filteredBookings = $scope.bookings.filter(function (b) {
-            var d = parseCardDateTime(b);
-            return d && d.getTime() > today.getTime() && b.status !== 'Cancelled';
-        });
-    } else if (filter === 'completed') {
-        $scope.filteredBookings = $scope.bookings.filter(function (b) {
-            return b.status === 'Completed';
-        });
-    } else if (filter === 'cancelled') {
-        $scope.filteredBookings = $scope.bookings.filter(function (b) {
-            return b.status === 'Cancelled';
-        });
-    } else if (filter === 'pending') {
-        $scope.filteredBookings = $scope.bookings.filter(function (b) {
-            return b.status === 'Pending';
-        });
-    } else {
-        $scope.filteredBookings = $scope.bookings;
-    }
+            function parseCardDateTime(card) {
+                if (!card || !card.dateTime || card.dateTime === "N/A") return null;
+                var datePart = card.dateTime.split(" ")[0];
+                var parts = datePart.split("/");
+                if (parts.length !== 3) return null;
+                var d = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+                d.setHours(0, 0, 0, 0);
+                return d;
+            }
 
-    // Always update paging after filtering
-    $scope.bookingsCurrentPage = 1;
-    $scope.bookingsUpdatePaging();
-};
+            if (filter === 'all') {
+                $scope.filteredBookings = $scope.bookings;
+            } else if (filter === 'today') {
+                $scope.filteredBookings = $scope.bookings.filter(function (b) {
+                    var d = parseCardDateTime(b);
+                    return d && d.getTime() === today.getTime();
+                });
+            } else if (filter === 'upcoming') {
+                $scope.filteredBookings = $scope.bookings.filter(function (b) {
+                    var d = parseCardDateTime(b);
+                    return d && d.getTime() > today.getTime() && b.status !== 'Cancelled';
+                });
+            } else if (filter === 'completed') {
+                $scope.filteredBookings = $scope.bookings.filter(function (b) {
+                    return b.status === 'Completed';
+                });
+            } else if (filter === 'cancelled') {
+                $scope.filteredBookings = $scope.bookings.filter(function (b) {
+                    return b.status === 'Cancelled';
+                });
+            } else if (filter === 'pending') {
+                $scope.filteredBookings = $scope.bookings.filter(function (b) {
+                    return b.status === 'Pending';
+                });
+            } else {
+                $scope.filteredBookings = $scope.bookings;
+            }
+
+            $scope.bookingsCurrentPage = 1;
+            $scope.bookingsUpdatePaging();
+        };
 
         if (window.location.pathname.toLowerCase().indexOf("adminbookingpage") !== -1) {
             console.log("Admin booking page detected");
@@ -1711,13 +1706,9 @@ $scope.filterBookings = function (filter) {
             if (!confirmed) return;
 
             var reason = prompt("Reason for cancellation (optional):");
-
-            // NULL means user clicked Cancel on the prompt — stop here
             if (reason === null) return;
-
-            // Empty string is fine (they just left it blank and clicked OK)
             reason = reason || "";
-            
+
             return $http({
                 method: "POST",
                 url: "/Booking/AdminCancel",
@@ -1750,73 +1741,99 @@ $scope.filterBookings = function (filter) {
             });
         };
 
-        // ===== SALES ANALYTICS =====
-        $scope.salesRange = "week";
-        $scope.sales = { totalRevenue: 0, totalBookings: 0, points: [], range: "week" };
-        var salesChartInstance = null;
+        // ===== SALES FUNCTIONS (SINGLE DEFINITION) =====
+        //$scope.setSalesRange = function (range) {
+            //console.log("setSalesRange called with:", range);
+            //if ($scope.sales.range === range && $scope.salesLoaded) {
+                //console.log("Already on range:", range);
+               // return;
+           //}
+          //  $scope.salesLoaded = false;
+          //  $scope.salesRange = range;
+          //  $scope.loadSales(range);
+      //  };
 
-        $scope.setSalesRange = function (range) {
-            $scope.salesRange = range;
-            $scope.loadSalesAnalytics(range);
-        };
+        $scope.loadSales = function (range) {
 
-        $scope.loadSalesAnalytics = function (range) {
-            range = range || $scope.salesRange || "week";
-            return $http.get("/Main/Analytics", { params: { range: range } })
-                .then(function (resp) {
-                    $scope.sales = resp.data || {};
-                    $scope.renderSalesChart(resp.data.points || []);
+            if ($scope._lockLoadSales) {
+                console.log("BLOCKED duplicate call");
+                return;
+            }
+
+            $scope._lockLoadSales = true;
+
+            if ($scope.isLoadingSales) return;
+
+            if ($scope.salesLoaded && $scope.sales.range === range) return;
+
+            $scope.isLoadingSales = true;
+
+            $http.get('/Admin/GetSalesAnalytics?range=' + range)
+                .then(function (res) {
+
+                    $scope.sales.totalRevenue = res.data.totalRevenue || 0;
+                    $scope.sales.totalBookings = res.data.completedBookings || 0;
+                    $scope.sales.topService = res.data.topService || "-";
+                    $scope.sales.range = range;
+
+                    $scope.salesLoaded = true;
                 })
                 .catch(function (err) {
-                    console.error("Sales analytics error:", err);
-                    alert("Failed to load Sales analytics. Check console.");
+                    console.error("Sales error:", err);
+                })
+                .finally(function () {
+                    $scope.isLoadingSales = false;
+
+                    // 🔥 RELEASE LOCK AFTER DELAY
+                    setTimeout(function () {
+                        $scope._lockLoadSales = false;
+                    }, 500);
                 });
         };
 
-        $scope.renderSalesChart = function (points) {
-            if (!window.Chart) {
-                console.warn("Chart.js not found.");
-                return;
+        $scope.filterByService = function (name) {
+            $scope.selectedService = name;
+            if (name === "all") {
+                $scope.filteredServicePerformance = angular.copy($scope.servicePerformance);
+            } else {
+                $scope.filteredServicePerformance = $scope.servicePerformance.filter(function (x) {
+                    return x.name === name;
+                });
             }
-            var canvas = document.getElementById("salesChart");
-            if (!canvas) return;
-            const existingChart = Chart.getChart(canvas);
-            if (existingChart) {
-                existingChart.destroy();
-            }
-            var labels = (points || []).map(p => p.label);
-            var data = (points || []).map(p => Number(p.value || 0));
-            var ctx = canvas.getContext("2d");
-            salesChartInstance = new Chart(ctx, {
-                type: "line",
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: "Total Revenue",
-                        data: data,
-                        borderColor: "rgb(75, 192, 192)",
-                        backgroundColor: "rgba(75, 192, 192, 0.2)",
-                        tension: 0.35,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
         };
 
-        if (window.location.pathname.toLowerCase().indexOf("adminsalespage") !== -1) {
-            if (!$scope._salesLoaded) {
-                $scope._salesLoaded = true;
-                setTimeout(function () {
-                    $scope.$applyAsync(function () {
-                        $scope.loadSalesAnalytics($scope.salesRange);
-                    });
-                }, 0);
+        $scope.applyCustomRange = function () {
+            if ($scope.customFrom && $scope.customTo) {
+                $scope.salesLoaded = false;
+                $scope.loadSales('custom');
             }
-        }
+        };
+
+        $scope.generateReport = function () {
+            $scope.reportGenerated = true;
+            $scope.reportDate = new Date().toLocaleString();
+        };
+
+        $scope.printReport = function () {
+            var printContent = document.getElementById('printableReport');
+            if (!printContent) return;
+            var originalContent = document.body.innerHTML;
+            document.body.innerHTML = printContent.innerHTML;
+            window.print();
+            document.body.innerHTML = originalContent;
+            location.reload();
+        };
+
+        // Initialize sales page data
+        
+
+            
+
+       
+            
+        
+
+     
 
         // ===== CONTACT DATA =====
         $scope.loadContactInfo = function () {
@@ -2564,18 +2581,15 @@ $scope.filterBookings = function (filter) {
             var total = $scope.filteredBookings.length;
             $scope.bookingsTotalPages = Math.max(1, Math.ceil(total / size));
 
-            // Clamp current page
             if ($scope.bookingsCurrentPage > $scope.bookingsTotalPages) {
                 $scope.bookingsCurrentPage = $scope.bookingsTotalPages;
             }
 
-            // Build page number array
             $scope.bookingsPageNumbers = [];
             for (var i = 1; i <= $scope.bookingsTotalPages; i++) {
                 $scope.bookingsPageNumbers.push(i);
             }
 
-            // Slice the current page
             var start = ($scope.bookingsCurrentPage - 1) * size;
             $scope.pagedBookings = $scope.filteredBookings.slice(start, start + size);
         };
@@ -2590,6 +2604,7 @@ $scope.filterBookings = function (filter) {
             $scope.bookingsCurrentPage = 1;
             $scope.bookingsUpdatePaging();
         };
+
         // ── GALLERY (admin tab) ──────────────────────────────────────────────────
         $scope.galleryPhotos = [];
         $scope.adminTab = 'gallery';
@@ -2889,16 +2904,6 @@ $scope.filterBookings = function (filter) {
             $scope.lightboxPhoto = null;
         };
 
-        $scope.openReviewLightbox = function (imgUrl) {
-            $scope.selectedImage = imgUrl;
-            $scope.showImageModal = true;
-        };
-
-        $scope.closeImageModal = function () {
-            $scope.showImageModal = false;
-            $scope.selectedImage = null;
-        };
-
         $scope.flagModal = {
             show: false,
             review: null,
@@ -3152,7 +3157,12 @@ $scope.filterBookings = function (filter) {
             });
         };
 
+        $timeout(function () {
+            $scope.loadSales('today');
+        }, 500);
     });
+
+
 
 // ===== COMPARE DIRECTIVE =====
 app.directive('compareTo', function () {
