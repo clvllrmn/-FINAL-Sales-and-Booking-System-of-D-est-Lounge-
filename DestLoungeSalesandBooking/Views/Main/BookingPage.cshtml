@@ -276,6 +276,7 @@
                     ng-disabled="booking.selectedServices.length === 0 || !booking.date || !booking.time"
                     required>
                 <option value="">Select Nail Tech</option>
+                <option value="No Preference">No Preference (Any Available)</option>
                 <option ng-repeat="tech in nailTechs" value="{{tech.name}}">
                     {{tech.name}}
                 </option>

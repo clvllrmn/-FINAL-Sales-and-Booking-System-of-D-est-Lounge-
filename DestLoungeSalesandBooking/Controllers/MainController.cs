@@ -53,7 +53,7 @@ namespace DestLoungeSalesandBooking.Controllers
                     return Redirect(returnUrl);
 
                 if (Session["RoleID"] != null && (int)Session["RoleID"] == 1)
-                    return RedirectToAction("AdminHomepage", "Main");
+                    return RedirectToAction("AdminDashboardpage", "Main");
 
                 return RedirectToAction("Homepage", "Main");
             }
@@ -100,10 +100,10 @@ namespace DestLoungeSalesandBooking.Controllers
         {
             return View();
         }
-        public ActionResult AdminNailTechPage()
-        {
-            return View();
-        }
+        //public ActionResult AdminNailTechPage()
+        //{
+        //    return View();
+        //}
         public ActionResult AdminDashboard()
         {
             return View();
@@ -220,47 +220,47 @@ namespace DestLoungeSalesandBooking.Controllers
         }
 
         // ── Admin-only protected pages ──
-        [SessionCheck(RequireAdmin = true)]
-        [NoCache]
-        public ActionResult AdminHomepage()
-        {
-            return View();
-        }
+        //[SessionCheck(RequireAdmin = true)]
+        //[NoCache]
+        ////public ActionResult AdminHomepage()
+        ////{
+        ////    return View();
+        ////}
 
-        [SessionCheck(RequireAdmin = true)]
-        [NoCache]
-        public ActionResult AdminContactPage()
-        {
-            return View();
-        }
+        //[SessionCheck(RequireAdmin = true)]
+        //[NoCache]
+        //public ActionResult AdminContactPage()
+        //{
+        //    return View();
+        //}
 
-        [SessionCheck(RequireAdmin = true)]
-        [NoCache]
-        public ActionResult AdminFAQsPage()
-        {
-            return View();
-        }
+        //[SessionCheck(RequireAdmin = true)]
+        //[NoCache]
+        //public ActionResult AdminFAQsPage()
+        //{
+        //    return View();
+        //}
 
-        [SessionCheck(RequireAdmin = true)]
-        [NoCache]
-        public ActionResult AdminBookingPage()
-        {
-            return View();
-        }
+        //[SessionCheck(RequireAdmin = true)]
+        //[NoCache]
+        //public ActionResult AdminBookingPage()
+        //{
+        //    return View();
+        //}
 
-        [SessionCheck(RequireAdmin = true)]
-        [NoCache]
-        public ActionResult AdminServicePage()
-        {
-            return View();
-        }
+        //[SessionCheck(RequireAdmin = true)]
+        //[NoCache]
+        //public ActionResult AdminServicePage()
+        //{
+        //    return View();
+        //}
 
-        [SessionCheck(RequireAdmin = true)]
-        [NoCache]
-        public ActionResult AdminInboxPage()
-        {
-            return View();
-        }
+        //[SessionCheck(RequireAdmin = true)]
+        //[NoCache]
+        //public ActionResult AdminInboxPage()
+        //{
+        //    return View();
+        //}
 
         [SessionCheck(RequireAdmin = true)]
         [NoCache]
@@ -269,19 +269,19 @@ namespace DestLoungeSalesandBooking.Controllers
             return View();
         }
 
-        [SessionCheck(RequireAdmin = true)]
-        [NoCache]
-        public ActionResult AdminGalleryPage()
-        {
-            return View();
-        }
+        //[SessionCheck(RequireAdmin = true)]
+        //[NoCache]
+        //public ActionResult AdminGalleryPage()
+        //{
+        //    return View();
+        //}
 
-        [SessionCheck(RequireAdmin = true)]
-        [NoCache]
-        public ActionResult AdminPaymentSetting()
-        {
-            return View();
-        }
+        //[SessionCheck(RequireAdmin = true)]
+        //[NoCache]
+        //public ActionResult AdminPaymentSetting()
+        //{
+        //    return View();
+        //}
 
         [SessionCheck(RequireAdmin = true)]
         [NoCache]
@@ -794,8 +794,8 @@ namespace DestLoungeSalesandBooking.Controllers
                 model.status = string.IsNullOrWhiteSpace(model.status) ? "active" : model.status.Trim();
                 model.notes = (model.notes ?? "").Trim();
 
-                if (string.IsNullOrWhiteSpace(model.contact) ||
-                    !System.Text.RegularExpressions.Regex.IsMatch(model.contact, @"^09\d{9}$"))
+                if (!string.IsNullOrWhiteSpace(model.contact) &&
+    !System.Text.RegularExpressions.Regex.IsMatch(model.contact, @"^09\d{9}$"))
                 {
                     return Json(new { success = false, message = "Contact number must be exactly 11 digits and start with 09." });
                 }
@@ -845,8 +845,8 @@ namespace DestLoungeSalesandBooking.Controllers
                 model.status = (model.status ?? "").Trim();
                 model.notes = (model.notes ?? "").Trim();
 
-                if (string.IsNullOrWhiteSpace(model.contact) ||
-                    !System.Text.RegularExpressions.Regex.IsMatch(model.contact, @"^09\d{9}$"))
+                if (!string.IsNullOrWhiteSpace(model.contact) &&
+    !System.Text.RegularExpressions.Regex.IsMatch(model.contact, @"^09\d{9}$"))
                 {
                     return Json(new { success = false, message = "Contact number must be exactly 11 digits and start with 09." });
                 }

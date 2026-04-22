@@ -308,6 +308,116 @@ app.controller("DestLoungeSalesandBookingController",
                 });
         };
 
+        $scope.techErrors = {};
+
+        $scope.validateTechForm = function () {
+            var errors = {};
+            var f = $scope.techForm;
+
+            // ── Name ──
+            if (!f.name || f.name.trim().length === 0) {
+                errors.name = 'Full name is required.';
+            } else if (f.name.trim().length < 2) {
+                errors.name = 'Name must be at least 2 characters.';
+            } else if (f.name.trim().length > 60) {
+                errors.name = 'Name must not exceed 60 characters.';
+            } else if (!/^[a-zA-ZÀ-ÿ\s\-\.]+$/.test(f.name.trim())) {
+                errors.name = 'Name can only contain letters, spaces, hyphens, or periods. No numbers allowed.';
+            }
+
+            // ── Specialization ──
+            if (f.specialization && f.specialization.trim().length > 0) {
+                if (f.specialization.trim().length > 50) {
+                    errors.specialization = 'Specialization must not exceed 50 characters.';
+                } else if (!/^[a-zA-ZÀ-ÿ\s\-\/]+$/.test(f.specialization.trim())) {
+                    errors.specialization = 'Specialization can only contain letters, spaces, or hyphens. No numbers allowed.';
+                }
+            }
+
+            // ── Contact ──
+            if (f.contact && f.contact.trim().length > 0) {
+                var cleaned = f.contact.replace(/\s+/g, '');
+
+                // Block if it contains any letters
+                if (/[a-zA-Z]/.test(cleaned)) {
+                    errors.contact = 'Contact number must contain digits only. No letters allowed.';
+                } else if (!/^(09\d{9}|\+639\d{9})$/.test(cleaned)) {
+                    errors.contact = 'Enter a valid PH mobile number (e.g. 09XX XXX XXXX or +639XX XXX XXXX).';
+                }
+            }
+
+            // ── Status ──
+            if (!f.status) {
+                errors.status = 'Please select a status.';
+            }
+
+            // ── Notes ──
+            if (f.notes && f.notes.length > 300) {
+                errors.notes = 'Notes must not exceed 300 characters.';
+            }
+
+            $scope.techErrors = errors;
+            return Object.keys(errors).length === 0;
+        };
+
+        $scope.saveTech = function () {
+            if (!$scope.validateTechForm()) return;
+
+            // Normalize contact before sending (strip spaces, keep digits/+)
+            var payload = {
+                nailTechId: $scope.editingTech ? $scope.techForm.nailTechId : 0,
+                name: $scope.techForm.name.trim(),
+                specialization: ($scope.techForm.specialization || '').trim(),
+                contact: ($scope.techForm.contact || '').replace(/\s+/g, ''),
+                status: $scope.techForm.status,
+                notes: ($scope.techForm.notes || '').trim()
+            };
+
+            var url = $scope.editingTech ? '/Main/UpdateNailTech' : '/Main/AddNailTech';
+
+            $http.post(url, payload)
+                .then(function (res) {
+                    if (res.data.success) {
+                        $scope.closeModal();
+                        $scope.loadTechs(); // refresh the list
+                    } else {
+                        // Surface server-side error (e.g. duplicate name, DB issue)
+                        $scope.techErrors.name = res.data.message || 'Something went wrong. Please try again.';
+                    }
+                })
+                .catch(function () {
+                    $scope.techErrors.name = 'Network error. Please check your connection and try again.';
+                });
+        };
+
+        // ── Real-time input guards ──
+
+        // Block non-letter keystrokes on the Name field
+        $scope.onNameKeypress = function ($event) {
+            var ch = String.fromCharCode($event.charCode);
+            // Allow letters (including accented), spaces, hyphens, periods
+            if (!/[a-zA-ZÀ-ÿ\s\-\.]/.test(ch)) {
+                $event.preventDefault();
+            }
+        };
+
+        // Block non-digit / non-plus keystrokes on the Contact field
+        $scope.onContactKeypress = function ($event) {
+            var ch = String.fromCharCode($event.charCode);
+            // Allow digits, spaces (for readability), and leading +
+            if (!/[\d\s\+]/.test(ch)) {
+                $event.preventDefault();
+            }
+        };
+
+        // Block non-letter keystrokes on the Specialization field
+        $scope.onSpecializationKeypress = function ($event) {
+            var ch = String.fromCharCode($event.charCode);
+            if (!/[a-zA-ZÀ-ÿ\s\-\/]/.test(ch)) {
+                $event.preventDefault();
+            }
+        };
+
         // ===== UPDATE POLAROID IMAGE =====
         $scope.updatePolaroidImage = function (slot) {
             var input = document.createElement('input');
@@ -695,7 +805,9 @@ app.controller("DestLoungeSalesandBookingController",
                                 description: s.description,
                                 price: s.price,
                                 category: s.category || 'manicure',
-                                image: (s.image && s.image.trim() !== '') ? s.image + '?t=' + Date.now() : '/Content/Pictures/DestLogo.png'
+                                image: (s.image && s.image.trim() !== '')
+                                    ? s.image + '?t=' + Date.now()
+                                    : '/Content/Pictures/HomepageBackground.png'
                             };
                         });
                     }
@@ -718,7 +830,13 @@ app.controller("DestLoungeSalesandBookingController",
 
         $scope.openAddServiceModal = function () {
             $scope.isEditMode = false;
-            $scope.currentService = { name: '', description: '', price: null, category: '', image: '' };
+            $scope.currentService = {
+                name: '',
+                description: '',
+                price: null,
+                category: '',
+                image: '/Content/Pictures/HomepageBackground.png'  // ← add this
+            };
             $scope.showServiceModal = true;
         };
 
@@ -1051,11 +1169,14 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.checkAvailability = function () {
             $scope.takenTimes = [];
             $scope.dateFullyBooked = false;
+
             if (!$scope.booking.date) {
                 $scope.availableTimes = [];
                 $scope.booking.time = '';
                 return;
             }
+
+            // Set available times based on day of week (always runs when date is picked)
             var selectedDate;
             if ($scope.booking.date instanceof Date) {
                 selectedDate = $scope.booking.date;
@@ -1063,19 +1184,24 @@ app.controller("DestLoungeSalesandBookingController",
                 var parts = $scope.booking.date.split('-');
                 selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
             }
+
             var dayOfWeek = selectedDate.getDay();
             if (dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6) {
                 $scope.availableTimes = angular.copy($scope.weekendTimes);
             } else {
                 $scope.availableTimes = angular.copy($scope.weekdayTimes);
             }
-            if (!$scope.booking.nailTech) {
+
+            // Skip slot-checking if no specific tech selected
+            if (!$scope.booking.nailTech || $scope.booking.nailTech === 'No Preference') {
                 return;
             }
+
             var year = selectedDate.getFullYear();
             var month = String(selectedDate.getMonth() + 1).padStart(2, '0');
             var day = String(selectedDate.getDate()).padStart(2, '0');
             var selectedDateStr = year + '-' + month + '-' + day;
+
             $http.get('/Booking/GetTakenSlots', {
                 params: {
                     date: selectedDateStr,
@@ -1156,7 +1282,9 @@ app.controller("DestLoungeSalesandBookingController",
         };
 
         $scope.getSelectedTechName = function () {
-            return $scope.booking.nailTech || '';
+            return $scope.booking.nailTech === 'No Preference'
+                ? 'No Preference (Any Available)'
+                : ($scope.booking.nailTech || '');
         };
 
         $scope.submitBooking = function () {
@@ -1223,6 +1351,13 @@ app.controller("DestLoungeSalesandBookingController",
             };
 
             console.log("Booking payload:", payload);
+
+            // Replace the $http.get("/Booking/CheckSlot"...) block with:
+            if ($scope.booking.nailTech === 'No Preference') {
+                sessionStorage.setItem("pendingBooking", JSON.stringify(payload));
+                window.location.href = "/Main/PaymentPage";
+                return;
+            }
 
             $http.get("/Booking/CheckSlot", {
                 params: {

@@ -163,7 +163,7 @@ namespace DestLoungeSalesandBooking.Controllers
 
                 // fallback
                 if (user.roleID == 1)
-                    return RedirectToAction("AdminHomepage", "Main");
+                    return RedirectToAction("AdminDashboard", "Main");
                 else
                     return RedirectToAction("Homepage", "Main");
             }
@@ -353,7 +353,7 @@ namespace DestLoungeSalesandBooking.Controllers
                 db.SaveChanges();
 
                 TempData["SuccessMessage"] = "Password updated successfully.";
-                return RedirectToAction("AdminHomepage", "Main");
+                return RedirectToAction("AdminDashboard", "Main");
             }
             catch (Exception ex)
             {
@@ -490,7 +490,7 @@ namespace DestLoungeSalesandBooking.Controllers
                 Session["FullName"] = user.firstname + " " + user.lastname;
 
                 string redirectUrl = user.roleID == 1
-                    ? Url.Action("AdminHomepage", "Main")
+                    ? Url.Action("AdminDashboard", "Main")
                     : Url.Action("Homepage", "Main");
 
                 return Json(new
