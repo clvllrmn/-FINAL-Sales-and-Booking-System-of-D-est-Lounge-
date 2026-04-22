@@ -680,7 +680,7 @@ namespace DestLoungeSalesandBooking.Controllers
                 db.tbl_users.Add(newUser);
                 db.SaveChanges();
 
-                // Clear session
+                // Clear signup session data
                 Session.Remove("SignupOTP");
                 Session.Remove("SignupOTPExpiry");
                 Session.Remove("SignupFNAME");
@@ -690,8 +690,34 @@ namespace DestLoungeSalesandBooking.Controllers
                 Session.Remove("SignupADDRESS");
                 Session.Remove("SignupPASSWORD");
 
-                TempData["SuccessMessage"] = "Registration successful! Please login with your new account.";
-                return RedirectToAction("LoginPage", "Main");
+                // Auto-login: set forms auth cookie
+                var ticket = new FormsAuthenticationTicket(
+                    1,
+                    newUser.email,
+                    DateTime.UtcNow,
+                    DateTime.UtcNow.Add(FormsAuthentication.Timeout),
+                    false,
+                    string.Empty,
+                    FormsAuthentication.FormsCookiePath);
+
+                var encTicket = FormsAuthentication.Encrypt(ticket);
+                var cookie = new HttpCookie(FormsAuthentication.FormsCookieName, encTicket)
+                {
+                    HttpOnly = true,
+                    Secure = Request.IsSecureConnection
+                };
+                Response.Cookies.Add(cookie);
+
+                // Set session
+                Session["UserID"] = newUser.userID;
+                Session["UserEmail"] = newUser.email;
+                Session["UserFirstName"] = newUser.firstname;
+                Session["UserLastName"] = newUser.lastname;
+                Session["RoleID"] = newUser.roleID;
+                Session["FullName"] = newUser.firstname + " " + newUser.lastname;
+
+                TempData["SuccessMessage"] = "Welcome to D'est Lounge! Your account has been created.";
+                return RedirectToAction("Homepage", "Main");
             }
             catch (Exception ex)
             {
