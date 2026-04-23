@@ -222,7 +222,7 @@
                     <div class="review-stars">
                         <i ng-repeat="s in [1,2,3,4,5]" class="fa-star" ng-class="s <= review.rating ? 'fa-solid' : 'fa-regular'"></i>
                     </div>
-                    <span class="review-date">{{review.date | date:'MMMM d, yyyy'}}</span>
+                    <span class="review-date">{{review.date ? (review.date | date:'MMMM d, yyyy') : 'No date'}}</span>
                 </div>
                 <p class="review-text">&ldquo;{{review.reviewText || 'No comment provided.'}}&rdquo;</p>
 

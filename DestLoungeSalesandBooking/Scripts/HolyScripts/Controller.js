@@ -121,10 +121,24 @@ app.controller("DestLoungeSalesandBookingController",
             
         $scope.loadReviews = function () {
             var path = window.location.pathname.toLowerCase();
-            var url = path.indexOf('admingallerypage') !== -1
-                ? '/Main/GetAdminReviews'
-                : '/Main/GetPublicReviews';
 
+            var url = '/Main/GetPublicReviews';
+
+            // admin page
+            if (path.indexOf('admingallerypage') !== -1) {
+                url = '/Main/GetAdminReviews';
+            }
+
+            // customer profile / my reviews page
+            else if (
+                path.indexOf('profilepage') !== -1 ||
+                path.indexOf('mypage') !== -1 ||
+                path.indexOf('reviewpage') !== -1 ||
+                path.indexOf('accountpage') !== -1
+            ) {
+                url = '/Main/GetMyReviews';
+            }
+            console.log("Loading reviews from:", url);
             $http.get(url)
                 .then(function (res) {
                     console.log("REVIEWS DATA:", res.data);
@@ -137,7 +151,16 @@ app.controller("DestLoungeSalesandBookingController",
                                 images = [];
                             }
                         }
-                        var reviewDate = r.date ? new Date(r.date) : (r.CreatedAt ? new Date(r.CreatedAt) : new Date());
+                        var rawDate =
+                            r.date ||
+                            r.Date ||
+                            r.createdAt ||
+                            r.CreatedAt ||
+                            r.reviewDate ||
+                            r.ReviewDate ||
+                            r.created_date;
+
+                        var reviewDate = rawDate ? new Date(rawDate) : new Date();
 
                         return {
                             reviewId: r.ReviewId || r.reviewId,
@@ -1979,33 +2002,32 @@ app.controller("DestLoungeSalesandBookingController",
         };
 
         // ===== SALES FUNCTIONS (SINGLE DEFINITION) =====
-        //$scope.setSalesRange = function (range) {
-            //console.log("setSalesRange called with:", range);
-            //if ($scope.sales.range === range && $scope.salesLoaded) {
-                //console.log("Already on range:", range);
-               // return;
-           //}
-          //  $scope.salesLoaded = false;
-          //  $scope.salesRange = range;
-          //  $scope.loadSales(range);
-      //  };
+        $scope.setSalesRange = function (range) {
+
+            $scope.salesRange = range;
+            $scope.salesLoaded = false;
+
+            if (range === 'custom') {
+                $scope.loadSales(range);
+                
+            }
+
+        };
 
         $scope.loadSales = function (range) {
 
-            if ($scope._lockLoadSales) {
-                console.log("BLOCKED duplicate call");
-                return;
-            }
-
-            $scope._lockLoadSales = true;
-
+            if ($scope._lockLoadSales) return;
             if ($scope.isLoadingSales) return;
 
-            if ($scope.salesLoaded && $scope.sales.range === range) return;
-
+            $scope._lockLoadSales = true;
             $scope.isLoadingSales = true;
 
-            $http.get('/Admin/GetSalesAnalytics?range=' + range)
+            var url = '/Admin/GetSalesAnalytics?range=' + range;
+
+            // ✅ FIX CUSTOM DATE FORMAT
+            
+            $http.get(url)
+
                 .then(function (res) {
 
                     $scope.sales.totalRevenue = res.data.totalRevenue || 0;
@@ -2013,20 +2035,46 @@ app.controller("DestLoungeSalesandBookingController",
                     $scope.sales.topService = res.data.topService || "-";
                     $scope.sales.range = range;
 
+                    $scope.servicePerformance = [];
+                    $scope.filteredServicePerformance = [];
+
+                    angular.forEach(res.data.services || [], function (item) {
+
+                        var share = 0;
+
+                        if ($scope.sales.totalRevenue > 0) {
+                            share = (item.Revenue / $scope.sales.totalRevenue) * 100;
+                        }
+
+                        $scope.servicePerformance.push({
+                            name: item.Service,
+                            bookings: item.Bookings,
+                            revenue: item.Revenue,
+                            share: share.toFixed(1),
+                            isBlockbuster: share >= 60
+                        });
+                    });
+
+                    $scope.filteredServicePerformance =
+                        angular.copy($scope.servicePerformance);
+
+                    if (res.data.points) {
+                        renderSalesChart(res.data.points);
+                    }
+
                     $scope.salesLoaded = true;
                 })
+
                 .catch(function (err) {
                     console.error("Sales error:", err);
                 })
+
                 .finally(function () {
                     $scope.isLoadingSales = false;
-
-                    // 🔥 RELEASE LOCK AFTER DELAY
-                    setTimeout(function () {
-                        $scope._lockLoadSales = false;
-                    }, 500);
+                    $scope._lockLoadSales = false;
                 });
         };
+
 
         $scope.filterByService = function (name) {
             $scope.selectedService = name;
@@ -2040,10 +2088,13 @@ app.controller("DestLoungeSalesandBookingController",
         };
 
         $scope.applyCustomRange = function () {
-            if ($scope.customFrom && $scope.customTo) {
-                $scope.salesLoaded = false;
-                $scope.loadSales('custom');
-            }
+
+            if (!$scope.customFrom || !$scope.customTo) return;
+
+            $scope.salesRange = 'custom';
+            $scope.salesLoaded = false;
+
+            $scope.loadSales('custom');
         };
 
         $scope.generateReport = function () {

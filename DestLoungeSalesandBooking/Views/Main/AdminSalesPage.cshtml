@@ -90,7 +90,7 @@
             <div class="sales-kpis">
                 <div class="kpi-card">
                     <div class="kpi-icon"><i class="fa-solid fa-peso-sign"></i></div>
-                    <div class="kpi-title">Total Revenue</div>
+                    <div class="kpi-title">Total Sales</div>
                     <div class="kpi-value">₱ {{sales.totalRevenue | number:2}}</div>
                 </div>
                 <div class="kpi-card">
@@ -199,7 +199,7 @@
 
                 <div class="report-options-grid">
                     <label class="report-check">
-                        <input type="checkbox" ng-model="reportOptions.revenue" /> Revenue Summary
+                        <input type="checkbox" ng-model="reportOptions.revenue" /> Sales Summary
                     </label>
                     <label class="report-check">
                         <input type="checkbox" ng-model="reportOptions.bookings" /> Booking Counts
@@ -245,8 +245,8 @@
                         </div>
 
                         <div class="rpt-section" ng-if="reportOptions.revenue">
-                            <div class="rpt-section-title">Revenue Summary</div>
-                            <div class="rpt-row"><span>Total Revenue</span><span class="rpt-highlight">₱ {{sales.totalRevenue || 0 | number:2}}</span></div>
+                            <div class="rpt-section-title">Sales Summary</div>
+                            <div class="rpt-row"><span>Total Sales</span><span class="rpt-highlight">₱ {{sales.totalRevenue || 0 | number:2}}</span></div>
                             <div class="rpt-row"><span>Top Earning Service</span><span>{{sales.topService || '—'}}</span></div>
                         </div>
 

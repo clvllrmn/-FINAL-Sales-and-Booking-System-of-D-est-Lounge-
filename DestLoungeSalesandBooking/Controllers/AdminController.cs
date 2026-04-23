@@ -108,91 +108,125 @@
             }
 
 
-            [HttpGet]
-            public JsonResult GetSalesAnalytics(string range = "today")
-            {
-                DateTime start = DateTime.Today;
-                DateTime end = DateTime.Now;
-
-                switch ((range ?? "today").ToLower())
+        [HttpGet]
+        public JsonResult GetSalesAnalytics(
+        string range = "today",
+        string from = null,
+        string to = null)
                 {
-                    case "month":
-                    case "thismonth":
-                        start = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-                        break;
+            DateTime start = DateTime.Today;
+            DateTime end = DateTime.Now;
 
-                    case "3months":
-                        start = DateTime.Today.AddMonths(-3);
-                        break;
+            switch ((range ?? "today").ToLower())
+            {
+                case "month":
+                case "thismonth":
+                    start = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                    break;
 
-                    case "6months":
-                        start = DateTime.Today.AddMonths(-6);
-                        break;
+                case "3months":
+                    start = DateTime.Today.AddMonths(-3);
+                    break;
 
-                    case "year":
-                    case "thisyear":
-                        start = new DateTime(DateTime.Today.Year, 1, 1);
-                        break;
+                case "6months":
+                    start = DateTime.Today.AddMonths(-6);
+                    break;
 
-                    default:
-                        start = DateTime.Today;
-                        break;
-                }
+                case "year":
+                case "thisyear":
+                    start = new DateTime(DateTime.Today.Year, 1, 1);
+                    break;
 
-                var sales = db.tbl_sales
-                    .Where(x => x.CreatedAt >= start && x.CreatedAt <= end && x.Status == "Paid")
-                    .ToList();
+                case "custom":
 
-                var saleIds = sales.Select(x => x.SaleId).ToList();
+                    DateTime tempStart;
+                    DateTime tempEnd;
 
-                var items = db.tbl_sale_items
-                    .Where(x => saleIds.Contains(x.SaleId))
-                    .ToList();
-
-                var totalRevenue = sales.Sum(x => (decimal?)x.Total) ?? 0;
-                var completedBookings = sales.Count();
-
-                var topService = items
-                    .GroupBy(x => x.ItemName)
-                    .Select(g => new {
-                        Name = g.Key,
-                        Count = g.Count()
-                    })
-                    .OrderByDescending(x => x.Count)
-                    .FirstOrDefault();
-
-                var serviceTable = items
-                    .GroupBy(x => x.ItemName)
-                    .Select(g => new
+                    if (
+                        DateTime.TryParseExact(
+                            from,
+                            "dd/MM/yyyy",
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            System.Globalization.DateTimeStyles.None,
+                            out tempStart
+                        )
+                        &&
+                        DateTime.TryParseExact(
+                            to,
+                            "dd/MM/yyyy",
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            System.Globalization.DateTimeStyles.None,
+                            out tempEnd
+                        )
+                    )
                     {
-                        Service = g.Key,
-                        Bookings = g.Count(),
-                        Revenue = g.Sum(x => x.LineTotal)
-                    })
-                    .OrderByDescending(x => x.Revenue)
-                    .ToList();
+                        start = tempStart.Date;
+                        end = tempEnd.Date.AddDays(1).AddSeconds(-1);
+                    }
 
-                        var points = sales
-            .GroupBy(x => x.CreatedAt.Date)
-            .OrderBy(g => g.Key)
-            .Select(g => new
-            {
-                label = g.Key.ToString("MMM dd"),
-                value = g.Sum(x => x.Total)
-            })
-            .ToList();
+                    break;
 
-                return Json(new
-                {
-                    totalRevenue = totalRevenue,
-                    completedBookings = completedBookings,
-                    topService = topService != null ? topService.Name : "-",
-                    services = serviceTable,
-                    points = points
-                }, JsonRequestBehavior.AllowGet);
+
+                default:
+                    start = DateTime.Today;
+                    break;
             }
 
+            var sales = db.tbl_sales
+                .Where(x => x.CreatedAt >= start &&
+                            x.CreatedAt <= end &&
+                            x.Status == "Paid")
+                .ToList();
 
+            var saleIds = sales.Select(x => x.SaleId).ToList();
+
+            var items = db.tbl_sale_items
+                .Where(x => saleIds.Contains(x.SaleId))
+                .ToList();
+
+            decimal totalSales = sales.Sum(x => (decimal?)x.Total) ?? 0;
+            int completedBookings = sales.Count();
+
+            var topService = items
+                .GroupBy(x => x.ItemName)
+                .Select(g => new {
+                    Name = g.Key,
+                    Count = g.Count()
+                })
+                .OrderByDescending(x => x.Count)
+                .FirstOrDefault();
+
+            var serviceTable = items
+                .GroupBy(x => x.ItemName)
+                .Select(g => new
+                {
+                    Service = g.Key,
+                    Bookings = g.Count(),
+                    Revenue = g.Sum(x => x.LineTotal)
+                })
+                .ToList();
+
+            var points = sales
+                .GroupBy(x => x.CreatedAt.Date)
+                .OrderBy(g => g.Key)
+                .Select(g => new
+                {
+                    label = g.Key.ToString("MMM dd"),
+                    value = g.Sum(x => x.Total)
+                })
+                .ToList();
+
+            return Json(new
+            {
+                totalRevenue = totalSales,
+                completedBookings = completedBookings,
+                topService = topService != null ? topService.Name : "-",
+                services = serviceTable,
+                points = points
+            }, JsonRequestBehavior.AllowGet);
         }
+
+
+    }
     
     }
