@@ -1832,15 +1832,21 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.analyticsFilter = 'week';
         var analyticsChartInstance = null;
 
+        $scope.analytics = { totalRevenue: 0, completedBookings: 0, topService: '—' };
+
         $scope.loadAnalytics = function () {
-            $http.get('/Main/Analytics', { params: { range: $scope.analyticsFilter } })
+            var range = $scope.analyticsFilter || 'week';
+            $http.get('/Admin/GetSalesAnalytics', { params: { range: range } })
                 .then(function (res) {
                     var data = res.data || {};
+                    $scope.analytics.totalRevenue = data.totalRevenue || 0;
+                    $scope.analytics.completedBookings = data.completedBookings || 0;
+                    $scope.analytics.topService = data.topService || '—';
                     $scope.pendingBookingsCount = $scope.bookings.filter(function (b) {
                         return b.status === 'Pending';
                     }).length;
                     $timeout(function () {
-                        renderAnalyticsChart(data.points || []);
+                        renderAnalyticsChart(data.points || [], range);
                     }, 100);
                 })
                 .catch(function (err) {
@@ -1848,30 +1854,64 @@ app.controller("DestLoungeSalesandBookingController",
                 });
         };
 
-        function renderAnalyticsChart(points) {
+        function renderAnalyticsChart(points, range) {
             if (!window.Chart) return;
             var canvas = document.getElementById('analyticsChart');
             if (!canvas) return;
             var existing = Chart.getChart(canvas);
             if (existing) existing.destroy();
+
+            var isSinglePoint = points.length <= 1;
+            var chartType = isSinglePoint ? 'bar' : 'line';
+
             new Chart(canvas.getContext('2d'), {
-                type: 'bar',
+                type: chartType,
                 data: {
                     labels: points.map(function (p) { return p.label; }),
                     datasets: [{
-                        label: 'Bookings',
+                        label: 'Revenue (₱)',
                         data: points.map(function (p) { return p.value; }),
-                        backgroundColor: 'rgba(107,68,35,0.7)',
+                        backgroundColor: chartType === 'bar'
+                            ? 'rgba(107,68,35,0.75)'
+                            : 'rgba(107,68,35,0.12)',
                         borderColor: '#6b4423',
-                        borderWidth: 1,
-                        borderRadius: 6
+                        borderWidth: 2,
+                        borderRadius: chartType === 'bar' ? 6 : 0,
+                        pointBackgroundColor: '#6b4423',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: chartType === 'line',
+                        tension: 0.35
                     }]
                 },
                 options: {
                     responsive: true,
-                    plugins: { legend: { display: false } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (ctx) {
+                                    return ' ₱' + Number(ctx.parsed.y).toLocaleString('en-PH', {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    });
+                                }
+                            }
+                        }
+                    },
                     scales: {
-                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (val) {
+                                    return '₱' + (val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val);
+                                }
+                            },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
                     }
                 }
             });
@@ -3451,9 +3491,8 @@ app.controller("DestLoungeSalesandBookingController",
         $timeout(function () {
             $scope.loadSales('today');
         }, 500);
-    });
 
-
+    }); // closes app.controller
 
 // ===== COMPARE DIRECTIVE =====
 app.directive('compareTo', function () {

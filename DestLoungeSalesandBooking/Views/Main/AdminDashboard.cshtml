@@ -84,17 +84,29 @@
             <div class="analytics-top-row">
                 <div class="analytics-chart-card">
                     <div class="chart-header">
-                        <span class="chart-title">Bookings Overview</span>
+                        <span class="chart-title">Sales Overview</span>
                         <select class="admin-select" ng-model="analyticsFilter" ng-change="loadAnalytics()">
+                            <option value="today">Today</option>
                             <option value="week">This Week</option>
                             <option value="month">This Month</option>
                             <option value="year">This Year</option>
                         </select>
                     </div>
-                    <canvas id="analyticsChart" height="180"></canvas>
-                    <button class="admin-btn admin-btn-primary" style="margin-top:1rem;" ng-click="generateReport()">
-                        <i class="fa-solid fa-file-export"></i> Generate Report
-                    </button>
+                    <div class="analytics-summary-row">
+                        <div class="analytics-kpi">
+                            <span class="kpi-label">Total Revenue</span>
+                            <span class="kpi-value">₱{{analytics.totalRevenue | number:2}}</span>
+                        </div>
+                        <div class="analytics-kpi">
+                            <span class="kpi-label">Completed Bookings</span>
+                            <span class="kpi-value">{{analytics.completedBookings}}</span>
+                        </div>
+                        <div class="analytics-kpi">
+                            <span class="kpi-label">Top Service</span>
+                            <span class="kpi-value kpi-value-sm">{{analytics.topService || '—'}}</span>
+                        </div>
+                    </div>
+                    <canvas id="analyticsChart" height="160"></canvas>
                 </div>
                 <div class="analytics-stats-col">
                     <div class="stat-card">
@@ -160,7 +172,6 @@
                 <div ng-if="bookings.length === 0" class="empty-mini">No bookings yet.</div>
             </div>
         </div>
-
         <!-- ═══════════════════════════════════════════════════ -->
         <!-- TAB: MANAGE BOOKINGS -->
         <!-- ═══════════════════════════════════════════════════ -->
@@ -4227,6 +4238,45 @@
         margin-top: 2px;
     }
 
+    .analytics-summary-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .analytics-kpi {
+        flex: 1;
+        background: #faf7f4;
+        border: 1.5px solid #e7dfd6;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        min-width: 100px;
+    }
+
+    .kpi-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #8b6f47;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .kpi-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #6b4423;
+        line-height: 1.1;
+    }
+
+    .kpi-value-sm {
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
     /* ── MOBILE TOP BAR ── */
     .mobile-topbar {
         display: none;
@@ -4479,6 +4529,7 @@
             bottom: 0;
         }
     }
+
 </style>
 
 <script>
