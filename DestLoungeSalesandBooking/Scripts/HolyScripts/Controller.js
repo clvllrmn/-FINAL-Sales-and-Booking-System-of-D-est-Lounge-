@@ -2007,72 +2007,61 @@ app.controller("DestLoungeSalesandBookingController",
             $scope.salesRange = range;
             $scope.salesLoaded = false;
 
-            if (range === 'custom') {
+            if (range !== 'custom') {
                 $scope.loadSales(range);
-                
+                 
             }
 
         };
 
         $scope.loadSales = function (range) {
 
-            if ($scope._lockLoadSales) return;
-            if ($scope.isLoadingSales) return;
-
-            $scope._lockLoadSales = true;
-            $scope.isLoadingSales = true;
-
             var url = '/Admin/GetSalesAnalytics?range=' + range;
 
-            // ✅ FIX CUSTOM DATE FORMAT
-            
-            $http.get(url)
+            if (range === 'custom' && $scope.customFrom && $scope.customTo) {
+                url += '&from=' + $scope.customFrom + '&to=' + $scope.customTo;
+            }
 
-                .then(function (res) {
 
-                    $scope.sales.totalRevenue = res.data.totalRevenue || 0;
-                    $scope.sales.totalBookings = res.data.completedBookings || 0;
-                    $scope.sales.topService = res.data.topService || "-";
-                    $scope.sales.range = range;
+            console.log("CUSTOM FROM:", $scope.customFrom);
+            console.log("CUSTOM TO:", $scope.customTo);
+            console.log("REQUEST URL:", url);
 
-                    $scope.servicePerformance = [];
-                    $scope.filteredServicePerformance = [];
 
-                    angular.forEach(res.data.services || [], function (item) {
+            $http.get(url).then(function (res) {
 
-                        var share = 0;
+                $scope.sales.totalRevenue = res.data.totalRevenue || 0;
+                $scope.sales.totalBookings = res.data.completedBookings || 0;
+                $scope.sales.topService = res.data.topService || '-';
+                $scope.sales.range = range;
 
-                        if ($scope.sales.totalRevenue > 0) {
-                            share = (item.Revenue / $scope.sales.totalRevenue) * 100;
-                        }
+                $scope.servicePerformance = [];
 
-                        $scope.servicePerformance.push({
-                            name: item.Service,
-                            bookings: item.Bookings,
-                            revenue: item.Revenue,
-                            share: share.toFixed(1),
-                            isBlockbuster: share >= 60
-                        });
-                    });
+                angular.forEach(res.data.services || [], function (item) {
 
-                    $scope.filteredServicePerformance =
-                        angular.copy($scope.servicePerformance);
+                    var share = 0;
 
-                    if (res.data.points) {
-                        renderSalesChart(res.data.points);
+                    if ($scope.sales.totalRevenue > 0) {
+                        share = (item.Revenue / $scope.sales.totalRevenue) * 100;
                     }
 
-                    $scope.salesLoaded = true;
-                })
-
-                .catch(function (err) {
-                    console.error("Sales error:", err);
-                })
-
-                .finally(function () {
-                    $scope.isLoadingSales = false;
-                    $scope._lockLoadSales = false;
+                    $scope.servicePerformance.push({
+                        name: item.Service,
+                        bookings: item.Bookings,
+                        revenue: item.Revenue,
+                        share: share.toFixed(1),
+                        isBlockbuster: share >= 60
+                    });
                 });
+
+                $scope.filteredServicePerformance =
+                    angular.copy($scope.servicePerformance);
+
+                renderSalesChart(res.data.points || []);
+
+            }, function (err) {
+                console.log(err);
+            });
         };
 
 
@@ -2091,11 +2080,25 @@ app.controller("DestLoungeSalesandBookingController",
 
             if (!$scope.customFrom || !$scope.customTo) return;
 
-            $scope.salesRange = 'custom';
-            $scope.salesLoaded = false;
+            var from = new Date($scope.customFrom);
+            var to = new Date($scope.customTo);
 
+            $scope.customFrom =
+                from.getFullYear() + "-" +
+                String(from.getMonth() + 1).padStart(2, '0') + "-" +
+                String(from.getDate()).padStart(2, '0');
+
+            $scope.customTo =
+                to.getFullYear() + "-" +
+                String(to.getMonth() + 1).padStart(2, '0') + "-" +
+                String(to.getDate()).padStart(2, '0');
+
+            $scope.salesRange = 'custom';
             $scope.loadSales('custom');
         };
+
+
+
 
         $scope.generateReport = function () {
             $scope.reportGenerated = true;

@@ -108,6 +108,7 @@
             }
 
 
+
         [HttpGet]
         public JsonResult GetSalesAnalytics(
         string range = "today",
@@ -119,64 +120,83 @@
 
             switch ((range ?? "today").ToLower())
             {
+                case "today":
+                    start = DateTime.Today;
+                    end = DateTime.Today.AddDays(1).AddSeconds(-1);
+                    break;
+
                 case "month":
                 case "thismonth":
                     start = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                    end = start.AddMonths(1).AddSeconds(-1);
                     break;
 
                 case "3months":
-                    start = DateTime.Today.AddMonths(-3);
+                    start = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddMonths(-2);
+                    end = DateTime.Now;
                     break;
 
                 case "6months":
-                    start = DateTime.Today.AddMonths(-6);
+                    start = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddMonths(-5);
+                    end = DateTime.Now;
                     break;
 
                 case "year":
                 case "thisyear":
                     start = new DateTime(DateTime.Today.Year, 1, 1);
+                    end = new DateTime(DateTime.Today.Year, 12, 31, 23, 59, 59);
                     break;
 
                 case "custom":
 
-                    DateTime tempStart;
-                    DateTime tempEnd;
-
-                    if (
-                        DateTime.TryParseExact(
-                            from,
-                            "dd/MM/yyyy",
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            System.Globalization.DateTimeStyles.None,
-                            out tempStart
-                        )
-                        &&
-                        DateTime.TryParseExact(
-                            to,
-                            "dd/MM/yyyy",
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            System.Globalization.DateTimeStyles.None,
-                            out tempEnd
-                        )
-                    )
+                    if (string.IsNullOrWhiteSpace(from) || string.IsNullOrWhiteSpace(to))
                     {
-                        start = tempStart.Date;
-                        end = tempEnd.Date.AddDays(1).AddSeconds(-1);
+                        start = DateTime.Today;
+                        end = DateTime.Now;
+                        break;
                     }
 
+                    DateTime parsedFrom;
+                    DateTime parsedTo;
+
+                    if (!DateTime.TryParse(from, out parsedFrom) ||
+                        !DateTime.TryParse(to, out parsedTo))
+                    {
+                        start = DateTime.Today;
+                        end = DateTime.Now;
+                        break;
+                    }
+
+                    start = parsedFrom.Date;
+                    end = parsedTo.Date.AddDays(1);
+
                     break;
+
+
+
 
 
                 default:
                     start = DateTime.Today;
+                    end = DateTime.Today.AddDays(1).AddSeconds(-1);
                     break;
             }
 
-            var sales = db.tbl_sales
-                .Where(x => x.CreatedAt >= start &&
-                            x.CreatedAt <= end &&
-                            x.Status == "Paid")
-                .ToList();
+
+                var sales = (
+                from s in db.tbl_sales
+                join b in db.tbl_bookings
+                on s.BookingId equals b.BookingId
+                where b.BookingDate >= start
+                && b.BookingDate < end
+                && s.Status == "Paid"
+                select new
+                {
+                    s.SaleId,
+                    s.Total,
+                    BookingDate = b.BookingDate
+                }
+            ).ToList();
 
             var saleIds = sales.Select(x => x.SaleId).ToList();
 
@@ -189,7 +209,8 @@
 
             var topService = items
                 .GroupBy(x => x.ItemName)
-                .Select(g => new {
+                .Select(g => new
+                {
                     Name = g.Key,
                     Count = g.Count()
                 })
@@ -207,7 +228,7 @@
                 .ToList();
 
             var points = sales
-                .GroupBy(x => x.CreatedAt.Date)
+                .GroupBy(x => x.BookingDate.Date)
                 .OrderBy(g => g.Key)
                 .Select(g => new
                 {
@@ -215,6 +236,7 @@
                     value = g.Sum(x => x.Total)
                 })
                 .ToList();
+
 
             return Json(new
             {
