@@ -37,9 +37,7 @@
                         ng-click="toggleNotif($event)"
                         style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037; z-index:9999;">
                     <i class="fa-solid fa-bell"></i>
-
-                    <span ng-if="getUnreadCount() > 0"
-                          class="notif-badge">!</span>
+                    <span ng-if="getUnreadCount() > 0" class="notif-badge">!</span>
                 </button>
 
                 <div ng-show="showNotif"
@@ -92,9 +90,7 @@
                     ng-click="toggleNotif($event)"
                     style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037; z-index:9999;">
                 <i class="fa-solid fa-bell"></i>
-
-                <span ng-if="getUnreadCount() > 0"
-                      class="notif-badge">!</span>
+                <span ng-if="getUnreadCount() > 0" class="notif-badge">!</span>
             </button>
 
             <div ng-show="showNotif"
@@ -143,39 +139,78 @@
 <div ng-controller="DestLoungeSalesandBookingController">
 
     <div class="services-page-container">
-        <div class="services-sidebar">
-            <h2 class="services-sidebar-title">Services</h2>
 
-            <div class="service-category"
-                 ng-class="{'active': selectedCategory === 'all'}"
-                 ng-click="filterServices('all')">
-                <h3>All Services</h3>
+        <!-- LEFT COLUMN: sidebar + cart stacked -->
+        <div class="left-column">
+
+            <!-- Category Sidebar -->
+            <div class="services-sidebar">
+                <h2 class="services-sidebar-title">Services</h2>
+
+                <div class="service-category"
+                     ng-class="{'active': selectedCategory === 'all'}"
+                     ng-click="filterServices('all')">
+                    <h3>All Services</h3>
+                </div>
+
+                <div class="service-category"
+                     ng-class="{'active': selectedCategory === 'manicure'}"
+                     ng-click="filterServices('manicure')">
+                    <h3>Manicure</h3>
+                </div>
+
+                <div class="service-category"
+                     ng-class="{'active': selectedCategory === 'pedicure'}"
+                     ng-click="filterServices('pedicure')">
+                    <h3>Pedicure</h3>
+                </div>
             </div>
 
-            <div class="service-category"
-                 ng-class="{'active': selectedCategory === 'manicure'}"
-                 ng-click="filterServices('manicure')">
-                <h3>Manicure</h3>
+            <!-- Cart Summary Panel (separate, below sidebar) -->
+            <div class="left-cart-panel">
+                <h3 class="left-cart-title">
+                    <i class="fa-solid fa-bag-shopping" style="margin-right:8px;"></i>Your Cart
+                </h3>
+
+                <div ng-if="selectedServices && selectedServices.length > 0">
+                    <div class="left-cart-list">
+                        <div class="left-cart-item" ng-repeat="service in selectedServices track by $index">
+                            <div class="left-cart-item-left">
+                                <div class="left-cart-item-name">{{service.name}}</div>
+                                <div class="left-cart-item-desc" ng-if="service.description">{{service.description}}</div>
+                            </div>
+                            <div class="left-cart-item-price">₱{{service.price}}</div>
+                        </div>
+                    </div>
+
+                    <div class="left-cart-footer">
+                        <div class="left-cart-count">
+                            {{selectedServices.length}} service<span ng-if="selectedServices.length > 1">s</span> selected
+                        </div>
+                        <div class="left-cart-total">Total: ₱{{getSelectedServicesTotal()}}</div>
+                    </div>
+
+                    <button class="left-cart-book-btn" ng-click="bookNow()">Book Now</button>
+                </div>
+
+                <div ng-if="!selectedServices || selectedServices.length === 0" class="left-cart-empty">
+                    <i class="fa-solid fa-bag-shopping" style="font-size:28px; color:#c9b5a3; display:block; margin-bottom:10px;"></i>
+                    No services selected yet.<br>
+                    <span style="font-size:12px; color:#b0a090;">Tap a service card to add it.</span>
+                </div>
             </div>
 
-            <div class="service-category"
-                 ng-class="{'active': selectedCategory === 'pedicure'}"
-                 ng-click="filterServices('pedicure')">
-                <h3>Pedicure</h3>
-            </div>
         </div>
 
+        <!-- RIGHT: Service Cards -->
         <div class="services-content">
             <div class="service-card"
                  ng-repeat="service in services | filter:categoryFilter"
                  ng-click="!isCategoryBlocked(service) && toggleService(service)"
                  ng-class="{
-        'selected-service': isSelected(service),
-
-        'blocked-service': isCategoryBlocked(service)
-
-
-     }">
+                     'selected-service': isSelected(service),
+                     'blocked-service': isCategoryBlocked(service)
+                 }">
                 <div class="service-cart-icon">
                     <i class="fa-solid"
                        ng-class="isSelected(service) ? 'fa-check-circle selected-icon' : 'fa-bag-shopping'">
@@ -189,42 +224,7 @@
                 <div class="service-price">₱{{service.price}}</div>
             </div>
         </div>
-    </div>
 
-    <!-- CART SUMMARY -->
-    <div class="cart-summary-container" ng-if="selectedServices && selectedServices.length > 0">
-        <h3 class="cart-summary-title">Selected Services</h3>
-
-        <div class="cart-summary-list">
-            <div class="cart-summary-item" ng-repeat="service in selectedServices track by $index">
-                <div class="cart-summary-left">
-                    <div class="cart-service-name">{{service.name}}</div>
-                    <div class="cart-service-description" ng-if="service.description">{{service.description}}</div>
-                </div>
-                <div class="cart-summary-right">
-                    ₱{{service.price}}
-                </div>
-            </div>
-        </div>
-
-        <div class="cart-summary-footer">
-            <div class="cart-summary-count">
-                {{selectedServices.length}} service<span ng-if="selectedServices.length > 1">s</span> selected
-            </div>
-            <div class="cart-summary-total">
-                Total: ₱{{getSelectedServicesTotal()}}
-            </div>
-        </div>
-    </div>
-
-    <div class="cart-summary-empty" ng-if="selectedServices && selectedServices.length === 0">
-        No services selected yet.
-    </div>
-
-    <div class="book-now-container">
-        <button class="book-now-button" ng-click="bookNow()">
-            Book Now
-        </button>
     </div>
 
 </div>
@@ -318,19 +318,28 @@
         display: none;
     }
 
-    /* ── Services Layout ── */
+    /* ── Page Layout ── */
     .services-page-container {
         display: flex;
         min-height: calc(100vh - 200px);
         background-color: #f5f0eb;
         overflow-x: hidden;
+        align-items: flex-start;
     }
 
-    .services-sidebar {
+    /* ── Left Column (sidebar + cart stacked) ── */
+    .left-column {
         width: 260px;
         flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        align-self: stretch;
+    }
+
+    /* ── Category Sidebar ── */
+    .services-sidebar {
         background-color: #d4c4b5;
-        padding: 40px 0;
+        padding: 40px 0 24px 0;
     }
 
     .services-sidebar-title {
@@ -362,6 +371,119 @@
             border-left-color: #6b5544;
         }
 
+    /* ── Cart Panel (separate box below sidebar) ── */
+    .left-cart-panel {
+        background-color: #fffaf5;
+        border-top: 3px solid #c9b5a3;
+        padding: 24px 20px;
+        flex: 1;
+    }
+
+    .left-cart-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: #6b4423;
+        margin: 0 0 16px 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .left-cart-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .left-cart-item {
+        background-color: #f5ede4;
+        border-radius: 10px;
+        padding: 10px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+        border: 1px solid #e8ddd1;
+    }
+
+    .left-cart-item-left {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .left-cart-item-name {
+        font-size: 13px;
+        font-weight: 700;
+        color: #5d4037;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .left-cart-item-desc {
+        font-size: 11px;
+        color: #8a7060;
+        margin-top: 2px;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .left-cart-item-price {
+        font-size: 13px;
+        font-weight: 700;
+        color: #6b4423;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .left-cart-footer {
+        border-top: 1px solid #e8ddd1;
+        padding-top: 12px;
+        margin-bottom: 16px;
+    }
+
+    .left-cart-count {
+        font-size: 12px;
+        color: #8a7060;
+        margin-bottom: 4px;
+    }
+
+    .left-cart-total {
+        font-size: 17px;
+        font-weight: 800;
+        color: #6b4423;
+    }
+
+    .left-cart-book-btn {
+        width: 100%;
+        background-color: #6b5544;
+        color: white;
+        border: none;
+        border-radius: 24px;
+        padding: 13px 0;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .left-cart-book-btn:hover {
+            background-color: #5a4635;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+    .left-cart-empty {
+        text-align: center;
+        color: #8a7060;
+        font-size: 13px;
+        line-height: 1.7;
+        padding: 10px 0;
+    }
+
+    /* ── Service Cards ── */
     .services-content {
         flex: 1;
         display: flex;
@@ -382,6 +504,8 @@
         transition: transform 0.2s ease, box-shadow 0.2s ease;
         box-sizing: border-box;
         min-width: 0;
+        position: relative;
+        cursor: pointer;
     }
 
         .service-card:hover {
@@ -446,30 +570,46 @@
         text-align: center;
     }
 
-    /* ── Book Now ── */
-    .book-now-container {
-        display: flex;
-        justify-content: center;
-        padding: 40px 20px;
-        background-color: #f5f0eb;
+    .service-cart-icon {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        font-size: 20px;
+        z-index: 2;
+        background: #fff;
+        border-radius: 50%;
+        padding: 6px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
 
-    .book-now-button {
-        background-color: #6b5544;
-        color: white;
-        border: none;
-        border-radius: 30px;
-        padding: 16px 60px;
-        font-size: 18px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
+        .service-cart-icon i {
+            color: #6b5544;
+        }
+
+    .selected-icon {
+        color: #4CAF50 !important;
     }
 
-        .book-now-button:hover {
-            background-color: #5a4635;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    .service-card:hover .service-cart-icon i {
+        color: #8b5e34;
+    }
+
+    .selected-service {
+        border: 3px solid #8b5e34;
+        box-shadow: 0 0 12px rgba(139, 94, 52, 0.25);
+        transform: translateY(-3px);
+    }
+
+    .blocked-service {
+        opacity: 0.45;
+        filter: grayscale(100%);
+        cursor: not-allowed !important;
+        pointer-events: auto;
+    }
+
+        .blocked-service:hover {
+            transform: none !important;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important;
         }
 
     /* ── Footer ── */
@@ -674,84 +814,51 @@
                 .mobile-nav-actions a:last-child {
                     border-bottom: none !important;
                 }
-        /* Services: sidebar becomes vertical category list on top */
+        /* On tablet/mobile: left column goes full width on top */
         .services-page-container {
             flex-direction: column;
         }
 
-        .services-sidebar {
+        .left-column {
             width: 100%;
-            padding: 20px 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0;
-            overflow-x: unset;
-            background-color: #d4c4b5;
-            border-bottom: 2px solid #c9b5a3;
-            box-sizing: border-box;
+            flex-direction: row;
+            align-items: stretch;
         }
 
-            .services-sidebar::-webkit-scrollbar {
-                display: none;
-            }
+        .services-sidebar {
+            width: 200px;
+            flex-shrink: 0;
+            padding: 20px 0;
+        }
 
         .services-sidebar-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: #6b5544;
-            padding: 0 0 14px 0;
-            margin: 0 0 8px 0;
-            border-bottom: 2px solid #c9b5a3;
-            border-right: none;
-            width: 100%;
-            white-space: nowrap;
-        }
-
-        .selected-service {
-            border: 3px solid #6b5544;
-            box-shadow: 0 0 12px rgba(107, 85, 68, 0.4);
-            transform: scale(1.02);
+            font-size: 18px;
+            padding: 0 16px 14px 16px;
         }
 
         .service-category {
-            width: 100%;
             padding: 12px 16px;
-            border-left: 4px solid transparent;
-            border-radius: 0;
-            background-color: transparent;
-            transition: all 0.2s ease;
         }
 
             .service-category h3 {
-                font-size: 15px;
-                font-weight: 600;
-                color: #5a4a3a;
-                margin: 0;
-                white-space: normal;
+                font-size: 14px;
             }
 
-            .service-category:hover,
-            .service-category.active {
-                background-color: #c9b5a3;
-                border-left-color: #6b5544;
-            }
-
-                .service-category.active h3,
-                .service-category:hover h3 {
-                    color: #5a4a3a;
-                }
+        .left-cart-panel {
+            flex: 1;
+            border-top: none;
+            border-left: 3px solid #c9b5a3;
+            padding: 20px 16px;
+        }
 
         .services-content {
             width: 100%;
             padding: 20px 16px;
             gap: 16px;
-            box-sizing: border-box;
         }
 
         .service-card {
             width: calc(50% - 8px);
-            box-sizing: border-box;
         }
     }
 
@@ -759,34 +866,45 @@
        MOBILE (max-width: 768px)
     ============================================= */
     @@media (max-width: 768px) {
+        /* Stack sidebar and cart vertically again on small screens */
+        .left-column {
+            flex-direction: column;
+        }
+
         .services-sidebar {
-            padding: 16px;
+            width: 100%;
+            padding: 16px 0;
+            display: flex;
+            flex-direction: column;
         }
 
         .services-sidebar-title {
-            font-size: 18px;
-            padding-bottom: 12px;
-            margin-bottom: 6px;
+            font-size: 17px;
+            padding: 0 16px 12px 16px;
+            margin-bottom: 4px;
         }
 
         .service-category {
-            padding: 11px 14px;
+            padding: 11px 16px;
         }
 
             .service-category h3 {
                 font-size: 14px;
             }
 
+        .left-cart-panel {
+            border-left: none;
+            border-top: 3px solid #c9b5a3;
+            padding: 18px 16px;
+        }
+
         .services-content {
-            width: 100%;
             padding: 16px;
             gap: 14px;
-            box-sizing: border-box;
         }
 
         .service-card {
             width: calc(50% - 7px);
-            box-sizing: border-box;
         }
 
         .service-image img {
@@ -796,30 +914,16 @@
         .service-name {
             font-size: 14px;
             padding: 10px 12px 3px 12px;
-            text-align: center;
         }
 
         .service-description {
             font-size: 12px;
             padding: 0 12px 8px 12px;
-            text-align: center;
         }
 
         .service-price {
             font-size: 13px;
             padding: 0 12px 12px 12px;
-            text-align: center;
-        }
-
-        .book-now-container {
-            padding: 28px 16px;
-        }
-
-        .book-now-button {
-            padding: 14px 48px;
-            font-size: 16px;
-            width: 100%;
-            max-width: 320px;
         }
 
         footer {
@@ -843,158 +947,14 @@
             font-size: 0.8rem;
         }
     }
-    .cart-summary-container {
-        width: calc(100% - 40px);
-        max-width: 1000px;
-        margin: 10px auto 0 auto;
-        background-color: #fffaf5;
-        border: 2px solid #d4c4b0;
-        border-radius: 18px;
-        padding: 24px;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-    }
-
-    .cart-summary-title {
-        margin: 0 0 18px 0;
-        font-size: 24px;
-        font-weight: 700;
-        color: #6b4423;
-    }
-
-    .cart-summary-list {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-    }
-
-    .cart-summary-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 16px;
-        padding: 14px 0;
-        border-bottom: 1px solid #eadfd2;
-    }
-
-        .cart-summary-item:last-child {
-            border-bottom: none;
-        }
-
-    .cart-summary-left {
-        flex: 1;
-    }
-
-    .cart-service-name {
-        font-size: 16px;
-        font-weight: 700;
-        color: #5d4037;
-        margin-bottom: 4px;
-    }
-
-    .cart-service-description {
-        font-size: 13px;
-        color: #8a7060;
-        line-height: 1.4;
-    }
-
-    .cart-summary-right {
-        font-size: 16px;
-        font-weight: 700;
-        color: #6b4423;
-        white-space: nowrap;
-    }
-
-    .cart-summary-footer {
-        margin-top: 20px;
-        padding-top: 18px;
-        border-top: 2px solid #d4c4b0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 16px;
-        flex-wrap: wrap;
-    }
-
-    .cart-summary-count {
-        font-size: 15px;
-        color: #6b5544;
-        font-weight: 500;
-    }
-
-    .cart-summary-total {
-        font-size: 20px;
-        font-weight: 800;
-        color: #6b4423;
-    }
-
-    .cart-summary-empty {
-        width: calc(100% - 40px);
-        max-width: 1000px;
-        margin: 10px auto 0 auto;
-        text-align: center;
-        padding: 20px;
-        color: #8a7060;
-        font-size: 15px;
-    }
-    .blocked-service {
-        opacity: 0.45;
-        filter: grayscale(100%);
-        cursor: not-allowed !important;
-        pointer-events: auto;
-    }
-
-        .blocked-service:hover {
-            transform: none !important;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important;
-        }
-
-    .selected-service {
-        border: 3px solid #8b5e34;
-        box-shadow: 0 0 12px rgba(139, 94, 52, 0.25);
-        transform: translateY(-3px);
-    }
-    .service-card {
-        position: relative;
-        cursor: pointer;
-    }
-
-    .service-cart-icon {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        font-size: 20px;
-        z-index: 2;
-        background: #fff;
-        border-radius: 50%;
-        padding: 6px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    }
-
-        .service-cart-icon i {
-            color: #6b5544;
-        }
-
-    /* when selected */
-    .selected-icon {
-        color: #4CAF50 !important;
-    }
-
-    /* hover effect */
-    .service-card:hover .service-cart-icon i {
-        color: #8b5e34;
-    }
 
     /* =============================================
        SMALL MOBILE (max-width: 480px)
     ============================================= */
     @@media (max-width: 480px) {
-        .services-sidebar {
-            padding: 12px;
-        }
-
         .services-sidebar-title {
             font-size: 16px;
-            padding-bottom: 10px;
+            padding: 0 12px 10px 12px;
         }
 
         .service-category {
@@ -1006,48 +966,16 @@
             }
 
         .services-content {
-            width: 100%;
             padding: 12px;
             gap: 12px;
-            box-sizing: border-box;
         }
 
         .service-card {
             width: 100%;
-            box-sizing: border-box;
         }
 
         .service-image img {
             height: 180px;
-        }
-
-        .book-now-button {
-            padding: 13px 40px;
-            font-size: 15px;
-        }
-    }
-    @@media (max-width: 768px) {
-        .cart-summary-container,
-        .cart-summary-empty {
-            width: calc(100% - 24px);
-            padding: 18px;
-        }
-
-        .cart-summary-title {
-            font-size: 20px;
-        }
-
-        .cart-summary-item {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .cart-summary-right {
-            font-size: 15px;
-        }
-
-        .cart-summary-total {
-            font-size: 18px;
         }
     }
 </style>
@@ -1085,6 +1013,1023 @@
         })();
     </script>
     <script>
-    window.isLoggedIn = @(Session["UserID"] != null ? "true" : "false");
+        window.isLoggedIn = @(Session["UserID"] != null ? "true" : "false");
+    </script>
+}@{
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+    var userFirstName = Session["UserFirstName"] as string;
+    var isLoggedIn = Session["UserID"] != null;
+}
+
+<header ng-controller="DestLoungeSalesandBookingController"
+        ng-init="loadNotifications()">
+    <div class="header-container">
+        <div class="logo">
+            <a href="@Url.Action("Homepage","Main")">
+                <img src="~/Content/Pictures/DestLogo.png" alt="D'est Lounge">
+            </a>
+        </div>
+
+        <nav class="main-nav" id="mainNav">
+            <a href="@Url.Action("Homepage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "Homepage" ? "nav-active" : "")">HOME</a>
+            <a href="@Url.Action("ServicePage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ServicePage" ? "nav-active" : "")">SERVICES</a>
+            <a href="@Url.Action("GalleryPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "GalleryPage" ? "nav-active" : "")">GALLERY</a>
+            <a href="@Url.Action("ContactPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ContactPage" ? "nav-active" : "")">CONTACT</a>
+            <a href="@Url.Action("FAQsPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "FAQsPage" ? "nav-active" : "")">FAQs</a>
+
+            <div class="mobile-nav-actions">
+                @if (isLoggedIn)
+                {
+                    <a href="@Url.Action("ProfilePage","Main")">
+                        <i class="fa-solid fa-circle-user"></i> Welcome, @userFirstName!
+                    </a>
+                }
+                else
+                {
+                    <a href="@Url.Action("LoginPage","Main")">
+                        <i class="fa-regular fa-user"></i> LOGIN
+                    </a>
+                }
+                <button type="button"
+                        ng-click="toggleNotif($event)"
+                        style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037; z-index:9999;">
+                    <i class="fa-solid fa-bell"></i>
+                    <span ng-if="getUnreadCount() > 0" class="notif-badge">!</span>
+                </button>
+
+                <div ng-show="showNotif"
+                     ng-click="$event.stopPropagation()"
+                     style="position:absolute; right:0; top:35px; width:280px; max-height:350px; overflow-y:auto; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999; box-shadow:0 4px 10px rgba(0,0,0,0.2);">
+                    <div style="padding:10px 12px; font-weight:bold; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:#333;">Notifications</span>
+                        <button ng-if="notifications.length > 0"
+                                ng-click="clearAllNotifications($event)"
+                                style="font-size:11px; color:#e74c3c; background:none; border:none; cursor:pointer; padding:0;">
+                            Clear all
+                        </button>
+                    </div>
+                    <div ng-if="!notifications.length" style="padding:12px; color:gray; font-size:13px; text-align:center;">
+                        No notifications yet.
+                    </div>
+                    <div ng-repeat="n in notifications"
+                         class="notif-item"
+                         ng-class="(n.IsRead || n.isRead) ? 'read' : 'unread'"
+                         style="padding:10px 12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                        <span ng-click="markAsReadAndGo(n, $event)"
+                              style="cursor:pointer; flex:1; line-height:1.4;"
+                              ng-style="(n.IsRead || n.isRead) ? {'font-size':'13px','color':'#999','font-weight':'normal'} : {'font-size':'13px','color':'#333','font-weight':'600'}">
+                            <span ng-if="!(n.IsRead || n.isRead)" class="notif-unread-dot"></span>
+                            {{n.Message || n.message}}
+                        </span>
+                        <button ng-click="deleteNotification(n.NotificationId || n.notificationId, $event)"
+                                style="background:none; border:none; cursor:pointer; color:#aaa; font-size:16px; padding:0 0 0 6px; flex-shrink:0; line-height:1;">
+                            &times;
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="header-actions desktop-only">
+            @if (isLoggedIn)
+            {
+                <a href="@Url.Action("ProfilePage","Main")" class="welcome-text">
+                    <i class="fa-solid fa-circle-user"></i> Welcome, @userFirstName!
+                </a>
+            }
+            else
+            {
+                <a href="@Url.Action("LoginPage","Main")" class="login-link">
+                    <i class="fa-regular fa-user"></i> LOGIN
+                </a>
+            }
+            <button type="button"
+                    ng-click="toggleNotif($event)"
+                    style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037; z-index:9999;">
+                <i class="fa-solid fa-bell"></i>
+                <span ng-if="getUnreadCount() > 0" class="notif-badge">!</span>
+            </button>
+
+            <div ng-show="showNotif"
+                 ng-click="$event.stopPropagation()"
+                 style="position:absolute; right:0; top:35px; width:280px; max-height:350px; overflow-y:auto; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999; box-shadow:0 4px 10px rgba(0,0,0,0.2);">
+                <div style="padding:10px 12px; font-weight:bold; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:#333;">Notifications</span>
+                    <button ng-if="notifications.length > 0"
+                            ng-click="clearAllNotifications($event)"
+                            style="font-size:11px; color:#e74c3c; background:none; border:none; cursor:pointer; padding:0;">
+                        Clear all
+                    </button>
+                </div>
+                <div ng-if="!notifications.length" style="padding:12px; color:gray; font-size:13px; text-align:center;">
+                    No notifications yet.
+                </div>
+                <div ng-repeat="n in notifications"
+                     class="notif-item"
+                     ng-class="(n.IsRead || n.isRead) ? 'read' : 'unread'"
+                     style="padding:10px 12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                    <span ng-click="markAsReadAndGo(n, $event)"
+                          style="cursor:pointer; flex:1; line-height:1.4;"
+                          ng-style="(n.IsRead || n.isRead) ? {'font-size':'13px','color':'#999','font-weight':'normal'} : {'font-size':'13px','color':'#333','font-weight':'600'}">
+                        <span ng-if="!(n.IsRead || n.isRead)" class="notif-unread-dot"></span>
+                        {{n.Message || n.message}}
+                    </span>
+                    <button ng-click="deleteNotification(n.NotificationId || n.notificationId, $event)"
+                            style="background:none; border:none; cursor:pointer; color:#aaa; font-size:16px; padding:0 0 0 6px; flex-shrink:0; line-height:1;">
+                        &times;
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </div>
+
+    <div class="nav-overlay" id="navOverlay"></div>
+</header>
+
+<!-- Services Section -->
+<div ng-controller="DestLoungeSalesandBookingController">
+
+    <div class="services-page-container">
+
+        <!-- LEFT COLUMN: sidebar + cart stacked -->
+        <div class="left-column">
+
+            <!-- Category Sidebar -->
+            <div class="services-sidebar">
+                <h2 class="services-sidebar-title">Services</h2>
+
+                <div class="service-category"
+                     ng-class="{'active': selectedCategory === 'all'}"
+                     ng-click="filterServices('all')">
+                    <h3>All Services</h3>
+                </div>
+
+                <div class="service-category"
+                     ng-class="{'active': selectedCategory === 'manicure'}"
+                     ng-click="filterServices('manicure')">
+                    <h3>Manicure</h3>
+                </div>
+
+                <div class="service-category"
+                     ng-class="{'active': selectedCategory === 'pedicure'}"
+                     ng-click="filterServices('pedicure')">
+                    <h3>Pedicure</h3>
+                </div>
+            </div>
+
+            <!-- Cart Summary Panel (separate, below sidebar) -->
+            <div class="left-cart-panel">
+                <h3 class="left-cart-title">
+                    <i class="fa-solid fa-bag-shopping" style="margin-right:8px;"></i>Your Cart
+                </h3>
+
+                <div ng-if="selectedServices && selectedServices.length > 0">
+                    <div class="left-cart-list">
+                        <div class="left-cart-item" ng-repeat="service in selectedServices track by $index">
+                            <div class="left-cart-item-left">
+                                <div class="left-cart-item-name">{{service.name}}</div>
+                                <div class="left-cart-item-desc" ng-if="service.description">{{service.description}}</div>
+                            </div>
+                            <div class="left-cart-item-price">₱{{service.price}}</div>
+                        </div>
+                    </div>
+
+                    <div class="left-cart-footer">
+                        <div class="left-cart-count">
+                            {{selectedServices.length}} service<span ng-if="selectedServices.length > 1">s</span> selected
+                        </div>
+                        <div class="left-cart-total">Total: ₱{{getSelectedServicesTotal()}}</div>
+                    </div>
+
+                    <button class="left-cart-book-btn" ng-click="bookNow()">Book Now</button>
+                </div>
+
+                <div ng-if="!selectedServices || selectedServices.length === 0" class="left-cart-empty">
+                    <i class="fa-solid fa-bag-shopping" style="font-size:28px; color:#c9b5a3; display:block; margin-bottom:10px;"></i>
+                    No services selected yet.<br>
+                    <span style="font-size:12px; color:#b0a090;">Tap a service card to add it.</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT: Service Cards -->
+        <div class="services-content">
+            <div class="service-card"
+                 ng-repeat="service in services | filter:categoryFilter"
+                 ng-click="!isCategoryBlocked(service) && toggleService(service)"
+                 ng-class="{
+                     'selected-service': isSelected(service),
+                     'blocked-service': isCategoryBlocked(service)
+                 }">
+                <div class="service-cart-icon">
+                    <i class="fa-solid"
+                       ng-class="isSelected(service) ? 'fa-check-circle selected-icon' : 'fa-bag-shopping'">
+                    </i>
+                </div>
+                <div class="service-image">
+                    <img ng-src="{{service.image}}" alt="{{service.name}}">
+                </div>
+                <div class="service-name">{{service.name}}</div>
+                <div class="service-description" ng-if="service.description">{{service.description}}</div>
+                <div class="service-price">₱{{service.price}}</div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<footer>
+    <div class="footer-container">
+        <h2 class="footer-title">Follow our Socials!</h2>
+        <div class="social-links">
+            <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank">
+                <i class="fa-brands fa-tiktok"></i>
+                <span>destlounge</span>
+            </a>
+            <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank">
+                <i class="fa-brands fa-facebook"></i>
+                <span>D'est Lounge</span>
+            </a>
+            <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank">
+                <i class="fa-brands fa-instagram"></i>
+                <span>destlounge</span>
+            </a>
+        </div>
+    </div>
+</footer>
+
+<style>
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    body {
+        overflow-x: hidden;
+    }
+
+    /* ── Hamburger ── */
+    .hamburger-btn {
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.5rem;
+        z-index: 1100;
+        position: relative;
+        flex-shrink: 0;
+    }
+
+        .hamburger-btn span {
+            display: block;
+            width: 26px;
+            height: 3px;
+            background-color: #5d4037;
+            border-radius: 3px;
+            transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease;
+            transform-origin: center;
+        }
+
+        .hamburger-btn.open span:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+
+        .hamburger-btn.open span:nth-child(2) {
+            opacity: 0;
+            width: 0;
+        }
+
+        .hamburger-btn.open span:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+    /* ── Nav Overlay ── */
+    .nav-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0,0,0,0.4);
+        z-index: 900;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+
+        .nav-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+    .mobile-nav-actions {
+        display: none;
+    }
+
+    /* ── Page Layout ── */
+    .services-page-container {
+        display: flex;
+        min-height: calc(100vh - 200px);
+        background-color: #f5f0eb;
+        overflow-x: hidden;
+        align-items: flex-start;
+    }
+
+    /* ── Left Column (sidebar + cart stacked) ── */
+    .left-column {
+        width: 260px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        align-self: stretch;
+    }
+
+    /* ── Category Sidebar ── */
+    .services-sidebar {
+        background-color: #d4c4b5;
+        padding: 40px 0 24px 0;
+    }
+
+    .services-sidebar-title {
+        color: #6b5544;
+        font-size: 26px;
+        font-weight: 700;
+        padding: 0 35px 20px 35px;
+        border-bottom: 2px solid #c9b5a3;
+        margin: 0 0 10px 0;
+    }
+
+    .service-category {
+        padding: 18px 35px;
+        cursor: pointer;
+        border-left: 4px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+        .service-category h3 {
+            color: #5a4a3a;
+            font-size: 17px;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .service-category:hover,
+        .service-category.active {
+            background-color: #c9b5a3;
+            border-left-color: #6b5544;
+        }
+
+    /* ── Cart Panel (separate box below sidebar) ── */
+    .left-cart-panel {
+        background-color: #fffaf5;
+        border-top: 3px solid #c9b5a3;
+        padding: 24px 20px;
+        flex: 1;
+    }
+
+    .left-cart-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: #6b4423;
+        margin: 0 0 16px 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .left-cart-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .left-cart-item {
+        background-color: #f5ede4;
+        border-radius: 10px;
+        padding: 10px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+        border: 1px solid #e8ddd1;
+    }
+
+    .left-cart-item-left {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .left-cart-item-name {
+        font-size: 13px;
+        font-weight: 700;
+        color: #5d4037;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .left-cart-item-desc {
+        font-size: 11px;
+        color: #8a7060;
+        margin-top: 2px;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .left-cart-item-price {
+        font-size: 13px;
+        font-weight: 700;
+        color: #6b4423;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .left-cart-footer {
+        border-top: 1px solid #e8ddd1;
+        padding-top: 12px;
+        margin-bottom: 16px;
+    }
+
+    .left-cart-count {
+        font-size: 12px;
+        color: #8a7060;
+        margin-bottom: 4px;
+    }
+
+    .left-cart-total {
+        font-size: 17px;
+        font-weight: 800;
+        color: #6b4423;
+    }
+
+    .left-cart-book-btn {
+        width: 100%;
+        background-color: #6b5544;
+        color: white;
+        border: none;
+        border-radius: 24px;
+        padding: 13px 0;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .left-cart-book-btn:hover {
+            background-color: #5a4635;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+    .left-cart-empty {
+        text-align: center;
+        color: #8a7060;
+        font-size: 13px;
+        line-height: 1.7;
+        padding: 10px 0;
+    }
+
+    /* ── Service Cards ── */
+    .services-content {
+        flex: 1;
+        display: flex;
+        flex-wrap: wrap;
+        align-content: flex-start;
+        gap: 24px;
+        padding: 40px;
+        box-sizing: border-box;
+        min-width: 0;
+    }
+
+    .service-card {
+        background-color: #e8ddd1;
+        border-radius: 16px;
+        overflow: hidden;
+        width: calc(33.333% - 16px);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-sizing: border-box;
+        min-width: 0;
+        position: relative;
+        cursor: pointer;
+    }
+
+        .service-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        }
+
+    .service-image {
+        width: 100%;
+        overflow: hidden;
+    }
+
+        .service-image img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+            max-width: 100%;
+        }
+
+    .service-name {
+        color: #5a4a3a;
+        font-size: 16px;
+        font-weight: 600;
+        padding: 12px 16px 4px 16px;
+        text-align: center;
+    }
+
+    .service-description {
+        color: #8a7060;
+        font-size: 13px;
+        font-weight: 400;
+        padding: 0 16px 10px 16px;
+        line-height: 1.5;
+        text-align: center;
+        max-height: 4.5rem;
+        overflow-y: auto;
+        overflow-x: hidden;
+        word-break: break-word;
+        scrollbar-width: thin;
+        scrollbar-color: #c9b5a3 transparent;
+    }
+
+        .service-description::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .service-description::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .service-description::-webkit-scrollbar-thumb {
+            background-color: #c9b5a3;
+            border-radius: 4px;
+        }
+
+    .service-price {
+        color: #6b5544;
+        font-size: 15px;
+        font-weight: 500;
+        padding: 0 16px 14px 16px;
+        text-align: center;
+    }
+
+    .service-cart-icon {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        font-size: 20px;
+        z-index: 2;
+        background: #fff;
+        border-radius: 50%;
+        padding: 6px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+        .service-cart-icon i {
+            color: #6b5544;
+        }
+
+    .selected-icon {
+        color: #4CAF50 !important;
+    }
+
+    .service-card:hover .service-cart-icon i {
+        color: #8b5e34;
+    }
+
+    .selected-service {
+        border: 3px solid #8b5e34;
+        box-shadow: 0 0 12px rgba(139, 94, 52, 0.25);
+        transform: translateY(-3px);
+    }
+
+    .blocked-service {
+        opacity: 0.45;
+        filter: grayscale(100%);
+        cursor: not-allowed !important;
+        pointer-events: auto;
+    }
+
+        .blocked-service:hover {
+            transform: none !important;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important;
+        }
+
+    /* ── Footer ── */
+    footer {
+        background-color: #e7d7c8;
+        border: 2px solid #d4c4b0;
+        border-left: none;
+        border-right: none;
+        padding: 2.5rem 3rem;
+        text-align: center;
+    }
+
+    .footer-container {
+        margin: 0 auto;
+    }
+
+    .footer-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #6b4423;
+        margin: 0 0 2rem 0;
+        font-style: italic;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .social-links {
+        display: flex;
+        justify-content: center;
+        gap: 3rem;
+        flex-wrap: wrap;
+    }
+
+    .social-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        color: #5a4a3a;
+        transition: color 0.3s;
+    }
+
+        .social-item:hover {
+            color: #8b6f47;
+        }
+
+        .social-item i {
+            font-size: 1.5rem;
+        }
+
+        .social-item span {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+    /* =============================================
+       DESKTOP (above 1024px)
+    ============================================= */
+    @@media (min-width: 1025px) {
+        .hamburger-btn {
+            display: none !important;
+        }
+
+        .desktop-only {
+            display: flex !important;
+        }
+
+        .mobile-nav-actions {
+            display: none !important;
+        }
+
+        .nav-overlay {
+            display: none !important;
+        }
+
+        .main-nav {
+            position: static !important;
+            top: auto !important;
+            right: auto !important;
+            left: auto !important;
+            width: auto !important;
+            height: auto !important;
+            background: none !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin-left: 3rem !important;
+            margin-right: auto !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            gap: 2.5rem !important;
+            overflow: visible !important;
+            transform: none !important;
+            transition: none !important;
+            z-index: auto !important;
+        }
+
+            .main-nav a {
+                width: auto !important;
+                padding: 0 !important;
+                border-bottom: none !important;
+                font-size: 1.3rem !important;
+                font-weight: 600 !important;
+                color: #5d4037 !important;
+                letter-spacing: 0.5px !important;
+                display: inline !important;
+            }
+
+                .main-nav a.nav-active {
+                    color: #6b4423 !important;
+                    border-bottom: 2.5px solid #6b4423 !important;
+                    padding-bottom: 2px !important;
+                }
+    }
+
+    /* =============================================
+       TABLET + MOBILE (max-width: 1024px)
+    ============================================= */
+    @@media (max-width: 1024px) {
+        .hamburger-btn {
+            display: flex;
+        }
+
+        .desktop-only {
+            display: none !important;
+        }
+
+        .nav-overlay {
+            display: block;
+        }
+
+        .main-nav {
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            left: auto !important;
+            width: 280px !important;
+            height: 100vh !important;
+            background-color: #f5f0eb !important;
+            z-index: 1000 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            justify-content: flex-start !important;
+            padding: 5rem 2rem 2rem 2rem !important;
+            gap: 0 !important;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.15) !important;
+            transform: translateX(100%) !important;
+            transition: transform 0.35s cubic-bezier(0.4,0,0.2,1) !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            margin: 0 !important;
+        }
+
+            .main-nav.open {
+                transform: translateX(0) !important;
+            }
+
+            .main-nav a {
+                width: 100% !important;
+                padding: 0.9rem 0 !important;
+                font-size: 1rem !important;
+                font-weight: 600 !important;
+                color: #5d4037 !important;
+                border-bottom: 1px solid #e0d5c8 !important;
+                letter-spacing: 0.05em !important;
+                display: block !important;
+                text-decoration: none !important;
+                background: none !important;
+            }
+
+                .main-nav a.nav-active {
+                    color: #6b4423 !important;
+                    border-bottom: 1px solid #e0d5c8 !important;
+                }
+
+        .mobile-nav-actions {
+            display: flex !important;
+            flex-direction: column;
+            width: 100%;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #d4c4b0;
+            gap: 0;
+        }
+
+            .mobile-nav-actions a {
+                display: flex !important;
+                align-items: center;
+                gap: 0.6rem;
+                padding: 0.75rem 0 !important;
+                font-size: 0.97rem !important;
+                color: #5d4037 !important;
+                border-bottom: 1px solid #e0d5c8 !important;
+                width: 100% !important;
+                font-weight: 600 !important;
+                text-decoration: none !important;
+                background: none !important;
+            }
+
+                .mobile-nav-actions a:last-child {
+                    border-bottom: none !important;
+                }
+        /* On tablet/mobile: left column goes full width on top */
+        .services-page-container {
+            flex-direction: column;
+        }
+
+        .left-column {
+            width: 100%;
+            flex-direction: row;
+            align-items: stretch;
+        }
+
+        .services-sidebar {
+            width: 200px;
+            flex-shrink: 0;
+            padding: 20px 0;
+        }
+
+        .services-sidebar-title {
+            font-size: 18px;
+            padding: 0 16px 14px 16px;
+        }
+
+        .service-category {
+            padding: 12px 16px;
+        }
+
+            .service-category h3 {
+                font-size: 14px;
+            }
+
+        .left-cart-panel {
+            flex: 1;
+            border-top: none;
+            border-left: 3px solid #c9b5a3;
+            padding: 20px 16px;
+        }
+
+        .services-content {
+            width: 100%;
+            padding: 20px 16px;
+            gap: 16px;
+        }
+
+        .service-card {
+            width: calc(50% - 8px);
+        }
+    }
+
+    /* =============================================
+       MOBILE (max-width: 768px)
+    ============================================= */
+    @@media (max-width: 768px) {
+        /* Stack sidebar and cart vertically again on small screens */
+        .left-column {
+            flex-direction: column;
+        }
+
+        .services-sidebar {
+            width: 100%;
+            padding: 16px 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .services-sidebar-title {
+            font-size: 17px;
+            padding: 0 16px 12px 16px;
+            margin-bottom: 4px;
+        }
+
+        .service-category {
+            padding: 11px 16px;
+        }
+
+            .service-category h3 {
+                font-size: 14px;
+            }
+
+        .left-cart-panel {
+            border-left: none;
+            border-top: 3px solid #c9b5a3;
+            padding: 18px 16px;
+        }
+
+        .services-content {
+            padding: 16px;
+            gap: 14px;
+        }
+
+        .service-card {
+            width: calc(50% - 7px);
+        }
+
+        .service-image img {
+            height: 140px;
+        }
+
+        .service-name {
+            font-size: 14px;
+            padding: 10px 12px 3px 12px;
+        }
+
+        .service-description {
+            font-size: 12px;
+            padding: 0 12px 8px 12px;
+        }
+
+        .service-price {
+            font-size: 13px;
+            padding: 0 12px 12px 12px;
+        }
+
+        footer {
+            padding: 1.5rem 1rem;
+        }
+
+        .footer-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .social-links {
+            gap: 1.5rem;
+        }
+
+        .social-item i {
+            font-size: 1.25rem;
+        }
+
+        .social-item span {
+            font-size: 0.8rem;
+        }
+    }
+
+    /* =============================================
+       SMALL MOBILE (max-width: 480px)
+    ============================================= */
+    @@media (max-width: 480px) {
+        .services-sidebar-title {
+            font-size: 16px;
+            padding: 0 12px 10px 12px;
+        }
+
+        .service-category {
+            padding: 10px 12px;
+        }
+
+            .service-category h3 {
+                font-size: 13px;
+            }
+
+        .services-content {
+            padding: 12px;
+            gap: 12px;
+        }
+
+        .service-card {
+            width: 100%;
+        }
+
+        .service-image img {
+            height: 180px;
+        }
+    }
+</style>
+
+@section scripts {
+    <script>
+        (function () {
+            var btn = document.getElementById('hamburgerBtn');
+            var nav = document.getElementById('mainNav');
+            var overlay = document.getElementById('navOverlay');
+
+            function openMenu() {
+                btn.classList.add('open');
+                nav.classList.add('open');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeMenu() {
+                btn.classList.remove('open');
+                nav.classList.remove('open');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            btn.addEventListener('click', function () {
+                nav.classList.contains('open') ? closeMenu() : openMenu();
+            });
+
+            overlay.addEventListener('click', closeMenu);
+
+            nav.querySelectorAll('a').forEach(function (link) {
+                link.addEventListener('click', closeMenu);
+            });
+        })();
+    </script>
+    <script>
+        window.isLoggedIn = @(Session["UserID"] != null ? "true" : "false");
     </script>
 }
