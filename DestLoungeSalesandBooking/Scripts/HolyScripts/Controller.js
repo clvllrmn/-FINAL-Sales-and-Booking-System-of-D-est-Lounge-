@@ -782,11 +782,14 @@ app.controller("DestLoungeSalesandBookingController",
         };
 
         $scope.bookNow = function () {
-            if (!$scope.selectedServices || $scope.selectedServices.length === 0) {
-                alert("Please select at least one service first.");
-                return;
-            }
-            sessionStorage.setItem("selectedServices", JSON.stringify($scope.selectedServices));
+
+            // Save selected services if meron
+            sessionStorage.setItem(
+                "selectedServices",
+                JSON.stringify($scope.selectedServices || [])
+            );
+
+            // Redirect depending on login status
             if (window.isLoggedIn) {
                 window.location.href = "/Main/BookingPage";
             } else {
@@ -1046,6 +1049,7 @@ app.controller("DestLoungeSalesandBookingController",
                                 serviceId: s.serviceId,
                                 name: s.name,
                                 price: s.price,
+                                category: s.category || '',
                                 selected: false
                             };
                         });
@@ -1176,7 +1180,6 @@ app.controller("DestLoungeSalesandBookingController",
                 return;
             }
 
-            // Set available times based on day of week (always runs when date is picked)
             var selectedDate;
             if ($scope.booking.date instanceof Date) {
                 selectedDate = $scope.booking.date;
@@ -1186,14 +1189,15 @@ app.controller("DestLoungeSalesandBookingController",
             }
 
             var dayOfWeek = selectedDate.getDay();
+
             if (dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6) {
                 $scope.availableTimes = angular.copy($scope.weekendTimes);
             } else {
                 $scope.availableTimes = angular.copy($scope.weekdayTimes);
             }
 
-            // Skip slot-checking if no specific tech selected
-            if (!$scope.booking.nailTech || $scope.booking.nailTech === 'No Preference') {
+            // If no nail tech yet, just show the normal available times based on date
+            if (!$scope.booking.nailTech) {
                 return;
             }
 
@@ -1209,35 +1213,89 @@ app.controller("DestLoungeSalesandBookingController",
                 }
             }).then(function (res) {
                 var data = res.data || {};
+
                 if (!data.success) {
                     console.error("GetTakenSlots error:", data.message);
                     return;
                 }
+
                 $scope.takenTimes = (data.takenSlots || []).map(function (slot) {
                     return $scope.normalizeTime(slot.StartTime);
                 });
+
                 $scope.dateFullyBooked = $scope.availableTimes.length > 0 &&
                     $scope.availableTimes.every(function (time) {
                         return $scope.takenTimes.indexOf($scope.normalizeTime(time)) !== -1;
                     });
-                if ($scope.booking.time && $scope.isTimeDisabled($scope.booking.time)) {
-                    $scope.booking.time = '';
+
+                // 🔥 early warning when chosen time is already taken for this nail tech
+                if ($scope.booking.time && $scope.takenTimes.indexOf($scope.normalizeTime($scope.booking.time)) !== -1) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Time Slot Unavailable',
+                        text: 'This time slot for ' + $scope.booking.nailTech + ' is already taken. Please choose another time or nail technician.',
+                        confirmButtonColor: '#6b4423'
+                    });
+
+                    $scope.booking.nailTech = '';
+                    return;
+                }
+
+                if ($scope.dateFullyBooked) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Fully Booked',
+                        text: $scope.booking.nailTech + ' is fully booked for the selected date. Please choose another date or nail technician.',
+                        confirmButtonColor: '#6b4423'
+                    });
+
+                    $scope.booking.nailTech = '';
                 }
             }).catch(function (err) {
                 console.error("GetTakenSlots error:", err);
             });
         };
 
-        $scope.updateSelectedServices = function () {
+        $scope.updateSelectedServices = function (changedService) {
+
+            // only allow 1 service per category
+            if (changedService && changedService.selected) {
+
+                angular.forEach($scope.bookingServices, function (service) {
+
+                    if (
+                        service.serviceId !== changedService.serviceId &&
+                        (service.category || '').toLowerCase() === (changedService.category || '').toLowerCase()
+                    ) {
+                        service.selected = false;
+                    }
+                });
+            }
+
             $scope.booking.selectedServices = [];
+
             angular.forEach($scope.bookingServices, function (service) {
+
                 if (service.selected) {
                     $scope.booking.selectedServices.push({
+                        serviceId: service.serviceId,
                         name: service.name,
-                        price: service.price
+                        price: service.price,
+                        category: service.category
                     });
                 }
             });
+        };
+        $scope.isBookingCategoryBlocked = function (service) {
+
+            var selectedInSameCategory = ($scope.bookingServices || []).find(function (s) {
+
+                return s.selected &&
+                    s.serviceId !== service.serviceId &&
+                    (s.category || '').toLowerCase() === (service.category || '').toLowerCase();
+            });
+
+            return !!selectedInSameCategory;
         };
 
         $scope.onServicesChanged = function () {
@@ -1289,25 +1347,52 @@ app.controller("DestLoungeSalesandBookingController",
 
         $scope.submitBooking = function () {
             console.log("window.loggedInUserId = ", window.loggedInUserId);
+
             if (!window.loggedInUserId || window.loggedInUserId === "null" || parseInt(window.loggedInUserId) <= 0) {
-                alert("Please login first before booking.");
-                window.location.href = "/Main/LoginPage";
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Login Required',
+                    text: 'Please login first before booking.',
+                    confirmButtonColor: '#6b4423'
+                }).then(function () {
+                    window.location.href = "/Main/LoginPage";
+                });
                 return;
             }
+
             if (!$scope.isBookingValid()) {
-                alert("Please complete all booking fields.");
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Incomplete Booking',
+                    text: 'Please complete all booking fields.',
+                    confirmButtonColor: '#6b4423'
+                });
                 return;
             }
+
             if (!$scope.calculateTotal() || $scope.calculateTotal() <= 0) {
-                alert("Downpayment required");
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Service Selected',
+                    text: 'Please select at least one service before continuing.',
+                    confirmButtonColor: '#6b4423'
+                });
                 return;
             }
+
             var d = $scope.booking.date;
             var dateObj = (d instanceof Date) ? d : new Date(d);
+
             if (isNaN(dateObj.getTime())) {
-                alert("Invalid date.");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Date',
+                    text: 'Please choose a valid date.',
+                    confirmButtonColor: '#6b4423'
+                });
                 return;
             }
+
             var yyyy2 = dateObj.getFullYear();
             var mm2 = String(dateObj.getMonth() + 1).padStart(2, "0");
             var dd2 = String(dateObj.getDate()).padStart(2, "0");
@@ -1319,8 +1404,10 @@ app.controller("DestLoungeSalesandBookingController",
                 var hour = parseInt(hm[0], 10);
                 var min = parseInt(hm[1], 10);
                 var ampm = (parts[1] || "").toUpperCase();
+
                 if (ampm === "PM" && hour < 12) hour += 12;
                 if (ampm === "AM" && hour === 12) hour = 0;
+
                 return { hour: hour, min: min };
             }
 
@@ -1329,9 +1416,12 @@ app.controller("DestLoungeSalesandBookingController",
             var startMin = start.min;
             var endHour = startHour + 2;
             var endMin = startMin;
+
             if (endHour >= 24) endHour -= 24;
+
             var startTime = String(startHour).padStart(2, "0") + ":" + String(startMin).padStart(2, "0");
             var endTime = String(endHour).padStart(2, "0") + ":" + String(endMin).padStart(2, "0");
+
             var serviceId = 1;
             var selectedServiceNames = ($scope.booking.selectedServices || []).map(function (s) {
                 return s.name;
@@ -1352,13 +1442,6 @@ app.controller("DestLoungeSalesandBookingController",
 
             console.log("Booking payload:", payload);
 
-            // Replace the $http.get("/Booking/CheckSlot"...) block with:
-            if ($scope.booking.nailTech === 'No Preference') {
-                sessionStorage.setItem("pendingBooking", JSON.stringify(payload));
-                window.location.href = "/Main/PaymentPage";
-                return;
-            }
-
             $http.get("/Booking/CheckSlot", {
                 params: {
                     date: bookingDate,
@@ -1367,14 +1450,33 @@ app.controller("DestLoungeSalesandBookingController",
                 }
             }).then(function (res) {
                 if (res.data.taken) {
-                    alert("Slot already taken. Please choose another.");
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Time Slot Unavailable',
+                        text: 'This time slot for ' + $scope.booking.nailTech + ' is already taken. Please choose another time or nail technician.',
+                        confirmButtonColor: '#6b4423'
+                    });
                     return;
                 }
+
                 sessionStorage.setItem("pendingBooking", JSON.stringify(payload));
-                window.location.href = "/Main/PaymentPage";
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Slot Available',
+                    text: 'Your booking details are ready. You will now proceed to payment.',
+                    confirmButtonColor: '#6b4423'
+                }).then(function () {
+                    window.location.href = "/Main/PaymentPage";
+                });
             }).catch(function (error) {
                 console.error("Error checking slot:", error);
-                alert("Unable to check slot availability. Please try again.");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Booking Error',
+                    text: 'Unable to check slot availability. Please try again.',
+                    confirmButtonColor: '#6b4423'
+                });
             });
         };
 

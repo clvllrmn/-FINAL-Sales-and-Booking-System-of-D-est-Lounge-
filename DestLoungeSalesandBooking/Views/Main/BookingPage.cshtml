@@ -206,12 +206,13 @@
         </div>
     </div>
 
-    
+
 
     <!-- Booking Form -->
     <div class="booking-form">
         <div class="form-group">
             <label>Choose Services</label>
+
             <div class="services-checklist">
                 <div class="service-category">
                     <h4>Nail Care Services</h4>
@@ -220,13 +221,23 @@
                         No services found.
                     </div>
 
-                    <label class="service-checkbox" ng-repeat="service in bookingServices">
+                    <label class="service-checkbox"
+                           ng-repeat="service in bookingServices"
+                           ng-class="{'blocked-service-option': isBookingCategoryBlocked(service)}">
+
                         <input type="checkbox"
                                ng-model="service.selected"
-                               ng-change="updateSelectedServices(); onServicesChanged()">
+                               ng-change="updateSelectedServices(service); onServicesChanged()"
+                               ng-disabled="isBookingCategoryBlocked(service)">
+
                         <span class="service-label">
-                            <span class="service-name-check">{{service.name}}</span>
-                            <span class="service-price-check">₱{{service.price}}</span>
+                            <span class="service-name-check">
+                                {{service.name}}
+                            </span>
+
+                            <span class="service-price-check">
+                                ₱{{service.price}}
+                            </span>
                         </span>
                     </label>
                 </div>
@@ -1158,6 +1169,15 @@
             margin: 0 2rem;
         }
     }
+    .blocked-service-option {
+        opacity: 0.45;
+        filter: grayscale(100%);
+        cursor: not-allowed;
+    }
+
+        .blocked-service-option .service-label {
+            cursor: not-allowed;
+        }
 
     /* =============================================
        MOBILE (max-width: 768px)
@@ -1469,6 +1489,7 @@
             padding: 1.2rem 1rem;
         }
     }
+
     .no-services-message {
         text-align: center;
         color: #8b6f47;
@@ -1512,4 +1533,5 @@
             });
         })();
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 }
