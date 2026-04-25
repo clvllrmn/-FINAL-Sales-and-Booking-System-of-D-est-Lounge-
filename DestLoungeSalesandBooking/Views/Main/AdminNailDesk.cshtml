@@ -1,0 +1,4307 @@
+﻿@{
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+}
+
+@Html.AntiForgeryToken()
+
+<div ng-app="DestLoungeSalesandBooking" ng-controller="DestLoungeSalesandBookingController">
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="logo-container">
+            <a href="@Url.Action("AdminDashboard","Main")">
+                <img src="~/Content/Pictures/DestLogo.png" class="sidebar-logo" alt="D'est Lounge">
+            </a>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="@Url.Action("AdminDashboard","Main")" class="nav-item">DASHBOARD</a>
+            <a href="@Url.Action("AdminNailDesk","Main")" class="nav-item active">NAIL DESK</a>
+            <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="@Url.Action("Logout","Account")" class="admin-link" title="Logout">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Mobile Top Bar -->
+    <div class="mobile-topbar">
+        <a href="@Url.Action("AdminDashboard","Main")">
+            <img src="~/Content/Pictures/DestLogo.png" alt="D'est Lounge">
+        </a>
+        <button class="mobile-menu-btn" onclick="toggleMobileNav()">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+    </div>
+
+    <div class="mobile-nav-overlay" id="mobileOverlay" onclick="toggleMobileNav()"></div>
+
+    <div class="mobile-nav-drawer" id="mobileDrawer">
+        <nav class="sidebar-nav">
+            <a href="@Url.Action("AdminDashboard","Main")" class="nav-item">DASHBOARD</a>
+            <a href="@Url.Action("AdminNailDesk","Main")" class="nav-item active">NAIL DESK</a>
+            <a href="@Url.Action("AdminSalesPage","Main")" class="nav-item">SALES</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="@Url.Action("Logout","Account")" class="admin-link" title="Logout">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        window.isAdminPage = true;
+    </script>
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">NAIL DESK</h1>
+        </div>
+
+        <!-- Top Tabs -->
+        <div class="tab-bar">
+            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'bookings'}" ng-click="dashTab = 'bookings'; loadBookings()">Manage Booking</button>
+            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'staffs'}" ng-click="dashTab = 'staffs'; loadTechs()">Manage Staffs</button>
+            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'gallery'}" ng-click="dashTab = 'gallery'; loadGalleryPhotos(); loadReviews(); loadArchivedReviews()">Gallery</button>
+            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'services'}" ng-click="dashTab = 'services'; loadServices()">Services</button>
+            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'faqs'}" ng-click="dashTab = 'faqs'; loadFAQs()">FAQs</button>
+            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'contact'}" ng-click="dashTab = 'contact'; loadContactInfo()">Contact</button>
+            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'homepage'}" ng-click="dashTab = 'homepage'">Homepage</button>
+            <button class="tab-btn" ng-class="{'tab-active': dashTab === 'payment'}" ng-click="dashTab = 'payment'; loadPaymentInfo()">Payment</button>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- TAB: MANAGE BOOKINGS -->
+        <!-- ═══════════════════════════════════════════════════ -->
+        <div class="tab-content" ng-show="dashTab === 'bookings'">
+            <h2 class="section-title">Manage Bookings</h2>
+            <div class="filter-tabs">
+                <button class="tab-btn" ng-class="{'active': selectedFilter === 'all'}" ng-click="filterBookings('all')">All Bookings</button>
+                <button class="tab-btn" ng-class="{'active': selectedFilter === 'today'}" ng-click="filterBookings('today')">Today</button>
+                <button class="tab-btn" ng-class="{'active': selectedFilter === 'upcoming'}" ng-click="filterBookings('upcoming')">Upcoming</button>
+                <button class="tab-btn" ng-class="{'active': selectedFilter === 'pending'}" ng-click="filterBookings('pending')">For Approval</button>
+                <button class="tab-btn" ng-class="{'active': selectedFilter === 'completed'}" ng-click="filterBookings('completed')">Completed</button>
+                <button class="tab-btn" ng-class="{'active': selectedFilter === 'cancelled'}" ng-click="filterBookings('cancelled')">Cancelled</button>
+            </div>
+            <div class="bookings-table-wrap">
+                <table class="bookings-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Client</th>
+                            <th>Contact No.</th>
+                            <th>Email</th>
+                            <th>Service</th>
+                            <th>Date / Time</th>
+                            <th>Nail Tech</th>
+                            <th>Total Bill</th>
+                            <th>Downpayment</th>
+                            <th>Ref No.</th>
+                            <th>Status</th>
+                            <th>Receipt</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="booking in pagedBookings track by booking.bookingId">
+                            <td class="cell-num">{{(bookingsCurrentPage - 1) * bookingsPageSize + $index + 1}}</td>
+                            <td><strong class="cell-client">{{booking.clientName}}</strong></td>
+                            <td class="cell-sm">{{booking.contactNumber || '—'}}</td>
+                            <td class="cell-sm">{{booking.email || '—'}}</td>
+                            <td>{{booking.service}}</td>
+                            <td class="cell-date">{{booking.dateTime}}</td>
+                            <td class="cell-sm" ng-init="n = parseNotes(booking.notes)">{{n.nailtech || 'N/A'}}</td>
+                            <td>₱{{booking.totalBill | number:2}}</td>
+                            <td class="cell-down">₱{{booking.downpayment | number:2}}</td>
+                            <td class="cell-sm">{{booking.referenceNo || '—'}}</td>
+                            <td>
+                                <span class="bk-pill" ng-class="{'bk-pill-pending': booking.status === 'Pending','bk-pill-approved': booking.status === 'Approved','bk-pill-completed': booking.status === 'Completed','bk-pill-cancelled': booking.status === 'Cancelled'}">
+                                    {{booking.status}}
+                                </span>
+                                <span class="bk-cancel-reason" ng-if="booking.status === 'Cancelled' && booking.cancelReason">{{booking.cancelReason}}</span>
+                            </td>
+                            <td>
+                                <img ng-if="booking.receiptPath" ng-src="{{booking.receiptPath}}" class="bk-receipt-thumb clickable-review-image" ng-click="openReviewLightbox(booking.receiptPath); $event.stopPropagation();" alt="Receipt" />
+                                <span ng-if="!booking.receiptPath" class="cell-muted">—</span>
+                            </td>
+                            <td>
+                                <div ng-if="booking.status === 'Pending'" class="bk-action-group">
+                                    <button class="bk-btn bk-btn-approve" ng-click="updateBookingStatus(booking.bookingId, 'Approved')">Approve</button>
+                                    <button class="bk-btn bk-btn-cancel" ng-click="cancelBooking(booking.bookingId, $event)">Cancel</button>
+                                </div>
+                                <div ng-if="booking.status === 'Approved'" class="bk-action-group">
+                                    <button class="bk-btn bk-btn-complete" ng-click="updateBookingStatus(booking.bookingId, 'Completed')">Complete</button>
+                                    <button class="bk-btn bk-btn-cancel" ng-click="cancelBooking(booking.bookingId, $event)">Cancel</button>
+                                </div>
+                                <span ng-if="booking.status === 'Completed' || booking.status === 'Cancelled'" class="cell-muted">—</span>
+                            </td>
+                        </tr>
+                        <tr ng-if="pagedBookings.length === 0">
+                            <td colspan="13" class="bk-empty">No bookings found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="bk-pagination" ng-if="filteredBookings.length > 0">
+                    <div class="bk-pg-btns">
+                        <button class="bk-pg-btn" ng-click="bookingsGoPage(bookingsCurrentPage - 1)" ng-disabled="bookingsCurrentPage === 1">&#8249;</button>
+                        <button class="bk-pg-btn" ng-repeat="p in bookingsPageNumbers" ng-class="{'bk-pg-active': p === bookingsCurrentPage}" ng-click="bookingsGoPage(p)">{{p}}</button>
+                        <button class="bk-pg-btn" ng-click="bookingsGoPage(bookingsCurrentPage + 1)" ng-disabled="bookingsCurrentPage === bookingsTotalPages">&#8250;</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- TAB: MANAGE STAFFS -->
+        <!-- ═══════════════════════════════════════════════════ -->
+        <div class="tab-content" ng-show="dashTab === 'staffs'" ng-controller="NailTechController">
+            <div class="page-header-row">
+                <h2 class="section-title">Nail Techs</h2>
+                <button class="add-btn" ng-click="openModal()"><i class="fa-solid fa-plus"></i> Add Nail Tech</button>
+            </div>
+            <div class="stats-bar-row">
+                <div class="stat-pill stat-pill-active"><i class="fa-solid fa-users"></i> <strong>{{activeTechs.length}}</strong> Active</div>
+                <div class="stat-pill stat-pill-inactive"><i class="fa-solid fa-user-slash"></i> <strong>{{inactiveTechs.length}}</strong> Inactive</div>
+            </div>
+            <div class="section-label-small" ng-if="activeTechs.length > 0"><i class="fa-solid fa-circle-check"></i> Active Staff</div>
+            <div class="nailtech-grid">
+                <div class="nailtech-card" ng-repeat="tech in activeTechs">
+                    <div class="card-avatar">
+                        <div class="avatar-initials">{{getInitials(tech.name)}}</div>
+                        <div class="status-dot status-dot-active"></div>
+                    </div>
+                    <div class="card-info">
+                        <h3 class="card-name">{{tech.name}}</h3>
+                        <span class="card-role">{{tech.specialization || 'Nail Technician'}}</span>
+                        <div class="card-meta" ng-if="tech.contact"><i class="fa-solid fa-phone"></i> {{tech.contact}}</div>
+                    </div>
+                    <div class="card-actions-row">
+                        <button class="card-btn card-btn-edit" ng-click="openEditModal(tech)" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                        <button class="card-btn card-btn-deactivate" ng-click="deactivateTech(tech)" title="Deactivate"><i class="fa-solid fa-user-slash"></i></button>
+                        <button class="card-btn card-btn-delete" ng-click="deleteTech(tech)" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+                <div ng-if="activeTechs.length === 0" class="nailtech-empty"><i class="fa-solid fa-scissors"></i><p>No active nail techs yet.</p></div>
+            </div>
+            <div class="inactive-section" ng-if="inactiveTechs.length > 0">
+                <button class="inactive-toggle-btn" ng-click="showInactive = !showInactive">
+                    <i class="fa-solid fa-user-slash"></i>
+                    {{ showInactive ? 'Hide Inactive Staff' : 'View Inactive Staff' }}
+                    <span class="inactive-count">{{inactiveTechs.length}}</span>
+                </button>
+                <div class="inactive-panel" ng-show="showInactive">
+                    <h3 class="inactive-panel-title">Inactive / Former Nail Techs</h3>
+                    <div class="inactive-card" ng-repeat="tech in inactiveTechs">
+                        <div class="inactive-avatar">
+                            <div class="avatar-initials avatar-initials-sm">{{getInitials(tech.name)}}</div>
+                            <div class="status-dot status-dot-inactive"></div>
+                        </div>
+                        <div class="inactive-info">
+                            <h3>{{tech.name}}</h3>
+                            <p>{{tech.specialization || 'Nail Technician'}} <span ng-if="tech.contact"> &bull; {{tech.contact}}</span></p>
+                        </div>
+                        <div class="inactive-actions">
+                            <button class="restore-btn" ng-click="reactivateTech(tech)"><i class="fa-solid fa-rotate-left"></i> Reactivate</button>
+                            <button class="perm-delete-btn" ng-click="permanentDeleteTech(tech)"><i class="fa-solid fa-trash"></i> Remove</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nail Tech Add/Edit Modal -->
+            <div class="modal-backdrop" ng-show="showModal" ng-click="closeModalBackdrop($event)">
+                <div class="modal-box" ng-click="$event.stopPropagation()">
+                    <div class="modal-hdr">
+                        <div class="modal-hdr-left">
+                            <div class="modal-ico"><i class="fa-solid fa-scissors"></i></div>
+                            <div>
+                                <span class="modal-ttl">{{ editingTech ? 'Edit Nail Tech' : 'Add New Nail Tech' }}</span>
+                                <div class="modal-sub">Manage your nail technician roster</div>
+                            </div>
+                        </div>
+                        <button class="modal-cls" ng-click="closeModal()">&#10005;</button>
+                    </div>
+                    <div class="modal-bdy">
+                        <div class="field-grp field-grp-full">
+                            <label class="field-lbl">Full Name <span class="required">*</span></label>
+                            <input class="field-inp" type="text" ng-model="techForm.name" ng-keypress="onNameKeypress($event)" ng-class="{'field-inp-error': techErrors.name}" placeholder="e.g. Maria Santos" maxlength="60" />
+                            <span class="field-error" ng-if="techErrors.name">{{techErrors.name}}</span>
+                        </div>
+                        <div class="field-grp">
+                            <label class="field-lbl">Specialization <span class="field-optional">(optional)</span></label>
+                            <input class="field-inp" type="text" ng-model="techForm.specialization" ng-keypress="onSpecializationKeypress($event)" ng-class="{'field-inp-error': techErrors.specialization}" placeholder="e.g. Gel Nails" maxlength="50" />
+                            <span class="field-error" ng-if="techErrors.specialization">{{techErrors.specialization}}</span>
+                        </div>
+                        <div class="field-grp">
+                            <label class="field-lbl">Contact Number <span class="field-optional">(optional)</span></label>
+                            <input class="field-inp" type="text" ng-model="techForm.contact" ng-keypress="onContactKeypress($event)" ng-class="{'field-inp-error': techErrors.contact}" placeholder="e.g. 09XX XXX XXXX" />
+                            <span class="field-error" ng-if="techErrors.contact">{{techErrors.contact}}</span>
+                        </div>
+                        <div class="field-grp">
+                            <label class="field-lbl">Status <span class="required">*</span></label>
+                            <select class="field-inp field-sel" ng-model="techForm.status" ng-class="{'field-inp-error': techErrors.status}">
+                                <option value="">-- Select Status --</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                            <span class="field-error" ng-if="techErrors.status">{{techErrors.status}}</span>
+                        </div>
+                        <div class="field-grp field-grp-full">
+                            <label class="field-lbl">Notes <span class="field-optional">(optional, max 300)</span></label>
+                            <textarea class="field-inp field-ta" ng-model="techForm.notes" ng-class="{'field-inp-error': techErrors.notes}" placeholder="Additional notes..." rows="3" maxlength="300"></textarea>
+                            <div class="field-char-count" ng-if="techForm.notes">{{techForm.notes.length}}/300</div>
+                            <span class="field-error" ng-if="techErrors.notes">{{techErrors.notes}}</span>
+                        </div>
+                    </div>
+                    <div class="modal-ftr">
+                        <button class="btn-cancel" ng-click="closeModal()">Cancel</button>
+                        <button class="btn-save" ng-click="saveTech()" ng-disabled="isSaving || !techForm.name">
+                            <span ng-if="isSaving"><i class="fa-solid fa-spinner fa-spin"></i> Saving...</span>
+                            <span ng-if="!isSaving">{{ editingTech ? 'Save Changes' : 'Add Nail Tech' }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Confirm Modal -->
+            <div class="modal-backdrop modal-backdrop-confirm" ng-show="showConfirmModal" ng-click="closeConfirmModal()">
+                <div class="confirm-modal-box" ng-click="$event.stopPropagation()">
+                    <div class="confirm-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <h3 class="confirm-ttl">{{confirmTitle}}</h3>
+                    <p class="confirm-msg">{{confirmMessage}}</p>
+                    <div class="confirm-actions">
+                        <button class="btn-cancel" ng-click="closeConfirmModal()">Cancel</button>
+                        <button class="btn-confirm-delete" ng-click="confirmAction()">{{confirmBtnText}}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- TAB: GALLERY -->
+        <!-- ═══════════════════════════════════════════════════ -->
+        <div class="tab-content" ng-show="dashTab === 'gallery'">
+            <div class="sub-tab-bar">
+                <button class="tab-btn" ng-class="{'tab-active': adminTab === 'gallery'}" ng-click="adminTab = 'gallery'">
+                    <i class="fa-solid fa-images"></i> Gallery
+                    <span class="tab-count">{{galleryPhotos.length}}</span>
+                </button>
+                <button class="tab-btn" ng-class="{'tab-active': adminTab === 'archivedGallery'}" ng-click="adminTab = 'archivedGallery'; loadArchivedGallery()">
+                    <i class="fa-solid fa-box-archive"></i> Archived Photos
+                    <span class="tab-count tab-count-warn">{{archivedGalleryPhotos.length}}</span>
+                </button>
+                <button class="tab-btn" ng-class="{'tab-active': adminTab === 'reviews'}" ng-click="adminTab = 'reviews'">
+                    <i class="fa-solid fa-star"></i> Reviews
+                    <span class="tab-count">{{reviews.length}}</span>
+                </button>
+                <button class="tab-btn" ng-class="{'tab-active': adminTab === 'archived'}" ng-click="adminTab = 'archived'">
+                    <i class="fa-solid fa-box-archive"></i> Archived Reviews
+                    <span class="tab-count tab-count-warn">{{archivedReviews.length}}</span>
+                </button>
+            </div>
+
+            <!-- SUB-TAB: Gallery -->
+            <div ng-show="adminTab === 'gallery'" class="sub-tab-content">
+                <a href="@Url.Action("GalleryPage","Main")" class="view-public-btn" target="_blank">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Show Public View
+                </a>
+                <div class="upload-card">
+                    <h3><i class="fa-solid fa-cloud-arrow-up"></i> Upload New Photo</h3>
+                    <div class="upload-form">
+                        <div class="upload-dropzone" onclick="document.getElementById('photoFileInput').click()">
+                            <i class="fa-solid fa-image"></i>
+                            <p>Click to select a photo</p>
+                            <span>JPG, PNG, WEBP supported</span>
+                            <input type="file" id="photoFileInput" accept="image/*" onchange="angularFileChange(this)" style="display:none">
+                        </div>
+                        <div class="upload-fields">
+                            <div class="field-grp">
+                                <label>Caption</label>
+                                <input type="text" class="admin-input" ng-model="newPhoto.caption" placeholder="e.g. Gel Manicure - Nude Pink">
+                            </div>
+                            <div class="field-grp">
+                                <label>Description</label>
+                                <textarea class="admin-input" ng-model="newPhoto.description" placeholder="Description..." rows="3" style="resize:vertical;"></textarea>
+                            </div>
+                            <div class="upload-preview-wrap" ng-show="newPhoto.previewUrl">
+                                <img ng-src="{{newPhoto.previewUrl}}" class="upload-preview-img" alt="Preview">
+                            </div>
+                            <button class="admin-btn admin-btn-primary" ng-click="uploadPhoto()" ng-disabled="!newPhoto.file || !newPhoto.caption">
+                                <i class="fa-solid fa-plus"></i> Add to Gallery
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="gallery-grid" ng-show="galleryPhotos.length > 0">
+                    <div class="gallery-item" ng-repeat="photo in galleryPhotos">
+                        <img ng-src="{{photo.imageUrl}}" alt="{{photo.caption}}" onerror="this.src='/Content/Pictures/HomepageBackground.png'">
+                        <div class="gallery-overlay">
+                            <span class="gallery-caption">{{photo.caption}}</span>
+                            <div class="gallery-item-actions">
+                                <button class="item-action-btn item-edit" ng-click="startEditPhoto(photo); $event.stopPropagation()" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                                <button class="item-action-btn item-archive" ng-click="confirmDeletePhoto(photo); $event.stopPropagation()" title="Archive"><i class="fa-solid fa-box-archive"></i></button>
+                            </div>
+                        </div>
+                        <div class="inline-edit-overlay" ng-show="photo.editing" ng-click="$event.stopPropagation()">
+                            <input type="text" class="admin-input" ng-model="photo.editCaption" placeholder="Caption">
+                            <textarea class="admin-input" ng-model="photo.editDescription" placeholder="Description" rows="2" style="resize:none; margin-top:0.5rem;"></textarea>
+                            <div class="inline-edit-actions">
+                                <button class="admin-btn admin-btn-primary" ng-click="saveEditPhoto(photo)"><i class="fa-solid fa-check"></i> Save</button>
+                                <button class="admin-btn admin-btn-secondary" ng-click="cancelEditPhoto(photo)">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="empty-state" ng-show="galleryPhotos.length === 0">
+                    <i class="fa-regular fa-image"></i>
+                    <p>No photos yet. Upload one above.</p>
+                </div>
+            </div>
+
+            <!-- SUB-TAB: Archived Photos -->
+            <div ng-show="adminTab === 'archivedGallery'" class="sub-tab-content">
+                <div class="gallery-grid" ng-show="archivedGalleryPhotos.length > 0">
+                    <div class="gallery-item" ng-repeat="photo in archivedGalleryPhotos">
+                        <img ng-src="{{photo.imageUrl}}" alt="{{photo.caption}}">
+                        <div class="gallery-overlay" style="opacity:1; background:rgba(61,40,23,0.85);">
+                            <span class="gallery-caption">{{photo.caption}}</span>
+                            <div class="gallery-item-actions">
+                                <button class="item-action-btn item-edit" ng-click="restoreGalleryPhoto(photo); $event.stopPropagation()" title="Restore"><i class="fa-solid fa-rotate-left"></i></button>
+                                <button class="item-action-btn item-delete" ng-click="confirmPermanentDelete(photo); $event.stopPropagation()" title="Delete permanently"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="empty-state" ng-show="archivedGalleryPhotos.length === 0">
+                    <i class="fa-solid fa-box-archive"></i>
+                    <p>No archived photos.</p>
+                </div>
+            </div>
+
+            <!-- SUB-TAB: Reviews -->
+            <div ng-show="adminTab === 'reviews'" class="sub-tab-content">
+                <a href="@Url.Action("GalleryPage","Main")" class="view-public-btn" target="_blank">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Show Public View
+                </a>
+                <div class="stats-bar-row">
+                    <div class="stat-card-sm"><span class="stat-num-sm">{{reviews.length}}</span><span class="stat-lbl-sm">Active</span></div>
+                    <div class="stat-card-sm"><span class="stat-num-sm">{{averageRating()}}</span><span class="stat-lbl-sm">Avg Rating</span></div>
+                    <div class="stat-card-sm stat-warn-sm"><span class="stat-num-sm">{{flaggedCount()}}</span><span class="stat-lbl-sm">Flagged</span></div>
+                    <div class="stat-card-sm stat-muted-sm"><span class="stat-num-sm">{{archivedReviews.length}}</span><span class="stat-lbl-sm">Archived</span></div>
+                </div>
+                <div class="filter-row">
+                    <select class="admin-select" ng-model="reviewStarFilter" ng-change="reviewsPage = 1; updatePagedReviews()">
+                        <option value="">All Ratings</option>
+                        <option value="5">★★★★★ 5 Stars</option>
+                        <option value="4">★★★★☆ 4 Stars</option>
+                        <option value="3">★★★☆☆ 3 Stars</option>
+                        <option value="2">★★☆☆☆ 2 Stars</option>
+                        <option value="1">★☆☆☆☆ 1 Star</option>
+                    </select>
+                    <input type="text" class="admin-search" ng-model="reviewSearch" ng-change="reviewsPage = 1; updatePagedReviews()" placeholder="Search reviews...">
+                </div>
+                <div class="reviews-list">
+                    <div class="review-admin-card" ng-repeat="review in reviews | filter:reviewSearchFilter" ng-class="{'flagged-card': review.flagged}">
+                        <div class="rac-top">
+                            <div class="rac-stars">
+                                <i ng-repeat="s in [1,2,3,4,5]" class="fa-star" ng-class="s <= review.rating ? 'fa-solid' : 'fa-regular'"></i>
+                            </div>
+                            <span class="rac-service"><i class="fa-solid fa-spa"></i> {{review.serviceAvailed}}</span>
+                            <span class="rac-date">{{review.date | date:'MMM d, yyyy'}}</span>
+                            <span class="flag-badge" ng-show="review.flagged"><i class="fa-solid fa-flag"></i> Flagged</span>
+                        </div>
+                        <p class="rac-text">&ldquo;{{review.reviewText}}&rdquo;</p>
+                        <div class="rac-images" ng-if="review.images && review.images.length > 0">
+                            <img ng-repeat="img in review.images" ng-src="{{img}}" class="rac-image clickable-review-image" ng-click="openReviewLightbox(img); $event.stopPropagation();" />
+                        </div>
+                        <div class="rac-actions">
+                            <button class="admin-btn admin-btn-flag" ng-show="!review.flagged" ng-click="openFlagModal(review)"><i class="fa-solid fa-flag"></i> Flag</button>
+                            <button class="admin-btn admin-btn-unflag" ng-show="review.flagged" ng-click="unflagReview(review)"><i class="fa-solid fa-flag-checkered"></i> Unflag</button>
+                            <button class="admin-btn admin-btn-archive" ng-click="archiveReview(review.reviewId)"><i class="fa-solid fa-box-archive"></i> Archive</button>
+                        </div>
+                    </div>
+                    <div class="empty-state" ng-show="(reviews | filter:reviewSearchFilter).length === 0">
+                        <i class="fa-regular fa-star"></i>
+                        <p>No reviews match your filter.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-TAB: Archived Reviews -->
+            <div ng-show="adminTab === 'archived'" class="sub-tab-content">
+                <div class="reviews-list">
+                    <div class="review-admin-card archived-card" ng-repeat="review in archivedReviews | filter:archivedSearch">
+                        <div class="rac-top">
+                            <div class="rac-stars">
+                                <i ng-repeat="s in [1,2,3,4,5]" class="fa-star" ng-class="s <= review.rating ? 'fa-solid' : 'fa-regular'"></i>
+                            </div>
+                            <span class="rac-service"><i class="fa-solid fa-spa"></i> {{review.serviceAvailed}}</span>
+                            <span class="rac-date">{{review.date | date:'MMM d, yyyy'}}</span>
+                            <span class="archived-badge"><i class="fa-solid fa-box-archive"></i> Archived</span>
+                        </div>
+                        <p class="rac-text">&ldquo;{{review.reviewText}}&rdquo;</p>
+                        <div class="rac-actions">
+                            <button class="admin-btn admin-btn-restore" ng-click="restoreReview(review.reviewId)"><i class="fa-solid fa-rotate-left"></i> Restore</button>
+                        </div>
+                    </div>
+                    <div class="empty-state" ng-show="archivedReviews.length === 0">
+                        <i class="fa-solid fa-box-archive"></i>
+                        <p>No archived reviews.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: Flag Review -->
+        <div class="modal-overlay" ng-show="flagModal.show === true" ng-click="closeFlagModal()">
+            <div class="modal-card" ng-click="$event.stopPropagation()" style="max-width:500px;">
+                <div class="modal-icon-plain" style="color:#f39c12;"><i class="fa-solid fa-flag"></i></div>
+                <h3>Flag Review</h3>
+                <p style="margin:10px 0 18px; color:#6b4423;">Select the reason why this review is being flagged.</p>
+                <div class="field-grp" style="margin-bottom:14px;">
+                    <label>Reason</label>
+                    <select class="admin-input" ng-model="flagModal.reason">
+                        <option value="">-- Select a reason --</option>
+                        <option value="Inappropriate language">Inappropriate language</option>
+                        <option value="Spam or irrelevant content">Spam or irrelevant content</option>
+                        <option value="Offensive or abusive content">Offensive or abusive content</option>
+                        <option value="False or misleading review">False or misleading review</option>
+                        <option value="Contains sensitive/private information">Contains sensitive/private information</option>
+                    </select>
+                </div>
+                <div class="field-grp">
+                    <label>Additional note (optional)</label>
+                    <textarea class="admin-input" rows="3" ng-model="flagModal.note" placeholder="Add more details if needed..."></textarea>
+                </div>
+                <div class="modal-actions" style="margin-top:18px;">
+                    <button class="admin-btn admin-btn-secondary" ng-click="closeFlagModal()">Cancel</button>
+                    <button class="admin-btn admin-btn-flag" ng-click="submitFlagReview()" ng-disabled="!flagModal.reason"><i class="fa-solid fa-flag"></i> Confirm Flag</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: Edit Photo -->
+        <div class="modal-overlay" ng-show="editModal.show">
+            <div class="modal-card" style="max-width:500px;" ng-click="$event.stopPropagation()">
+                <div class="modal-icon-plain" style="font-size:2rem; color:#6b4423;"><i class="fa-solid fa-pen"></i></div>
+                <h3 style="margin-bottom:1.5rem;">Edit Photo Details</h3>
+                <div style="margin-bottom:0.8rem; border-radius:10px; overflow:hidden; border:2px solid #d4c4b0; max-height:180px;">
+                    <img ng-src="{{editModal.newImagePreview || editModal.photo.imageUrl}}" onerror="this.src='/Content/Pictures/HomepageBackground.png'" style="width:100%; max-height:180px; object-fit:cover; display:block;">
+                </div>
+                <button type="button" class="admin-btn admin-btn-secondary" style="width:100%; justify-content:center; margin-bottom:1rem;" onclick="document.getElementById('editImageInput').click()">
+                    <i class="fa-solid fa-image"></i> Replace Image
+                </button>
+                <input type="file" id="editImageInput" accept="image/*" onchange="angularFileChange(this)" style="display:none">
+                <span ng-show="editModal.newImagePreview" style="font-size:0.78rem; color:#27ae60; margin-bottom:1rem; display:block;"><i class="fa-solid fa-circle-check"></i> New image selected — save to apply</span>
+                <div class="field-grp" style="margin-bottom:1rem; text-align:left;">
+                    <label>Caption</label>
+                    <input type="text" class="admin-input" ng-model="editModal.caption" placeholder="e.g. Gel Manicure">
+                </div>
+                <div class="field-grp" style="text-align:left;">
+                    <label>Description</label>
+                    <textarea class="admin-input" ng-model="editModal.description" placeholder="No description yet..." rows="4" style="resize:vertical;"></textarea>
+                </div>
+                <div class="modal-actions" style="margin-top:1.8rem;">
+                    <button class="admin-btn admin-btn-secondary" ng-click="editModal.show = false">Cancel</button>
+                    <button class="admin-btn admin-btn-primary" ng-click="saveEditPhoto(editModal.photo)"><i class="fa-solid fa-check"></i> Save Changes</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: Archive Photo -->
+        <div class="modal-overlay" ng-show="deleteModal.show">
+            <div class="modal-card">
+                <div class="modal-icon-plain"><i class="fa-solid fa-box-archive"></i></div>
+                <h3>Archive Photo?</h3>
+                <p>&ldquo;{{deleteModal.photo.caption}}&rdquo; will be moved to Archived Photos. You can restore it later.</p>
+                <div class="modal-actions">
+                    <button class="admin-btn admin-btn-secondary" ng-click="deleteModal.show = false">Cancel</button>
+                    <button class="admin-btn admin-btn-archive" ng-click="deletePhoto()"><i class="fa-solid fa-box-archive"></i> Archive</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: Permanent Delete -->
+        <div class="modal-overlay" ng-show="permanentDeleteModal.show">
+            <div class="modal-card">
+                <div class="modal-icon-plain"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <h3>Permanently Delete?</h3>
+                <p>This will <strong>permanently remove</strong> &ldquo;{{permanentDeleteModal.photo.caption}}&rdquo; from the server. This <strong>cannot be undone</strong>.</p>
+                <div class="modal-actions">
+                    <button class="admin-btn admin-btn-secondary" ng-click="permanentDeleteModal.show = false">Cancel</button>
+                    <button class="admin-btn admin-btn-danger" ng-click="permanentDeletePhoto()"><i class="fa-solid fa-trash"></i> Delete Forever</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- LIGHTBOX: Review Image -->
+        <div class="lightbox-overlay" ng-show="lightboxPhoto" ng-click="closeLightbox()">
+            <div class="lightbox-card" ng-click="$event.stopPropagation()">
+                <button class="lightbox-close" ng-click="closeLightbox()"><i class="fa-solid fa-xmark"></i></button>
+                <img ng-src="{{lightboxPhoto}}" class="lightbox-img" alt="Review photo">
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- TAB: SERVICES -->
+        <!-- ═══════════════════════════════════════════════════ -->
+        <div class="tab-content" ng-show="dashTab === 'services'">
+            <div class="services-header-row">
+                <a href="@Url.Action("ServicePage","Main")" class="view-public-btn" target="_blank">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> View Public Page
+                </a>
+            </div>
+            <div class="services-layout">
+                <div class="services-sidebar-mini">
+                    <h3>Services</h3>
+                    <div class="service-cat" ng-class="{'active': selectedCategory === 'all'}" ng-click="filterServices('all')">All Services</div>
+                    <div class="service-cat" ng-class="{'active': selectedCategory === 'manicure'}" ng-click="filterServices('manicure')">Manicure</div>
+                    <div class="service-cat" ng-class="{'active': selectedCategory === 'pedicure'}" ng-click="filterServices('pedicure')">Pedicure</div>
+                </div>
+                <div class="services-main">
+                    <div class="page-header-row">
+                        <h2 class="section-title">Manage Services</h2>
+                        <button class="add-btn" ng-click="openAddServiceModal()"><i class="fa-solid fa-plus"></i> Add Service</button>
+                    </div>
+                    <div class="services-content-grid">
+                        <div class="service-card" ng-repeat="service in services | filter:categoryFilter">
+                            <div class="admin-controls-abs">
+                                <button class="edit-btn-sm" ng-click="editService(service)"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button class="delete-btn-sm" ng-click="deleteService(service)"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                            <div class="service-image">
+                                <img ng-src="{{service.image}}" alt="{{service.name}}" onerror="this.src='/Content/Pictures/HomepageBackground.png'">
+                            </div>
+                            <div class="service-name">{{service.name}}</div>
+                            <div class="service-description" ng-if="service.description">{{service.description}}</div>
+                            <div class="service-price">₱{{service.price}}</div>
+                        </div>
+                    </div>
+                    <div class="trash-container-mini">
+                        <button class="trash-toggle-btn" ng-click="showServiceTrash = !showServiceTrash; loadDeletedServices()">
+                            <i class="fa-solid fa-trash-can-arrow-up"></i>
+                            {{ showServiceTrash ? 'Hide Deleted Services' : 'View Deleted Services' }}
+                            <span class="trash-count" ng-if="deletedServices.length > 0">{{deletedServices.length}}</span>
+                        </button>
+                        <div class="trash-panel" ng-show="showServiceTrash">
+                            <h3 class="trash-title">Deleted Services</h3>
+                            <p class="trash-empty" ng-if="deletedServices.length === 0">No deleted services found.</p>
+                            <div class="deleted-faq-card" ng-repeat="s in deletedServices">
+                                <div class="deleted-faq-info">
+                                    <h3>{{s.name}}</h3>
+                                    <p>{{s.category | capitalize}} &bull; ₱{{s.price}}</p>
+                                    <p ng-if="s.description" style="margin-top:0.2rem;">{{s.description}}</p>
+                                </div>
+                                <div class="deleted-faq-actions">
+                                    <button class="restore-btn" ng-click="restoreService(s.serviceId)"><i class="fa-solid fa-rotate-left"></i> Restore</button>
+                                    <button class="perm-delete-btn" ng-click="permanentDeleteService(s.serviceId)"><i class="fa-solid fa-trash"></i> Delete Forever</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Service Modal -->
+            <div class="modal-overlay" ng-show="showServiceModal" ng-click="closeServiceModal()">
+                <div class="service-modal-box" ng-click="$event.stopPropagation()">
+                    <h2 class="modal-title-center">{{isEditMode ? 'Edit Service' : 'Add New Service'}}</h2>
+                    <form name="serviceForm" novalidate>
+                        <div class="form-grp">
+                            <label>Service Name <span class="required">*</span></label>
+                            <input type="text" class="form-inp" ng-model="currentService.name" placeholder="Enter service name" required>
+                        </div>
+                        <div class="form-grp">
+                            <label>Category <span class="required">*</span></label>
+                            <select class="form-inp" ng-model="currentService.category" required>
+                                <option value="">Select Category</option>
+                                <option value="manicure">Manicure</option>
+                                <option value="pedicure">Pedicure</option>
+                            </select>
+                        </div>
+                        <div class="form-grp">
+                            <label>Price (₱) <span class="required">*</span></label>
+                            <input type="number" class="form-inp" ng-model="currentService.price" min="0" step="0.01" placeholder="Enter price" required onkeydown="return event.key !== 'e' && event.key !== 'E' && event.key !== '+' && event.key !== '-'">
+                        </div>
+                        <div class="form-grp">
+                            <label>Description <span class="required">*</span></label>
+                            <textarea class="form-inp form-ta" ng-model="currentService.description" placeholder="Enter a short description..." maxlength="300" rows="3" required></textarea>
+                        </div>
+                        <div class="form-grp">
+                            <label>Service Image <span class="field-optional">(optional)</span></label>
+                            <input type="file" class="form-inp-file" accept="image/*" onchange="angular.element(this).scope().handleImageUpload(this.files[0])">
+                            <div class="image-preview-box" ng-show="currentService.image"><img ng-src="{{currentService.image}}" alt="Service Preview"></div>
+                        </div>
+                        <div class="modal-actions-row">
+                            <button type="button" class="btn-cancel" ng-click="closeServiceModal()">Cancel</button>
+                            <button type="button" class="btn-save" ng-click="saveService()" ng-disabled="serviceForm.$invalid">{{isEditMode ? 'Update Service' : 'Add Service'}}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- TAB: FAQs -->
+        <!-- ═══════════════════════════════════════════════════ -->
+        <div class="tab-content" ng-show="dashTab === 'faqs'">
+            <div class="page-header-row">
+                <h2 class="section-title">FAQs</h2>
+                <button class="add-btn" ng-click="openFaqModal()"><i class="fa-solid fa-plus"></i> Add FAQ</button>
+            </div>
+            <div class="faqs-grid">
+                <div class="faq-card" ng-repeat="faq in faqs" ng-class="{'active': faq.isOpen}">
+                    <div class="admin-controls-abs">
+                        <button class="edit-btn-sm" ng-click="openEditFaqModal(faq, $index); $event.stopPropagation();"><i class="fa-solid fa-pen"></i></button>
+                        <button class="delete-btn-sm" ng-click="deleteFaq($index); $event.stopPropagation();"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <div class="faq-question" ng-click="toggleFaq($index)">
+                        <h3>{{faq.question}}</h3>
+                        <i class="fa-solid" ng-class="faq.isOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                    </div>
+                    <div class="faq-answer" ng-show="faq.isOpen"><p>{{faq.answer}}</p></div>
+                </div>
+                <div ng-if="faqs.length === 0" class="faqs-empty"><i class="fa-solid fa-circle-question"></i><p>No FAQs yet.</p></div>
+            </div>
+            <div class="trash-container-mini">
+                <button class="trash-toggle-btn" ng-click="toggleFaqTrash()">
+                    <i class="fa-solid fa-trash-can-arrow-up"></i>
+                    {{ showFaqTrash ? 'Hide Deleted FAQs' : 'View Deleted FAQs' }}
+                    <span class="trash-count" ng-if="deletedFaqs.length > 0">{{deletedFaqs.length}}</span>
+                </button>
+                <div class="trash-panel" ng-show="showFaqTrash">
+                    <h3 class="trash-title">Deleted FAQs</h3>
+                    <p class="trash-empty" ng-if="deletedFaqs.length === 0">No deleted FAQs found.</p>
+                    <div class="deleted-faq-card" ng-repeat="faq in deletedFaqs">
+                        <div class="deleted-faq-info"><h3>{{faq.question}}</h3><p>{{faq.answer}}</p></div>
+                        <div class="deleted-faq-actions">
+                            <button class="restore-btn" ng-click="restoreFaq(faq.faqId)"><i class="fa-solid fa-rotate-left"></i> Restore</button>
+                            <button class="perm-delete-btn" ng-click="permanentDeleteFaq(faq.faqId)"><i class="fa-solid fa-trash"></i> Delete Forever</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- FAQ Modal -->
+            <div class="faq-modal-backdrop" ng-show="showFaqModal" ng-click="closeFaqModalBackdrop($event)">
+                <div class="faq-modal-box" ng-click="$event.stopPropagation()">
+                    <div class="modal-hdr">
+                        <div class="modal-hdr-left">
+                            <div class="modal-ico"><i class="fa-solid fa-circle-question"></i></div>
+                            <div>
+                                <span class="modal-ttl">{{ faqEditingIndex !== null ? 'Edit FAQ' : 'Add New FAQ' }}</span>
+                                <div class="modal-sub">This will appear on your public FAQ page</div>
+                            </div>
+                        </div>
+                        <button class="modal-cls" ng-click="closeFaqModal()">&#10005;</button>
+                    </div>
+                    <div class="modal-bdy">
+                        <div class="field-grp">
+                            <label class="field-lbl">Question</label>
+                            <input class="field-inp" type="text" ng-model="faqForm.question" placeholder="e.g. What services do you offer?" />
+                        </div>
+                        <div class="field-grp">
+                            <label class="field-lbl">Answer</label>
+                            <textarea class="field-inp field-ta" ng-model="faqForm.answer" placeholder="Provide a helpful and detailed answer..." rows="4"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-ftr">
+                        <button class="btn-cancel" ng-click="closeFaqModal()">Cancel</button>
+                        <button class="btn-save" ng-click="saveFaqModal()" ng-disabled="!faqForm.question || !faqForm.answer">{{ faqEditingIndex !== null ? 'Save Changes' : 'Add FAQ' }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- TAB: CONTACT -->
+        <!-- ═══════════════════════════════════════════════════ -->
+        <div class="tab-content" ng-show="dashTab === 'contact'">
+            <div class="page-header-row">
+                <h2 class="section-title">Contact Information Management</h2>
+                <button class="add-btn" ng-click="addNewContact()"><i class="fa-solid fa-plus"></i> Add Contact Info</button>
+            </div>
+            <div class="contact-layout">
+                <div class="map-wrapper">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3860.3958514777332!2d121.09269817603956!3d14.633456876269488!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397b8336d0f8f21%3A0x727b2bab93034843!2s35%20M.%20Cruz%20St%2C%20Marikina%2C%201800%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1767855448965!5m2!1sen!2sph"
+                            width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+                <div class="contact-list-wrapper">
+                    <div class="list-header">
+                        <h2>D'est Lounge</h2>
+                        <p class="subtitle">Manage contact information below</p>
+                    </div>
+                    <div class="contact-list">
+                        <div class="contact-card" ng-repeat="contact in contactInfo">
+                            <div class="card-icon"><i ng-class="contact.icon"></i></div>
+                            <div class="card-content">
+                                <h3>{{ contact.label }}</h3>
+                                <p ng-if="contact.infoType === 'phone'"><a href="tel:{{ contact.rawValue }}">{{ contact.rawValue }}</a></p>
+                                <p ng-if="contact.infoType === 'email'"><a href="mailto:{{ contact.rawValue }}">{{ contact.rawValue }}</a></p>
+                                <div ng-if="contact.infoType !== 'phone' && contact.infoType !== 'email'" ng-bind="contact.rawValue"></div>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn-edit" ng-click="editContact($index)" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                                <button class="btn-delete" ng-click="deleteContact($index)" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <div ng-if="contactInfo.length === 0" class="empty-state"><i class="fa-solid fa-inbox"></i><p>No contact information yet</p></div>
+                    </div>
+                </div>
+            </div>
+            <div class="contact-trash-container">
+                <div class="trash-section">
+                    <div class="trash-header">
+                        <div class="trash-header-left">
+                            <i class="fa-solid fa-trash-can" style="color:#6b4423; font-size:15px;"></i>
+                            <span class="trash-label">Deleted Contacts</span>
+                            <span class="trash-badge" ng-if="deletedContacts.length > 0">{{deletedContacts.length}}</span>
+                        </div>
+                        <button class="trash-toggle" ng-click="toggleContactTrash()">{{ showContactTrash ? 'Hide' : 'Show Deleted' }}</button>
+                    </div>
+                    <div class="trash-list" ng-show="showContactTrash">
+                        <p class="trash-empty-state" ng-if="deletedContacts.length === 0">No deleted contacts found.</p>
+                        <div class="deleted-card" ng-repeat="contact in deletedContacts">
+                            <div class="deleted-avatar"><i ng-class="contact.icon"></i></div>
+                            <div class="deleted-info">
+                                <span class="deleted-type-pill">{{contact.infoType}}</span>
+                                <h4>{{ contact.label }}</h4>
+                                <p>{{ contact.value }}</p>
+                            </div>
+                            <div class="deleted-actions">
+                                <button class="btn-restore" ng-click="restoreContact(contact.contactID)"><i class="fa-solid fa-rotate-left"></i> Restore</button>
+                                <button class="btn-perm-delete" ng-click="permanentDeleteContact(contact.contactID)"><i class="fa-solid fa-trash"></i> Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Contact Add/Edit Modal -->
+            <div class="modal-backdrop" ng-show="showModal" ng-click="closeModalBackdrop($event)">
+                <div class="modal-box" ng-click="$event.stopPropagation()">
+                    <div class="modal-hdr">
+                        <div class="modal-hdr-left">
+                            <div class="modal-ico"><i class="fa-solid fa-pen"></i></div>
+                            <div>
+                                <span class="modal-ttl">{{ editingIndex !== null ? 'Edit Contact' : 'Add Contact Info' }}</span>
+                                <div class="modal-sub">This will appear on your public contact page</div>
+                            </div>
+                        </div>
+                        <button class="modal-cls" ng-click="closeModal()">&#10005;</button>
+                    </div>
+                    <div class="modal-bdy">
+                        <div class="field-grp">
+                            <label class="field-lbl">What type of contact is this?</label>
+                            <div class="type-picker">
+                                <div class="type-option" ng-class="{'type-option-active': formData.infoType === 'phone', 'type-option-disabled': editingIndex !== null}" ng-click="editingIndex === null ? setContactType('phone') : null">
+                                    <i class="fa-solid fa-phone type-icon"></i><span>Phone</span>
+                                </div>
+                                <div class="type-option" ng-class="{'type-option-active': formData.infoType === 'email', 'type-option-disabled': editingIndex !== null}" ng-click="editingIndex === null ? setContactType('email') : null">
+                                    <i class="fa-solid fa-envelope type-icon"></i><span>Email</span>
+                                </div>
+                                <div class="type-option" ng-class="{'type-option-active': formData.infoType === 'address', 'type-option-disabled': editingIndex !== null}" ng-click="editingIndex === null ? setContactType('address') : null">
+                                    <i class="fa-solid fa-location-dot type-icon"></i><span>Address</span>
+                                </div>
+                                <div class="type-option" ng-class="{'type-option-active': formData.infoType === 'hours', 'type-option-disabled': editingIndex !== null}" ng-click="editingIndex === null ? setContactType('hours') : null">
+                                    <i class="fa-solid fa-clock type-icon"></i><span>Hours</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-preview" ng-if="formData.label || formData.value">
+                            <div class="preview-label">Preview</div>
+                            <div class="preview-card">
+                                <div class="preview-icon"><i ng-class="formData.icon"></i></div>
+                                <div class="preview-content">
+                                    <div class="preview-title">{{ formData.label || 'Label not set' }}</div>
+                                    <div class="preview-value">{{ formData.value || 'Details not set' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field-grp">
+                            <label class="field-lbl">Display Label</label>
+                            <input class="field-inp" type="text" ng-model="formData.label" placeholder="e.g. Customer Hotline" />
+                            <span class="field-hint">Shown as the card title</span>
+                        </div>
+                        <div class="field-grp">
+                            <label class="field-lbl">Contact Details</label>
+                            <input type="text" ng-model="formData.value" ng-keypress="formData.infoType === 'phone' && numbersOnly($event)" ng-attr-maxlength="{{formData.infoType === 'phone' ? 11 : undefined}}" placeholder="{{contactPlaceholder}}" class="field-inp" />
+                            <span class="field-hint">{{ contactHint }}</span>
+                        </div>
+                    </div>
+                    <div class="modal-ftr">
+                        <button class="btn-cancel" ng-click="closeModal()">Cancel</button>
+                        <button class="btn-save" ng-click="saveContact()">Save Contact</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- TAB: HOMEPAGE -->
+        <!-- ═══════════════════════════════════════════════════ -->
+        <div class="tab-content" ng-show="dashTab === 'homepage'">
+            <h2 class="section-title">Homepage Content</h2>
+            <div class="edit-modal-overlay" id="editModal" style="display:none;">
+                <div class="edit-modal-inner">
+                    <div class="modal-header-plain">
+                        <h3 id="modalTitle">Edit Text</h3>
+                        <button class="modal-close-plain" onclick="closeEditModal()"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="modal-body-plain">
+                        <textarea id="modalInput" class="modal-input-plain" rows="4" oninput="checkCharLimit()"></textarea>
+                        <div id="charCounter" style="text-align:right; font-size:0.8rem; color:#888; margin-top:0.3rem;"></div>
+                    </div>
+                    <div class="modal-footer-plain">
+                        <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+                        <button class="btn-save" onclick="saveEdit()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+                    </div>
+                </div>
+            </div>
+            <div class="homepage-section-card">
+                <h3 class="homepage-section-label">Banner Text</h3>
+                <div class="banner-preview">
+                    <div class="editable-block">
+                        <h1 class="hello">{{bannerText.hello}}</h1>
+                        <button class="inline-edit-btn" ng-click="openEditModal('banner_hello', bannerText.hello, 'Banner — Hello')" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                    </div>
+                    <div class="editable-block">
+                        <h2 class="youre-looking">{{bannerText.youre_looking}}</h2>
+                        <button class="inline-edit-btn" ng-click="openEditModal('banner_looking', bannerText.youre_looking, 'Banner — You\'re Looking')" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                    </div>
+                    <div class="editable-block">
+                        <h2 class="gorgeous">{{bannerText.gorgeous}}</h2>
+                        <button class="inline-edit-btn" ng-click="openEditModal('banner_gorgeous', bannerText.gorgeous, 'Banner — Gorgeous')" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                    </div>
+                    <div class="editable-block">
+                        <h2 class="today">{{bannerText.today}}</h2>
+                        <button class="inline-edit-btn" ng-click="openEditModal('banner_today', bannerText.today, 'Banner — Today')" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="homepage-section-card">
+                <h3 class="homepage-section-label">Services Intro</h3>
+                <div class="editable-block">
+                    <p class="hp-service-title">{{serviceInfo.title}}</p>
+                    <button class="inline-edit-btn" ng-click="openEditModal('service_title', serviceInfo.title, 'Service — Title')" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                </div>
+                <div class="editable-block" style="margin-top:0.5rem;">
+                    <p class="hp-service-tagline">{{serviceInfo.tagline}}</p>
+                    <button class="inline-edit-btn" ng-click="openEditModal('service_tagline', serviceInfo.tagline, 'Service — Tagline')" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                </div>
+            </div>
+            <div class="homepage-section-card">
+                <h3 class="homepage-section-label">Polaroid Images</h3>
+                <div class="polaroid-section-mini">
+                    <div class="polaroid-card-mini" ng-repeat="slot in [1,2,3]">
+                        <div class="admin-controls-abs">
+                            <button class="edit-btn-sm" ng-click="updatePolaroidImage(slot)" title="Change Photo"><i class="fa-solid fa-pen"></i></button>
+                            <button class="delete-btn-sm" ng-click="deletePolaroidImage(slot)" title="Delete Photo"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        <div class="polaroid-image-mini">
+                            <img ng-src="{{polaroidImages[slot]}}" alt="Nail Design {{slot}}" onerror="this.src='/Content/Pictures/HomepageBackground.png'">
+                        </div>
+                        <div class="polaroid-caption-mini"><i class="fa-regular fa-heart"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="homepage-section-card">
+                <h3 class="homepage-section-label">D'est Description</h3>
+                <div class="dest-desc-preview">
+                    <div class="editable-block">
+                        <p class="dest-title-prev">{{destInfo.title}}</p>
+                        <button class="inline-edit-btn" ng-click="openEditModal('dest_title', destInfo.title, 'D\'est — Title')" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                    </div>
+                    <div class="editable-block" style="margin-top:0.5rem;">
+                        <p class="dest-text-prev">{{destInfo.text}}</p>
+                        <button class="inline-edit-btn" ng-click="openEditModal('dest_text', destInfo.text, 'D\'est — Description')" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- TAB: PAYMENT -->
+        <!-- ═══════════════════════════════════════════════════ -->
+        <div class="tab-content" ng-show="dashTab === 'payment'" ng-init="dashTab === 'payment' && loadPaymentInfo()">
+            <h2 class="section-title">Payment Settings</h2>
+            <div class="payment-content">
+                <div class="settings-card">
+                    <div class="form-group">
+                        <label>GCash Number</label>
+                        <input type="text" name="gcashNumber" ng-model="payment.gcash" maxlength="11" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="09XXXXXXXXX" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label>Upload QR Code</label>
+                        <input type="file" id="qrUpload" accept="image/png, image/jpeg, image/jpg" />
+                        <small class="help-text">Upload QR code for GCash payments (PNG, JPG, JPEG)</small>
+                    </div>
+                    <div class="qr-preview" ng-if="paymentInfo.qr">
+                        <label>Current QR Code:</label>
+                        <img ng-src="{{paymentInfo.qr}}" alt="QR Code" class="qr-image" />
+                    </div>
+                    <button class="btn-save" ng-click="savePayment()">Save Settings</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <h2 class="footer-title">Follow our Socials!</h2>
+            <div class="social-links">
+                <a href="https://www.tiktok.com/&#64;destlounge" class="social-item" target="_blank"><i class="fa-brands fa-tiktok"></i><span>destlounge</span></a>
+                <a href="https://www.facebook.com/profile.php?id=61578352581708" class="social-item" target="_blank"><i class="fa-brands fa-facebook"></i><span>D'est Lounge</span></a>
+                <a href="https://www.instagram.com/destlounge/" class="social-item" target="_blank"><i class="fa-brands fa-instagram"></i><span>destlounge</span></a>
+            </div>
+        </div>
+    </footer>
+</div>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Georgia', serif;
+        background-color: #d4c4b0;
+    }
+
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 10%;
+        min-width: 9rem;
+        height: 100vh;
+        background-color: #e7dfd6;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 1.25rem 0;
+        z-index: 1000;
+    }
+
+    .logo-container {
+        margin-bottom: 2rem;
+    }
+
+    .sidebar-logo {
+        width: 3.5rem;
+        height: auto;
+    }
+
+    .sidebar-nav {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        width: 100%;
+    }
+
+    .nav-item {
+        color: #5a4a3a;
+        text-decoration: none;
+        padding: 1rem 0.625rem;
+        font-size: 1rem;
+        font-weight: 500;
+        text-align: center;
+        transition: background-color 0.3s;
+        letter-spacing: 0.0625rem;
+        display: block;
+    }
+
+        .nav-item:hover {
+            background-color: rgba(90,74,58,0.1);
+        }
+
+        .nav-item.active {
+            background-color: rgba(139,111,71,0.3);
+            border-left: 0.25rem solid #8b6f47;
+        }
+
+    .sidebar-footer {
+        margin-top: auto;
+        padding: 1.25rem 0;
+    }
+
+    .admin-link {
+        color: #5a4a3a;
+        text-decoration: none;
+        font-size: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.3125rem;
+    }
+
+        .admin-link i {
+            font-size: 1.25rem;
+        }
+
+    .main-content {
+        margin-left: 10%;
+        min-height: 100vh;
+        background-color: #f5f0eb;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .dashboard-header {
+        background-color: #e7dfd6;
+        padding: 1.5rem 2.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 3px solid #c1b2a5;
+    }
+
+    .dashboard-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #6b4423;
+        letter-spacing: 0.1em;
+        margin: 0;
+    }
+
+    .view-public-btn {
+        padding: 0.6rem 1.25rem;
+        background: transparent;
+        border: 2px solid #8b6f47;
+        border-radius: 25px;
+        color: #6b4423;
+        text-decoration: none;
+        font-size: 0.88rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s;
+    }
+
+        .view-public-btn:hover {
+            background-color: #8b6f47;
+            color: white;
+        }
+
+    .services-header-row {
+        margin-bottom: 1.25rem;
+    }
+
+    .tab-bar {
+        display: flex;
+        background-color: #e7dfd6;
+        border-bottom: 3px solid #c1b2a5;
+        padding: 0 1.5rem;
+        gap: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        flex-shrink: 0;
+    }
+
+    .tab-btn {
+        padding: 0.875rem 1.25rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border: none;
+        background: none;
+        color: #8b6f47;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -3px;
+        transition: all 0.2s;
+        font-family: 'Georgia', serif;
+        white-space: nowrap;
+        flex-shrink: 0;
+        border-radius: 0;
+    }
+
+        .tab-btn:hover {
+            color: #6b4423;
+        }
+
+        .tab-btn.tab-active, .tab-btn.active {
+            color: #6b4423;
+            border-bottom-color: #6b4423 !important;
+            background-color: white;
+        }
+
+    .tab-count {
+        background-color: #d4c4b0;
+        color: #5d4037;
+        border-radius: 12px;
+        padding: 0.1rem 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .tab-count-warn {
+        background-color: #f4c6b0;
+        color: #a03010;
+    }
+
+    .tab-content {
+        padding: 2rem 2.5rem;
+        flex: 1;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #6b4423;
+        margin: 0 0 1.5rem 0;
+    }
+
+    .page-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .add-btn {
+        background-color: #4a7c59;
+        color: white;
+        border: none;
+        padding: 0.7rem 1.4rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: 'Georgia', serif;
+    }
+
+        .add-btn:hover {
+            background-color: #3a6449;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+    .filter-tabs {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .bookings-table-wrap {
+        background: white;
+        border-radius: 1rem;
+        border: 2px solid #d4c4b0;
+        overflow: hidden;
+        box-shadow: 2px 4px 12px rgba(0,0,0,0.07);
+        overflow-x: auto;
+    }
+
+    .bookings-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: .83rem;
+        min-width: 900px;
+    }
+
+        .bookings-table thead tr {
+            background: #6b4423;
+        }
+
+        .bookings-table th {
+            padding: .75rem 1rem;
+            text-align: left;
+            color: #fce8d5;
+            font-weight: 600;
+            font-size: .78rem;
+            letter-spacing: .04em;
+            white-space: nowrap;
+        }
+
+        .bookings-table td {
+            padding: .65rem 1rem;
+            color: #5a4a3a;
+            vertical-align: middle;
+            border-bottom: 1px solid #e7dfd6;
+        }
+
+        .bookings-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .bookings-table tbody tr:hover {
+            background: #faf7f4;
+        }
+
+    .cell-num {
+        color: #a08060;
+        font-size: .75rem;
+    }
+
+    .cell-client {
+        color: #3d2817;
+    }
+
+    .cell-date {
+        white-space: nowrap;
+        font-size: .78rem;
+    }
+
+    .cell-sm {
+        font-size: .78rem;
+    }
+
+    .cell-down {
+        color: #8b6f47;
+    }
+
+    .cell-muted {
+        color: #c1b2a5;
+        font-size: .8rem;
+    }
+
+    .bk-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: .25rem .75rem;
+        border-radius: 20px;
+        font-size: .72rem;
+        font-weight: 700;
+    }
+
+    .bk-pill-pending {
+        background: #fff3e0;
+        color: #e67e22;
+    }
+
+    .bk-pill-approved {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .bk-pill-completed {
+        background: #e3f2fd;
+        color: #1565c0;
+    }
+
+    .bk-pill-cancelled {
+        background: #fce4ec;
+        color: #c62828;
+    }
+
+    .bk-cancel-reason {
+        display: block;
+        font-size: .7rem;
+        color: #c62828;
+        margin-top: .15rem;
+    }
+
+    .bk-receipt-thumb {
+        width: 36px;
+        height: 36px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #d4c4b0;
+        cursor: pointer;
+        transition: transform .2s;
+    }
+
+        .bk-receipt-thumb:hover {
+            transform: scale(1.08);
+        }
+
+    .bk-action-group {
+        display: flex;
+        gap: .35rem;
+        flex-wrap: wrap;
+    }
+
+    .bk-btn {
+        padding: .3rem .75rem;
+        border: none;
+        border-radius: 20px;
+        font-size: .75rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'Georgia', serif;
+        transition: all .2s;
+        white-space: nowrap;
+    }
+
+    .bk-btn-approve {
+        background: #8b6f47;
+        color: #fff;
+    }
+
+        .bk-btn-approve:hover {
+            background: #6b4423;
+        }
+
+    .bk-btn-complete {
+        background: #4a7c59;
+        color: #fff;
+    }
+
+        .bk-btn-complete:hover {
+            background: #3a6049;
+        }
+
+    .bk-btn-cancel {
+        background: #c0392b;
+        color: #fff;
+    }
+
+        .bk-btn-cancel:hover {
+            background: #922b21;
+        }
+
+    .bk-empty {
+        text-align: center;
+        padding: 3rem;
+        color: #a08060;
+        font-style: italic;
+    }
+
+    .bk-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: .85rem 1rem;
+        background: #faf7f4;
+        border-top: 1px solid #e7dfd6;
+        gap: .5rem;
+    }
+
+    .bk-pg-btns {
+        display: flex;
+        gap: .3rem;
+        align-items: center;
+    }
+
+    .bk-pg-btn {
+        min-width: 2rem;
+        height: 2rem;
+        padding: 0 .4rem;
+        border: 1.5px solid #d4c4b0;
+        background: #fff;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: .8rem;
+        color: #6b4423;
+        font-family: 'Georgia', serif;
+        transition: all .15s;
+    }
+
+        .bk-pg-btn:hover:not([disabled]) {
+            background: #e7dfd6;
+        }
+
+        .bk-pg-btn.bk-pg-active {
+            background: #6b4423;
+            color: #fff;
+            border-color: #6b4423;
+        }
+
+        .bk-pg-btn[disabled] {
+            opacity: .4;
+            cursor: default;
+        }
+
+    .stats-bar-row {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .stat-pill {
+        background-color: #4a7c59;
+        color: white;
+        padding: 0.4rem 1rem;
+        border-radius: 2rem;
+        font-size: 0.88rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .stat-pill-active {
+        background-color: #4a7c59;
+    }
+
+    .stat-pill-inactive {
+        background-color: #9a7060;
+    }
+
+    .section-label-small {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #8b6f47;
+        text-transform: uppercase;
+        letter-spacing: 0.1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .nailtech-grid {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: 1.5rem;
+        max-width: 87.5rem;
+        margin: 0 auto 2rem;
+    }
+
+    .nailtech-card {
+        background-color: #6b4423;
+        border-radius: 1.25rem;
+        padding: 1.75rem 1.5rem 1.5rem;
+        box-shadow: 0.25rem 0.25rem 0.75rem rgba(0,0,0,0.2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+        .nailtech-card:hover {
+            transform: translateY(-0.3125rem);
+            box-shadow: 0.375rem 0.375rem 1rem rgba(0,0,0,0.3);
+        }
+
+    .card-avatar {
+        position: relative;
+        width: 5rem;
+        height: 5rem;
+        flex-shrink: 0;
+    }
+
+    .avatar-initials {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        border: 3px solid rgba(255,255,255,0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: white;
+        letter-spacing: 0.05em;
+    }
+
+    .avatar-initials-sm {
+        width: 2.8rem;
+        height: 2.8rem;
+        font-size: 0.9rem;
+        background: rgba(107,68,35,0.15);
+        border: 2px solid rgba(107,68,35,0.2);
+        color: #6b4423;
+    }
+
+    .status-dot {
+        position: absolute;
+        bottom: 0.15rem;
+        right: 0.15rem;
+        width: 0.9rem;
+        height: 0.9rem;
+        border-radius: 50%;
+        border: 2px solid #6b4423;
+    }
+
+    .status-dot-active {
+        background: #4CAF50;
+    }
+
+    .status-dot-inactive {
+        background: #9a9a9a;
+        border-color: white;
+    }
+
+    .card-info {
+        text-align: center;
+        flex: 1;
+        width: 100%;
+    }
+
+    .card-name {
+        color: white;
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin: 0 0 0.25rem;
+    }
+
+    .card-role {
+        color: rgba(255,255,255,0.7);
+        font-size: 0.82rem;
+        display: block;
+        margin-bottom: 0.5rem;
+        font-style: italic;
+    }
+
+    .card-meta {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        color: rgba(255,255,255,0.65);
+        font-size: 0.78rem;
+    }
+
+    .card-actions-row {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .card-btn {
+        background: rgba(255,255,255,0.95);
+        border: none;
+        border-radius: 50%;
+        width: 2rem;
+        height: 2rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+        box-shadow: 0 0.125rem 0.375rem rgba(0,0,0,0.2);
+    }
+
+        .card-btn i {
+            font-size: 0.8rem;
+        }
+
+    .card-btn-edit {
+        color: #4a7c59;
+    }
+
+        .card-btn-edit:hover {
+            background: #4a7c59;
+            color: white;
+            transform: scale(1.1);
+        }
+
+    .card-btn-deactivate {
+        color: #c87a2a;
+    }
+
+        .card-btn-deactivate:hover {
+            background: #c87a2a;
+            color: white;
+            transform: scale(1.1);
+        }
+
+    .card-btn-delete {
+        color: #c84b4b;
+    }
+
+        .card-btn-delete:hover {
+            background: #c84b4b;
+            color: white;
+            transform: scale(1.1);
+        }
+
+    .nailtech-empty {
+        grid-column: 1/-1;
+        text-align: center;
+        padding: 3rem;
+        color: #8a7060;
+    }
+
+        .nailtech-empty i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+            opacity: 0.4;
+        }
+
+    .inactive-section {
+        max-width: 87.5rem;
+        margin: 0 auto 2rem;
+    }
+
+    .inactive-toggle-btn {
+        background: transparent;
+        border: 2px solid #6b4423;
+        color: #6b4423;
+        padding: 0.6rem 1.5rem;
+        border-radius: 1.875rem;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0 auto;
+        font-family: 'Georgia', serif;
+    }
+
+        .inactive-toggle-btn:hover {
+            background-color: #6b4423;
+            color: white;
+        }
+
+    .inactive-count {
+        background: #c84b4b;
+        color: white;
+        border-radius: 50%;
+        padding: 0.1rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .inactive-panel {
+        margin-top: 1.5rem;
+        background: rgba(107,68,35,0.08);
+        border: 2px dashed #6b4423;
+        border-radius: 1rem;
+        padding: 1.5rem;
+    }
+
+    .inactive-panel-title {
+        color: #6b4423;
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .inactive-card {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 0.875rem 1.25rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        opacity: 0.85;
+    }
+
+    .inactive-avatar {
+        position: relative;
+        flex-shrink: 0;
+        width: 2.8rem;
+        height: 2.8rem;
+    }
+
+    .inactive-info {
+        flex: 1;
+    }
+
+        .inactive-info h3 {
+            color: #4a3020;
+            font-size: 1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .inactive-info p {
+            color: #7a6050;
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+    .inactive-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .restore-btn {
+        background: #4a7c59;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 1rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: all 0.3s;
+        font-family: 'Georgia', serif;
+    }
+
+        .restore-btn:hover {
+            background: #3a6048;
+        }
+
+    .perm-delete-btn {
+        background: #c84b4b;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 1rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: all 0.3s;
+        font-family: 'Georgia', serif;
+    }
+
+        .perm-delete-btn:hover {
+            background: #a83a3a;
+        }
+
+    .sub-tab-bar {
+        display: flex;
+        background-color: #faf8f5;
+        border-bottom: 2px solid #d4c4b0;
+        padding: 0 1.5rem;
+        margin-bottom: 1.5rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+        .sub-tab-bar .tab-btn {
+            padding: 0.7rem 1.4rem;
+            font-size: 0.85rem;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            white-space: nowrap;
+        }
+
+            .sub-tab-bar .tab-btn.tab-active {
+                color: #6b4423;
+                border-bottom-color: #6b4423;
+                background-color: #faf8f5;
+            }
+
+    .sub-tab-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        padding: 0 0.5rem;
+        overflow: visible;
+    }
+
+    .upload-card {
+        background-color: white;
+        border-radius: 16px;
+        border: 2px solid #d4c4b0;
+        padding: 1.8rem;
+        box-shadow: 2px 4px 12px rgba(0,0,0,0.08);
+        margin-bottom: 2rem;
+    }
+
+        .upload-card h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #3d2817;
+            margin: 0 0 1.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+    .upload-form {
+        display: flex;
+        gap: 2rem;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .upload-dropzone {
+        flex: 0 0 180px;
+        height: 180px;
+        border: 2.5px dashed #c1b2a5;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background-color: #faf8f5;
+        gap: 0.5rem;
+        color: #8b6f47;
+    }
+
+        .upload-dropzone:hover {
+            border-color: #6b4423;
+            background-color: #f5f0eb;
+            color: #6b4423;
+        }
+
+        .upload-dropzone i {
+            font-size: 2.5rem;
+        }
+
+        .upload-dropzone p {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .upload-dropzone span {
+            font-size: 0.75rem;
+            color: #b0907a;
+        }
+
+    .upload-fields {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-width: 200px;
+    }
+
+    .upload-preview-wrap {
+        border-radius: 10px;
+        overflow: hidden;
+        border: 2px solid #d4c4b0;
+    }
+
+    .upload-preview-img {
+        width: 100%;
+        max-height: 120px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .gallery-item {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 3px solid #d4c4b0;
+        box-shadow: 3px 3px 10px rgba(0,0,0,0.12);
+        aspect-ratio: 1/1;
+    }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.4s ease;
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.04);
+        }
+
+    .gallery-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(61,40,23,0.9));
+        padding: 1.2rem 1rem 0.8rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .gallery-item:hover .gallery-overlay {
+        opacity: 1;
+    }
+
+    .gallery-caption {
+        color: white;
+        font-size: 0.85rem;
+        font-weight: 600;
+        flex: 1;
+        margin-right: 0.5rem;
+    }
+
+    .gallery-item-actions {
+        display: flex;
+        gap: 0.4rem;
+    }
+
+    .item-action-btn {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+    }
+
+    .item-edit {
+        background-color: rgba(255,255,255,0.9);
+        color: #6b4423;
+    }
+
+        .item-edit:hover {
+            background-color: #6b4423;
+            color: white;
+        }
+
+    .item-archive {
+        background-color: rgba(255,255,255,0.9);
+        color: #7f8c8d;
+    }
+
+        .item-archive:hover {
+            background-color: #7f8c8d;
+            color: white;
+        }
+
+    .item-delete {
+        background-color: rgba(255,255,255,0.9);
+        color: #c0392b;
+    }
+
+        .item-delete:hover {
+            background-color: #c0392b;
+            color: white;
+        }
+
+    .inline-edit-overlay {
+        position: absolute;
+        inset: 0;
+        background-color: rgba(61,40,23,0.92);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        gap: 1rem;
+    }
+
+    .inline-edit-actions {
+        display: flex;
+        gap: 0.6rem;
+    }
+
+    .stat-card-sm {
+        background: white;
+        border-radius: 0.75rem;
+        border: 2px solid #d4c4b0;
+        padding: 1rem 1.25rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+        flex: 1;
+        min-width: 80px;
+    }
+
+    .stat-num-sm {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #6b4423;
+    }
+
+    .stat-lbl-sm {
+        font-size: 0.75rem;
+        color: #8b6f47;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    .stat-warn-sm .stat-num-sm {
+        color: #e67e22;
+    }
+
+    .stat-muted-sm .stat-num-sm {
+        color: #7f8c8d;
+    }
+
+    .filter-row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .reviews-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .review-admin-card {
+        background-color: white;
+        border: 2px solid #e7dfd6;
+        border-radius: 12px;
+        padding: 1.2rem 1.5rem;
+    }
+
+    .flagged-card {
+        border-color: #f4c6b0;
+        background-color: #fff8f4;
+    }
+
+    .archived-card {
+        opacity: 0.8;
+        background-color: #f5f5f5;
+        border-color: #ddd;
+    }
+
+    .rac-top {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.8rem;
+        flex-wrap: wrap;
+    }
+
+    .rac-stars i {
+        color: #d4a843;
+        font-size: 0.95rem;
+    }
+
+    .rac-service {
+        font-size: 0.82rem;
+        color: #6b4423;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .rac-date {
+        font-size: 0.82rem;
+        color: #a08060;
+        font-style: italic;
+        margin-left: auto;
+    }
+
+    .flag-badge {
+        background-color: #f4c6b0;
+        color: #a03010;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.2rem 0.7rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .archived-badge {
+        background-color: #e0e0e0;
+        color: #555;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.2rem 0.7rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .rac-text {
+        font-size: 0.95rem;
+        color: #4a3428;
+        line-height: 1.6;
+        font-style: italic;
+        margin: 0 0 1rem 0;
+    }
+
+    .rac-actions {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+    }
+
+    .rac-images {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+
+    .rac-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid #ddd;
+    }
+
+    .services-layout {
+        display: flex;
+        gap: 2rem;
+    }
+
+    .services-sidebar-mini {
+        width: 180px;
+        background-color: #e7dfd6;
+        border: 2px solid #c1b2a5;
+        padding: 1.5rem 1rem;
+        height: fit-content;
+        flex-shrink: 0;
+        border-radius: 0.75rem;
+    }
+
+        .services-sidebar-mini h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #5d4037;
+            margin: 0 0 1.25rem 0;
+            text-align: center;
+        }
+
+    .service-cat {
+        margin-bottom: 0.75rem;
+        cursor: pointer;
+        padding: 0.6rem 0.75rem;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        color: #5d4037;
+        text-align: center;
+        font-weight: 500;
+    }
+
+        .service-cat:hover {
+            background-color: #d4c4b0;
+        }
+
+        .service-cat.active {
+            background-color: #6b4423;
+            color: white;
+        }
+
+    .services-main {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .services-content-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 280px));
+        gap: 1.5rem;
+        align-content: start;
+        justify-content: start;
+        margin-bottom: 1.5rem;
+    }
+
+    .service-card {
+        background-color: white;
+        border: 3px solid #3d2817;
+        padding: 1rem;
+        box-shadow: 4px 4px 8px rgba(0,0,0,0.2);
+        transition: transform 0.3s ease;
+        position: relative;
+    }
+
+        .service-card:hover {
+            transform: scale(1.03);
+        }
+
+    .admin-controls-abs {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        display: flex;
+        gap: 0.3rem;
+        z-index: 10;
+    }
+
+    .edit-btn-sm, .delete-btn-sm {
+        background: rgba(255,255,255,0.95);
+        border: none;
+        border-radius: 50%;
+        width: 2rem;
+        height: 2rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+        box-shadow: 0 0.125rem 0.375rem rgba(0,0,0,0.2);
+        font-size: 0.8rem;
+    }
+
+    .edit-btn-sm {
+        color: #4a7c59;
+    }
+
+        .edit-btn-sm:hover {
+            background: #4a7c59;
+            color: white;
+            transform: scale(1.1);
+        }
+
+    .delete-btn-sm {
+        color: #c84b4b;
+    }
+
+        .delete-btn-sm:hover {
+            background: #c84b4b;
+            color: white;
+            transform: scale(1.1);
+        }
+
+    .service-image {
+        width: 100%;
+        height: 200px;
+        overflow: hidden;
+        border: 2px solid #3d2817;
+        margin-bottom: 0.75rem;
+    }
+
+        .service-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .service-name {
+        text-align: center;
+        font-size: 1rem;
+        color: #3d2817;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        padding: 0.4rem 0 0.2rem;
+    }
+
+    .service-description {
+        text-align: center;
+        font-size: 0.82rem;
+        color: #7a6a5a;
+        padding: 0 0.5rem 0.4rem;
+        line-height: 1.5;
+    }
+
+    .service-price {
+        text-align: center;
+        font-size: 1.1rem;
+        color: #6b4423;
+        font-weight: 700;
+        padding: 0.25rem 0;
+    }
+
+    .trash-container-mini {
+        align-items: center;
+        max-width: 87.5rem;
+        margin: 0 auto 2rem;
+    }
+
+    .trash-toggle-btn {
+        background: transparent;
+        border: 2px solid #6b4423;
+        color: #6b4423;
+        padding: 0.6rem 1.5rem;
+        border-radius: 1.875rem;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0 auto;
+        font-family: 'Georgia', serif;
+    }
+
+        .trash-toggle-btn:hover {
+            background-color: #6b4423;
+            color: white;
+        }
+
+    .trash-count {
+        background: #c84b4b;
+        color: white;
+        border-radius: 50%;
+        padding: 0.1rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .trash-panel {
+        margin-top: 1.5rem;
+        background: rgba(107,68,35,0.08);
+        border: 2px dashed #6b4423;
+        border-radius: 1rem;
+        padding: 1.5rem;
+    }
+
+    .trash-title {
+        color: #6b4423;
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .trash-empty {
+        color: #8a7060;
+        text-align: center;
+        font-style: italic;
+        padding: 1rem 0;
+    }
+
+    .deleted-faq-card {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        opacity: 0.85;
+    }
+
+    .deleted-faq-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+        .deleted-faq-info h3 {
+            color: #4a3020;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .deleted-faq-info p {
+            color: #7a6050;
+            font-size: 0.875rem;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+    .deleted-faq-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .faqs-grid {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: 1.5rem;
+        max-width: 87.5rem;
+        margin: 0 auto 2rem;
+    }
+
+    .faq-card {
+        background-color: #6b4423;
+        border-radius: 1.25rem;
+        padding: 2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0.25rem 0.25rem 0.75rem rgba(0,0,0,0.2);
+        min-height: 10rem;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+        .faq-card:hover {
+            transform: translateY(-0.3125rem);
+            box-shadow: 0.375rem 0.375rem 1rem rgba(0,0,0,0.3);
+        }
+
+        .faq-card.active {
+            background-color: #5d3a1f;
+        }
+
+    .faq-question {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        padding-top: 2rem;
+    }
+
+        .faq-question h3 {
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+            line-height: 1.4;
+            flex: 1;
+        }
+
+        .faq-question i {
+            color: white;
+            font-size: 1.1rem;
+        }
+
+    .faq-answer {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 0.125rem solid rgba(255,255,255,0.3);
+    }
+
+        .faq-answer p {
+            color: white;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+    .faqs-empty {
+        grid-column: 1/-1;
+        text-align: center;
+        padding: 3rem;
+        color: #8a7060;
+    }
+
+        .faqs-empty i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+            opacity: 0.4;
+        }
+
+    .contact-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        min-height: 400px;
+    }
+
+    .map-wrapper {
+        border: 3px solid #5a4a3a;
+        border-radius: 0.625rem;
+        overflow: hidden;
+        box-shadow: 0.25rem 0.25rem 0.75rem rgba(0,0,0,0.2);
+        min-height: 350px;
+    }
+
+    .contact-list-wrapper {
+        background-color: rgba(232,223,213,0.95);
+        padding: 1.5rem;
+        border: 3px solid #5a4a3a;
+        border-radius: 0.625rem;
+        box-shadow: 0.25rem 0.25rem 0.75rem rgba(0,0,0,0.2);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .list-header {
+        text-align: center;
+        margin-bottom: 1.25rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #c1b2a5;
+    }
+
+        .list-header h2 {
+            font-size: 1.75rem;
+            color: #6b4423;
+            margin: 0 0 0.5rem 0;
+            font-style: italic;
+        }
+
+    .subtitle {
+        font-size: 0.9rem;
+        color: #8b6f47;
+        margin: 0;
+    }
+
+    .contact-list {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .contact-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+        background-color: rgba(249,246,243,0.9);
+        border-radius: 0.5rem;
+        border-left: 4px solid #4a7c59;
+        transition: all 0.3s;
+    }
+
+        .contact-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+    .card-icon {
+        flex-shrink: 0;
+        width: 2.5rem;
+        height: 2.5rem;
+        background-color: #f0e6dd;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #8b6f47;
+        font-size: 1.2rem;
+    }
+
+    .card-content {
+        flex: 1;
+    }
+
+        .card-content h3 {
+            font-size: 1rem;
+            color: #6b4423;
+            font-weight: 600;
+            margin: 0 0 0.3rem;
+        }
+
+        .card-content p {
+            font-size: 0.9rem;
+            color: #5a4a3a;
+            margin: 0;
+            word-break: break-word;
+        }
+
+        .card-content a {
+            color: #4a7c59;
+            text-decoration: none;
+        }
+
+            .card-content a:hover {
+                text-decoration: underline;
+            }
+
+        .card-content div {
+            font-size: 0.9rem;
+            color: #5a4a3a;
+        }
+
+    .card-actions {
+        flex-shrink: 0;
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-edit, .btn-delete {
+        width: 2rem;
+        height: 2rem;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+        font-size: 0.75rem;
+        background-color: white;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+
+    .btn-edit {
+        color: #4a7c59;
+    }
+
+        .btn-edit:hover {
+            background-color: #4a7c59;
+            color: white;
+            transform: scale(1.1);
+        }
+
+    .btn-delete {
+        color: #c84b4b;
+    }
+
+        .btn-delete:hover {
+            background-color: #c84b4b;
+            color: white;
+            transform: scale(1.1);
+        }
+
+    .contact-trash-container {
+        margin-bottom: 2rem;
+    }
+
+    .trash-section {
+        background: #faf7f4;
+        border-radius: 16px;
+        border: 1.5px solid #c9b89e;
+        overflow: hidden;
+    }
+
+    .trash-header {
+        background: #f2ece5;
+        border-bottom: 1px solid #ddd0c0;
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .trash-header-left {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+    }
+
+    .trash-label {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #6b4423;
+    }
+
+    .trash-badge {
+        background: #c84b4b;
+        color: white;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 20px;
+    }
+
+    .trash-toggle {
+        font-size: 0.82rem;
+        color: #8b6030;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-family: 'Georgia', serif;
+        text-decoration: underline;
+    }
+
+    .trash-list {
+        padding: 1rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .trash-empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: #a08060;
+        font-style: italic;
+    }
+
+    .deleted-card {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #e0d0bc;
+        padding: 0.9rem 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        opacity: 0.88;
+    }
+
+    .deleted-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #f0e4d4;
+        border: 1.5px solid #d6c0a8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #8b6030;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+
+    .deleted-info {
+        flex: 1;
+    }
+
+        .deleted-info h4 {
+            font-size: 0.92rem;
+            color: #4a3018;
+            margin-bottom: 2px;
+        }
+
+        .deleted-info p {
+            font-size: 0.8rem;
+            color: #9a7050;
+            margin: 0;
+        }
+
+    .deleted-type-pill {
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 2px 9px;
+        border-radius: 20px;
+        background: #f0e4d4;
+        color: #7a4a20;
+        display: inline-block;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    .deleted-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .btn-restore {
+        padding: 0.45rem 1rem;
+        border-radius: 50px;
+        border: 1.5px solid #4a7c59;
+        background: transparent;
+        color: #4a7c59;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'Georgia', serif;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.2s;
+    }
+
+        .btn-restore:hover {
+            background: #4a7c59;
+            color: white;
+        }
+
+    .btn-perm-delete {
+        padding: 0.45rem 1rem;
+        border-radius: 50px;
+        border: 1.5px solid #c84b4b;
+        background: transparent;
+        color: #c84b4b;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'Georgia', serif;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.2s;
+    }
+
+        .btn-perm-delete:hover {
+            background: #c84b4b;
+            color: white;
+        }
+
+    .type-picker {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: 8px;
+    }
+
+    .type-option {
+        border: 1.5px solid #d6c4ae;
+        border-radius: 10px;
+        padding: 10px 6px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .type-option-disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .type-option span {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #9a7050;
+        font-family: 'Georgia', serif;
+    }
+
+    .type-option:hover {
+        border-color: #8b6030;
+        background: #fef9f5;
+    }
+
+    .type-option-active {
+        border: 2px solid #6b4423 !important;
+        background: #fef9f5;
+    }
+
+        .type-option-active span {
+            color: #6b4423 !important;
+        }
+
+    .type-icon {
+        font-size: 1.2rem;
+        color: #9a7050;
+    }
+
+    .type-option-active .type-icon {
+        color: #6b4423;
+    }
+
+    .homepage-section-card {
+        background: white;
+        border-radius: 1rem;
+        border: 2px solid #d4c4b0;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 2px 4px 8px rgba(0,0,0,0.06);
+    }
+
+    .homepage-section-label {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #8b6030;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #e7dfd6;
+    }
+
+    .banner-preview {
+        background-color: #e8dfd5;
+        border: 2px solid #c1b2a5;
+        border-radius: 0.5rem;
+        padding: 2rem;
+    }
+
+    .editable-block {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+        .editable-block:hover {
+            background: rgba(139,111,71,0.08);
+            border-radius: 0.4rem;
+        }
+
+    .inline-edit-btn {
+        background: white;
+        border: none;
+        border-radius: 50%;
+        width: 2rem;
+        height: 2rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #4a7c59;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        transition: all 0.2s;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+
+        .inline-edit-btn:hover {
+            background: #4a7c59;
+            color: white;
+            transform: scale(1.1);
+        }
+
+    .hello {
+        font-size: 3.5rem;
+        font-weight: 900;
+        color: #6b4423;
+        margin: 0;
+        letter-spacing: 0.1em;
+    }
+
+    .youre-looking {
+        font-size: 2.5rem;
+        font-weight: 400;
+        color: #6b4423;
+        margin: 0;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        -webkit-text-stroke: 0.09375rem #6b4423;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .gorgeous {
+        font-size: 3rem;
+        font-weight: 400;
+        color: #6b4423;
+        margin: 0;
+        font-family: 'Brush Script MT', cursive;
+        font-style: italic;
+    }
+
+    .today {
+        font-size: 2.5rem;
+        font-weight: 400;
+        color: #6b4423;
+        margin: 0;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        -webkit-text-stroke: 0.09375rem #6b4423;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .hp-service-title {
+        font-size: 2rem;
+        font-weight: bold;
+        font-style: italic;
+        color: #8b6f47;
+        font-family: 'Brush Script MT', cursive;
+        margin: 0;
+    }
+
+    .hp-service-tagline {
+        font-size: 1rem;
+        color: #5a4a3a;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .polaroid-section-mini {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .polaroid-card-mini {
+        background: white;
+        padding: 0.75rem;
+        padding-bottom: 0.5rem;
+        box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.15);
+        width: 11rem;
+        position: relative;
+    }
+
+    .polaroid-image-mini {
+        width: 100%;
+        height: 10rem;
+        overflow: hidden;
+        margin-bottom: 0.5rem;
+        border: 1px solid #e0e0e0;
+    }
+
+        .polaroid-image-mini img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .polaroid-caption-mini {
+        text-align: center;
+        color: #c84b4b;
+        font-size: 1rem;
+        padding: 0.2rem 0;
+    }
+
+    .dest-desc-preview {
+        background: rgba(198,175,151,0.4);
+        border-radius: 1rem;
+        padding: 1.5rem;
+    }
+
+    .dest-title-prev {
+        font-size: 2rem;
+        font-weight: bold;
+        font-style: italic;
+        color: #5a4a3a;
+        font-family: 'Brush Script MT', cursive;
+        margin: 0;
+    }
+
+    .dest-text-prev {
+        font-size: 0.95rem;
+        line-height: 1.8;
+        color: #5a4a3a;
+        margin: 0;
+    }
+
+    .edit-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.45);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(3px);
+    }
+
+    .edit-modal-inner {
+        background: white;
+        border-radius: 0.75rem;
+        width: 32rem;
+        max-width: 90vw;
+        box-shadow: 0 1.5rem 3rem rgba(0,0,0,0.25);
+        overflow: hidden;
+    }
+
+    .modal-header-plain {
+        background: #e8dfd5;
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #ddd;
+    }
+
+        .modal-header-plain h3 {
+            font-size: 1.1rem;
+            color: #5a4a3a;
+            font-weight: 700;
+            margin: 0;
+        }
+
+    .modal-close-plain {
+        background: none;
+        border: none;
+        font-size: 1.1rem;
+        color: #888;
+        cursor: pointer;
+    }
+
+        .modal-close-plain:hover {
+            color: #c84b4b;
+        }
+
+    .modal-body-plain {
+        padding: 1.5rem;
+    }
+
+    .modal-input-plain {
+        width: 100%;
+        border: 1.5px solid #ddd;
+        border-radius: 0.375rem;
+        padding: 0.75rem;
+        font-family: 'Georgia', serif;
+        font-size: 0.95rem;
+        color: #333;
+        resize: vertical;
+    }
+
+        .modal-input-plain:focus {
+            outline: none;
+            border-color: #8b6f47;
+        }
+
+    .modal-footer-plain {
+        padding: 1rem 1.5rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        border-top: 1px solid #eee;
+    }
+
+    .payment-content {
+        display: flex;
+        justify-content: flex-start;
+        padding: 1rem 0;
+    }
+
+    .settings-card {
+        background: #e8ddd1;
+        padding: 2.5rem;
+        border-radius: 25px;
+        width: 100%;
+        max-width: 500px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+        .settings-card .form-group {
+            margin-bottom: 1.25rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+            .settings-card .form-group label {
+                margin-bottom: 0.5rem;
+                font-weight: 600;
+                color: #5a4a3a;
+                font-size: 0.875rem;
+            }
+
+        .settings-card .form-input, .settings-card input[type="file"] {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 10px;
+            border: 1px solid #cbb9a6;
+            font-size: 0.875rem;
+            outline: none;
+            background: white;
+            box-sizing: border-box;
+        }
+
+            .settings-card .form-input:focus {
+                border-color: #6b5544;
+            }
+
+        .settings-card .help-text {
+            display: block;
+            margin-top: 0.3125rem;
+            font-size: 0.75rem;
+            color: #8b6f47;
+            font-style: italic;
+        }
+
+    .qr-preview {
+        margin-bottom: 1.25rem;
+        text-align: center;
+        padding: 0.9375rem;
+        background: #c9b5a3;
+        border-radius: 10px;
+    }
+
+        .qr-preview label {
+            display: block;
+            margin-bottom: 0.625rem;
+            font-weight: 600;
+            color: #5a4a3a;
+            font-size: 0.875rem;
+        }
+
+    .qr-image {
+        width: 150px;
+        height: auto;
+        border: 2px solid white;
+        border-radius: 10px;
+        padding: 5px;
+        background: white;
+    }
+
+    .admin-btn {
+        padding: 0.55rem 1.2rem;
+        font-size: 0.88rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: all 0.2s;
+        font-family: 'Georgia', serif;
+        text-decoration: none;
+    }
+
+        .admin-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+    .admin-btn-sm {
+        padding: 0.4rem 0.9rem;
+        font-size: 0.8rem;
+    }
+
+    .admin-btn-primary {
+        background-color: #6b4423;
+        color: white;
+    }
+
+        .admin-btn-primary:hover:not(:disabled) {
+            background-color: #5d3a1f;
+        }
+
+    .admin-btn-secondary {
+        background-color: #e7dfd6;
+        color: #5d4037;
+    }
+
+        .admin-btn-secondary:hover {
+            background-color: #d4c4b0;
+        }
+
+    .admin-btn-danger {
+        background-color: #c0392b;
+        color: white;
+    }
+
+        .admin-btn-danger:hover {
+            background-color: #a93226;
+        }
+
+    .admin-btn-flag {
+        background-color: #f39c12;
+        color: white;
+    }
+
+        .admin-btn-flag:hover {
+            background-color: #d68910;
+        }
+
+    .admin-btn-unflag {
+        background-color: #e7dfd6;
+        color: #5d4037;
+    }
+
+    .admin-btn-archive {
+        background-color: #7f8c8d;
+        color: white;
+    }
+
+        .admin-btn-archive:hover {
+            background-color: #6c7a7b;
+        }
+
+    .admin-btn-restore {
+        background-color: #27ae60;
+        color: white;
+    }
+
+        .admin-btn-restore:hover {
+            background-color: #1e8449;
+        }
+
+    .admin-input {
+        padding: 0.65rem 1rem;
+        border: 2px solid #d4c4b0;
+        border-radius: 10px;
+        font-size: 0.93rem;
+        color: #3d2817;
+        font-family: inherit;
+        outline: none;
+        width: 100%;
+        box-sizing: border-box;
+        transition: border-color 0.3s;
+    }
+
+        .admin-input:focus {
+            border-color: #6b4423;
+        }
+
+    .admin-search {
+        padding: 0.6rem 1rem;
+        border: 2px solid #d4c4b0;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        color: #3d2817;
+        font-family: inherit;
+        outline: none;
+        min-width: 200px;
+        transition: border-color 0.3s;
+    }
+
+        .admin-search:focus {
+            border-color: #6b4423;
+        }
+
+    .admin-select {
+        padding: 0.6rem 1rem;
+        border: 2px solid #d4c4b0;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        color: #3d2817;
+        font-family: inherit;
+        background-color: white;
+        cursor: pointer;
+        outline: none;
+    }
+
+    .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
+        background: rgba(0,0,0,0.35);
+        backdrop-filter: blur(2px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .modal-backdrop.ng-hide {
+            display: none !important;
+        }
+
+        .modal-backdrop:not(.ng-hide) {
+            display: flex !important;
+        }
+
+    .modal-backdrop-confirm {
+        background: rgba(0,0,0,0.5);
+    }
+
+    .modal-box {
+        background: #faf7f4;
+        border-radius: 20px;
+        width: 100%;
+        max-width: 560px;
+        border: 1.5px solid #c9b89e;
+        overflow: hidden;
+        max-height: 92vh;
+        overflow-y: auto;
+    }
+
+    .faq-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
+        backdrop-filter: blur(1px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .faq-modal-backdrop.ng-hide {
+            display: none !important;
+        }
+
+        .faq-modal-backdrop:not(.ng-hide) {
+            display: flex !important;
+        }
+
+    .faq-modal-box {
+        background: #faf7f4;
+        border-radius: 20px;
+        width: 100%;
+        max-width: 520px;
+        border: 1.5px solid #c9b89e;
+        overflow: hidden;
+    }
+
+    .modal-hdr {
+        background: #6b4423;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .modal-hdr-left {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .modal-ico {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.18);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fce8d5;
+        font-size: 15px;
+    }
+
+    .modal-ttl {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #fce8d5;
+        display: block;
+    }
+
+    .modal-sub {
+        font-size: 0.72rem;
+        color: rgba(252,232,213,0.65);
+        margin-top: 2px;
+    }
+
+    .modal-cls {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.15);
+        border: none;
+        color: #fce8d5;
+        font-size: 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+    }
+
+        .modal-cls:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+    .modal-bdy {
+        padding: 1.5rem 1.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .modal-ftr {
+        padding: 1.1rem 1.75rem;
+        background: #f2ece5;
+        border-top: 1px solid #ddd0c0;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        position: sticky;
+        bottom: 0;
+    }
+
+    .field-grp {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        flex: 1;
+    }
+
+    .field-grp-full {
+        flex: 1 1 100%;
+    }
+
+    .field-lbl {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #8b6030;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+    }
+
+    .required {
+        color: #c84b4b;
+    }
+
+    .field-inp {
+        background: #fff;
+        border: 1.5px solid #d6c4ae;
+        border-radius: 10px;
+        padding: 0.6rem 0.9rem;
+        font-size: 0.93rem;
+        color: #4a3018;
+        font-family: 'Georgia', serif;
+        outline: none;
+        width: 100%;
+        transition: border-color 0.2s;
+    }
+
+        .field-inp:focus {
+            border-color: #8b6030;
+        }
+
+    .field-ta {
+        resize: vertical;
+        min-height: 80px;
+        line-height: 1.6;
+    }
+
+    .field-sel {
+        appearance: none;
+        -webkit-appearance: none;
+        cursor: pointer;
+    }
+
+    .confirm-modal-box {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 380px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    }
+
+    .confirm-ico {
+        font-size: 2.5rem;
+        color: #c84b4b;
+        margin-bottom: 1rem;
+    }
+
+    .confirm-ttl {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #3d2817;
+        margin-bottom: 0.5rem;
+    }
+
+    .confirm-msg {
+        font-size: 0.9rem;
+        color: #7a6050;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }
+
+    .confirm-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+    }
+
+    .btn-cancel {
+        padding: 0.6rem 1.4rem;
+        border-radius: 50px;
+        border: 1.5px solid #c9b89e;
+        background: transparent;
+        color: #6b4423;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'Georgia', serif;
+        transition: background 0.2s;
+    }
+
+        .btn-cancel:hover {
+            background: #e8dcd1;
+        }
+
+    .btn-save {
+        padding: 0.6rem 1.6rem;
+        border-radius: 50px;
+        border: none;
+        background: #6b4423;
+        color: #fce8d5;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'Georgia', serif;
+        transition: background 0.2s;
+    }
+
+        .btn-save:hover:not(:disabled) {
+            background: #8b5a2b;
+        }
+
+        .btn-save:disabled {
+            background: #c9b89e;
+            cursor: not-allowed;
+        }
+
+    .btn-confirm-delete {
+        padding: 0.6rem 1.6rem;
+        border-radius: 50px;
+        border: none;
+        background: #c84b4b;
+        color: white;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'Georgia', serif;
+        transition: background 0.2s;
+    }
+
+        .btn-confirm-delete:hover {
+            background: #a83a3a;
+        }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(30,15,5,0.6);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .modal-card {
+        background-color: white;
+        border-radius: 16px;
+        padding: 2.5rem;
+        max-width: 420px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 16px 48px rgba(0,0,0,0.25);
+    }
+
+    .modal-icon-plain {
+        font-size: 3rem;
+        color: #e67e22;
+        margin-bottom: 1rem;
+    }
+
+    .modal-card h3 {
+        font-size: 1.4rem;
+        color: #3d2817;
+        margin: 0 0 0.8rem;
+    }
+
+    .modal-card p {
+        font-size: 0.95rem;
+        color: #5d4037;
+        line-height: 1.6;
+        margin: 0 0 1.8rem;
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .modal-title-center {
+        color: #5d4037;
+        margin: 0 0 2rem;
+        font-size: 1.75rem;
+        text-align: center;
+    }
+
+    .service-modal-box {
+        background-color: white;
+        padding: 2.5rem;
+        border-radius: 10px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .form-grp {
+        margin-bottom: 1.25rem;
+        text-align: left;
+    }
+
+        .form-grp label {
+            display: block;
+            color: #5d4037;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+    .form-inp {
+        width: 100%;
+        padding: 0.9rem 1.2rem;
+        font-size: 1rem;
+        border: 2px solid #d4c4b0;
+        border-radius: 8px;
+        box-sizing: border-box;
+        outline: none;
+        transition: border-color 0.3s ease;
+        font-family: 'Georgia', serif;
+    }
+
+        .form-inp:focus {
+            border-color: #8b6f47;
+        }
+
+    .form-ta {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .form-inp-file {
+        width: 100%;
+        padding: 0.5rem;
+        font-size: 0.95rem;
+        border: 2px dashed #d4c4b0;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    .image-preview-box {
+        margin-top: 1rem;
+        text-align: center;
+    }
+
+        .image-preview-box img {
+            max-width: 100%;
+            max-height: 200px;
+            border: 2px solid #d4c4b0;
+            border-radius: 8px;
+        }
+
+    .modal-actions-row {
+        margin-top: 2rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    .lightbox-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.75);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        box-sizing: border-box;
+    }
+
+    .lightbox-card {
+        position: relative;
+        max-width: 90vw;
+        max-height: 90vh;
+        background-color: #f5f0eb;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    .lightbox-img {
+        max-width: 100%;
+        max-height: 80vh;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        display: block;
+        border-radius: 12px;
+    }
+
+    .lightbox-close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(61,40,23,0.85);
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 38px;
+        height: 38px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+        font-size: 1rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #8a7060;
+    }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+            opacity: 0.4;
+        }
+
+    .clickable-review-image {
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .clickable-review-image:hover {
+            transform: scale(1.04);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+    .field-inp-error {
+        border-color: #e53e3e !important;
+        background: #fff5f5;
+    }
+
+    .field-error {
+        display: block;
+        color: #e53e3e;
+        font-size: 0.75rem;
+        margin-top: 4px;
+    }
+
+    .field-optional {
+        color: #999;
+        font-size: 0.75rem;
+        font-weight: 400;
+    }
+
+    .field-char-count {
+        text-align: right;
+        font-size: 0.72rem;
+        color: #aaa;
+        margin-top: 2px;
+    }
+
+    .field-hint {
+        font-size: 0.75rem;
+        color: #a08060;
+        margin-top: 2px;
+    }
+
+    footer {
+        background-color: #e7d7c8;
+        border: 2px solid #d4c4b0;
+        border-left: none;
+        border-right: none;
+        padding: 2.5rem 3rem;
+        text-align: center;
+    }
+
+    .footer-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #6b4423;
+        margin: 0 0 2rem;
+        font-style: italic;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .social-links {
+        display: flex;
+        justify-content: center;
+        gap: 5rem;
+    }
+
+    .social-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        text-decoration: none;
+        color: #5a4a3a;
+        transition: transform 0.3s;
+    }
+
+        .social-item:hover {
+            transform: translateY(-0.1875rem);
+        }
+
+        .social-item i {
+            font-size: 2.25rem;
+        }
+
+        .social-item span {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+    .mobile-topbar {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background-color: #e7dfd6;
+        z-index: 1100;
+        padding: 0.75rem 1rem;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 2px solid #c1b2a5;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+        .mobile-topbar img {
+            height: 2.5rem;
+            width: auto;
+        }
+
+    .mobile-menu-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #5a4a3a;
+        cursor: pointer;
+    }
+
+    .mobile-nav-drawer {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 75%;
+        max-width: 16rem;
+        height: 100vh;
+        background-color: #e7dfd6;
+        z-index: 1200;
+        flex-direction: column;
+        padding: 1.5rem 0;
+        box-shadow: 4px 0 12px rgba(0,0,0,0.15);
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+        .mobile-nav-drawer.open {
+            transform: translateX(0);
+        }
+
+        .mobile-nav-drawer .nav-item {
+            font-size: 1rem;
+            padding: 1rem 1.5rem;
+            text-align: left;
+            color: #5a4a3a;
+        }
+
+        .mobile-nav-drawer .sidebar-footer {
+            margin-top: auto;
+            padding: 1rem 1.5rem;
+        }
+
+    .mobile-nav-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 1150;
+    }
+
+        .mobile-nav-overlay.open {
+            display: block;
+        }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-0.625rem);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@media (max-width: 64rem) {
+        .sidebar {
+            width: 5.5rem;
+            min-width: unset;
+        }
+
+        .main-content {
+            margin-left: 5.5rem;
+        }
+
+        .nav-item {
+            font-size: 0.6rem;
+            padding: 0.75rem 0.25rem;
+            letter-spacing: 0;
+        }
+
+        .sidebar-logo {
+            width: 2.5rem;
+        }
+
+        .admin-link span {
+            font-size: 0.6rem;
+        }
+
+        .dashboard-title {
+            font-size: 1.8rem;
+        }
+
+        .nailtech-grid {
+            grid-template-columns: repeat(2,1fr);
+        }
+
+        .faqs-grid {
+            grid-template-columns: repeat(2,1fr);
+        }
+
+        .services-content-grid {
+            grid-template-columns: repeat(2, minmax(0,1fr));
+        }
+
+        .gallery-grid {
+            grid-template-columns: repeat(2,1fr);
+        }
+
+        .contact-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 48rem) {
+        .sidebar {
+            width: 5rem;
+            min-width: unset;
+        }
+
+        .main-content {
+            margin-left: 5rem;
+        }
+
+        .nav-item {
+            font-size: 0.55rem;
+            padding: 0.65rem 0.2rem;
+        }
+
+        .sidebar-logo {
+            width: 2rem;
+        }
+
+        .tab-content {
+            padding: 1.25rem 1rem;
+        }
+
+        .services-layout {
+            flex-direction: column;
+        }
+
+        .services-sidebar-mini {
+            width: 100%;
+        }
+
+        .services-content-grid {
+            grid-template-columns: repeat(2, minmax(0,1fr));
+        }
+
+        .nailtech-grid {
+            grid-template-columns: repeat(2,1fr);
+        }
+
+        .faqs-grid {
+            grid-template-columns: repeat(2,1fr);
+        }
+
+        .social-links {
+            gap: 1.5rem;
+        }
+    }
+
+    @@media (max-width: 30rem) {
+        .sidebar {
+            display: none;
+        }
+
+        .main-content {
+            margin-left: 0;
+            padding-top: 4.5rem;
+        }
+
+        .mobile-topbar {
+            display: flex !important;
+        }
+
+        .mobile-nav-drawer {
+            display: flex;
+        }
+
+        .tab-content {
+            padding: 1rem;
+        }
+
+        .nailtech-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .faqs-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .services-content-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .gallery-grid {
+            grid-template-columns: repeat(2,1fr);
+        }
+
+        .social-links {
+            gap: 1rem;
+        }
+
+        .footer-title {
+            font-size: 1.5rem;
+        }
+
+        .modal-box {
+            max-width: 100vw;
+            border-radius: 16px 16px 0 0;
+            position: fixed;
+            bottom: 0;
+        }
+
+        .faq-modal-backdrop {
+            align-items: flex-end;
+        }
+
+        .faq-modal-box {
+            max-width: 100vw;
+            border-radius: 16px 16px 0 0;
+            position: fixed;
+            bottom: 0;
+        }
+    }
+</style>
+
+<script>
+    var _currentContentType = null;
+    var _charLimit = null;
+
+    function checkCharLimit() {
+        var input = document.getElementById('modalInput');
+        var counter = document.getElementById('charCounter');
+        if (!input) return;
+        if (_charLimit) {
+            var remaining = _charLimit - input.value.length;
+            counter.textContent = remaining + ' characters remaining';
+            counter.style.color = remaining < 20 ? '#c84b4b' : '#888';
+            if (input.value.length > _charLimit) input.value = input.value.substring(0, _charLimit);
+        } else { counter.textContent = ''; }
+    }
+
+    function openEditModal(contentType, currentValue, title) {
+        _currentContentType = contentType;
+        _charLimit = (contentType === 'dest_text') ? 500 : null;
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalInput').value = currentValue;
+        document.getElementById('editModal').style.display = 'flex';
+        document.getElementById('charCounter').textContent = '';
+        checkCharLimit();
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+        _currentContentType = null; _charLimit = null;
+        document.getElementById('charCounter').textContent = '';
+    }
+
+    function saveEdit() {
+        var newValue = document.getElementById('modalInput').value.trim();
+        if (!newValue) { alert('Value cannot be empty.'); return; }
+        var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        fetch('/HomePageContent/UpdateContent', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'contentType=' + encodeURIComponent(_currentContentType) +
+                '&contentValue=' + encodeURIComponent(newValue) +
+                '&__RequestVerificationToken=' + encodeURIComponent(token)
+        }).then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    closeEditModal();
+                    var scope = angular.element(document.querySelector('[ng-controller]')).scope();
+                    if (scope) { scope.loadHomepageContent(); scope.$apply(); }
+                } else { alert('Save failed: ' + data.message); }
+            }).catch(function () { alert('Network error. Please try again.'); });
+    }
+
+    function toggleMobileNav() {
+        var drawer = document.getElementById('mobileDrawer');
+        var overlay = document.getElementById('mobileOverlay');
+        drawer.classList.toggle('open');
+        overlay.classList.toggle('open');
+    }
+
+    function angularFileChange(input) {
+        var scope = angular.element(document.querySelector('.main-content')).scope();
+        if (!scope) return;
+        var fn = input.id === 'editImageInput' ? 'onEditImageSelected' : 'onFileSelected';
+        if (scope[fn]) scope.$apply(function () { scope[fn](input); });
+    }
+
+    document.addEventListener('click', function (e) {
+        if (e.target.id === 'editModal') closeEditModal();
+    });
+</script>
+
+@section scripts {
+    <script>
+        angular.element(document).ready(function () {
+            var scope = angular.element(document.querySelector('[ng-controller]')).scope();
+            if (scope) {
+                scope.$apply(function () {
+                    var savedTab = localStorage.getItem('nailDeskTab') || 'bookings';
+                    var savedSubTab = localStorage.getItem('nailDeskSubTab') || 'gallery';
+                    scope.dashTab = savedTab;
+                    scope.adminTab = savedSubTab;
+                    scope.filterBookings('all');
+                    scope.loadReviews();
+                    scope.loadArchivedReviews();
+                    scope.loadServices();
+                    scope.loadDeletedServices();
+                    scope.loadGalleryPhotos();
+                    scope.loadFAQs();
+                    scope.loadContactInfo();
+                    scope.loadHomepageContent && scope.loadHomepageContent();
+                    scope.loadPaymentInfo && scope.loadPaymentInfo();
+
+                    scope.$watch('dashTab', function (newTab) { if (newTab) localStorage.setItem('nailDeskTab', newTab); });
+                    scope.$watch('adminTab', function (newTab) { if (newTab) localStorage.setItem('nailDeskSubTab', newTab); });
+                });
+            }
+        });
+
+        angular.module('DestLoungeSalesandBooking')
+            .filter('capitalize', function () {
+                return function (input) {
+                    if (!input) return '';
+                    return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
+                };
+            });
+
+        angular.module('DestLoungeSalesandBooking')
+            .controller('NailTechController', ['$scope', '$http', function ($scope, $http) {
+                $scope.activeTechs = [];
+                $scope.inactiveTechs = [];
+                $scope.showModal = false;
+                $scope.showConfirmModal = false;
+                $scope.showInactive = false;
+                $scope.editingTech = null;
+                $scope.techForm = { name: '', specialization: '', contact: '', status: 'active', notes: '' };
+
+                $scope.loadTechs = function () {
+                    $http.get('/Main/GetNailTechs').then(function (res) {
+                        $scope.activeTechs = res.data.filter(function (t) { return t.status !== 'inactive'; });
+                        $scope.inactiveTechs = res.data.filter(function (t) { return t.status === 'inactive'; });
+                    });
+                };
+                $scope.loadTechs();
+
+                $scope.getInitials = function (name) {
+                    if (!name) return '?';
+                    return name.split(' ').map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase();
+                };
+
+                $scope.openModal = function () {
+                    $scope.editingTech = null;
+                    $scope.techForm = { name: '', specialization: '', contact: '', status: 'active', notes: '' };
+                    $scope.showModal = true;
+                };
+                $scope.openEditModal = function (tech) {
+                    $scope.editingTech = tech;
+                    $scope.techForm = { name: tech.name || '', specialization: tech.specialization || '', contact: tech.contact || '', status: tech.status || 'active', notes: tech.notes || '' };
+                    $scope.showModal = true;
+                };
+                $scope.closeModal = function () { $scope.showModal = false; $scope.editingTech = null; };
+                $scope.closeModalBackdrop = function ($event) { if ($event.target === $event.currentTarget) $scope.closeModal(); };
+
+                $scope.saveTech = function () {
+                    if (!$scope.techForm.name) return;
+                    var payload = angular.copy($scope.techForm);
+                    if ($scope.editingTech) {
+                        payload.nailTechId = $scope.editingTech.nailTechId;
+                        $http.post('/Main/UpdateNailTech', payload).then(function () { $scope.loadTechs(); $scope.closeModal(); });
+                    } else {
+                        $http.post('/Main/AddNailTech', payload).then(function () { $scope.loadTechs(); $scope.closeModal(); });
+                    }
+                };
+                $scope.deactivateTech = function (tech) {
+                    $scope.pendingAction = function () { $http.post('/Main/DeactivateNailTech', { nailTechId: tech.nailTechId }).then(function () { $scope.loadTechs(); }); };
+                    $scope.confirmTitle = 'Deactivate Nail Tech';
+                    $scope.confirmMessage = 'Mark ' + tech.name + ' as inactive?';
+                    $scope.confirmBtnText = 'Deactivate';
+                    $scope.showConfirmModal = true;
+                };
+                $scope.reactivateTech = function (tech) { $http.post('/Main/ReactivateNailTech', { nailTechId: tech.nailTechId }).then(function () { $scope.loadTechs(); }); };
+                $scope.deleteTech = function (tech) {
+                    $scope.pendingAction = function () { $http.post('/Main/DeleteNailTech', { nailTechId: tech.nailTechId }).then(function () { $scope.loadTechs(); }); };
+                    $scope.confirmTitle = 'Remove Nail Tech';
+                    $scope.confirmMessage = 'Remove ' + tech.name + '?';
+                    $scope.confirmBtnText = 'Remove';
+                    $scope.showConfirmModal = true;
+                };
+                $scope.permanentDeleteTech = function (tech) {
+                    $scope.pendingAction = function () { $http.post('/Main/PermanentDeleteNailTech', { nailTechId: tech.nailTechId }).then(function () { $scope.loadTechs(); }); };
+                    $scope.confirmTitle = 'Permanently Remove';
+                    $scope.confirmMessage = 'Completely remove ' + tech.name + ' from the system?';
+                    $scope.confirmBtnText = 'Delete Forever';
+                    $scope.showConfirmModal = true;
+                };
+                $scope.confirmAction = function () { if ($scope.pendingAction) $scope.pendingAction(); $scope.showConfirmModal = false; $scope.pendingAction = null; };
+                $scope.closeConfirmModal = function () { $scope.showConfirmModal = false; $scope.pendingAction = null; };
+            }]);
+    </script>
+}

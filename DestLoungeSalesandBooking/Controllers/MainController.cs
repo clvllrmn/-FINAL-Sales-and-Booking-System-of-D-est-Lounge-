@@ -77,6 +77,10 @@ namespace DestLoungeSalesandBooking.Controllers
         {
             return View();
         }
+        public ActionResult AdminNailDesk()
+        {
+            return View();
+        }
 
         // ── User-only protected pages ──
         [SessionCheck]
