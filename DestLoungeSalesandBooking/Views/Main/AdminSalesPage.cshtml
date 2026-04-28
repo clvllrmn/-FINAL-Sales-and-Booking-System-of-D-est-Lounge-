@@ -102,7 +102,19 @@
                 <div class="kpi-card">
                     <div class="kpi-icon"><i class="fa-solid fa-star"></i></div>
                     <div class="kpi-title">Top Service</div>
-                    <div class="kpi-value kpi-value-range">{{sales.topService || '—'}}</div>
+
+                    <select class="top-filter"
+                            ng-model="selectedTopCategory"
+                            ng-change="updateTopService()">
+
+                        <option value="all">All</option>
+                        <option value="manicure">Manicure</option>
+                        <option value="pedicure">Pedicure</option>
+                    </select>
+
+                    <div class="kpi-value kpi-value-range">
+                        {{filteredTopService || '—'}}
+                    </div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-icon"><i class="fa-solid fa-clock"></i></div>
@@ -977,6 +989,16 @@
             color: #3d2817;
             margin-bottom: 0.25rem;
         }
+
+        .top-filter {
+            margin-top: 10px;
+            padding: 6px 10px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            width: 100%;
+        }
+
 
         .rpt-meta {
             font-size: 0.78rem;

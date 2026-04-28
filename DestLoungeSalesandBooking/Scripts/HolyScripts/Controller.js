@@ -23,9 +23,10 @@ app.controller("DestLoungeSalesandBookingController",
         };
 
         $scope.servicePerformance = [];
+        $scope.updateTopService();
         $scope.filteredServicePerformance = [];
         $scope.selectedService = 'all';
-        $scope.salesRange = 'today';
+        $scope.salesRange = 'all';
         $scope.reportGenerated = false;
         $scope.reportDate = new Date().toLocaleString();
         $scope.reportOptions = {
@@ -38,6 +39,40 @@ app.controller("DestLoungeSalesandBookingController",
         };
         $scope.customFrom = null;
         $scope.customTo = null;
+
+        $scope.selectedTopCategory = "all";
+        $scope.filteredTopService = "-";
+
+        $scope.updateTopService = function () {
+
+            if (!$scope.servicePerformance || $scope.servicePerformance.length == 0) {
+                $scope.filteredTopService = "-";
+                return;
+            }
+
+            var filtered = $scope.servicePerformance;
+
+            if ($scope.selectedTopCategory != "all") {
+                filtered = filtered.filter(function (x) {
+
+                    var serviceName = (x.name || x.service || "").toLowerCase();
+
+                    return serviceName.includes($scope.selectedTopCategory.toLowerCase());
+                });
+            }
+
+            if (filtered.length == 0) {
+                $scope.filteredTopService = "-";
+                return;
+            }
+
+            filtered.sort(function (a, b) {
+                return b.bookings - a.bookings;
+            });
+
+            $scope.filteredTopService =
+                filtered[0].name || filtered[0].service;
+        };
 
         // ===== PAYMENT PAGE VARIABLES =====
         $scope.bookingSummary = null;
@@ -1839,12 +1874,18 @@ app.controller("DestLoungeSalesandBookingController",
             $http.get('/Admin/GetSalesAnalytics', { params: { range: range } })
                 .then(function (res) {
                     var data = res.data || {};
+
                     $scope.analytics.totalRevenue = data.totalRevenue || 0;
                     $scope.analytics.completedBookings = data.completedBookings || 0;
                     $scope.analytics.topService = data.topService || '—';
+
+                    $scope.servicePerformance = data.servicePerformance || [];
+                    $scope.updateTopService();
+
                     $scope.pendingBookingsCount = $scope.bookings.filter(function (b) {
                         return b.status === 'Pending';
                     }).length;
+
                     $timeout(function () {
                         renderAnalyticsChart(data.points || [], range);
                     }, 100);
