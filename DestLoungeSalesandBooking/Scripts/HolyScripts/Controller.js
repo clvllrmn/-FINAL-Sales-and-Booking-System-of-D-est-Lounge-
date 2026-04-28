@@ -5,7 +5,7 @@ var app = angular.module("DestLoungeSalesandBooking", ['ngSanitize']);
 app.controller("DestLoungeSalesandBookingController",
     function ($scope, $window, $http, $sce, $httpParamSerializerJQLike, $timeout) {
         console.log("🔥 SUBMIT PAYMENT FUNCTION TRIGGERED");
-        
+
         console.log("CONTROLLER RUNNING");
 
         $scope.test = "Working";
@@ -23,10 +23,9 @@ app.controller("DestLoungeSalesandBookingController",
         };
 
         $scope.servicePerformance = [];
-        $scope.updateTopService();
         $scope.filteredServicePerformance = [];
         $scope.selectedService = 'all';
-        $scope.salesRange = 'all';
+        $scope.salesRange = 'today';
         $scope.reportGenerated = false;
         $scope.reportDate = new Date().toLocaleString();
         $scope.reportOptions = {
@@ -39,40 +38,6 @@ app.controller("DestLoungeSalesandBookingController",
         };
         $scope.customFrom = null;
         $scope.customTo = null;
-
-        $scope.selectedTopCategory = "all";
-        $scope.filteredTopService = "-";
-
-        $scope.updateTopService = function () {
-
-            if (!$scope.servicePerformance || $scope.servicePerformance.length == 0) {
-                $scope.filteredTopService = "-";
-                return;
-            }
-
-            var filtered = $scope.servicePerformance;
-
-            if ($scope.selectedTopCategory != "all") {
-                filtered = filtered.filter(function (x) {
-
-                    var serviceName = (x.name || x.service || "").toLowerCase();
-
-                    return serviceName.includes($scope.selectedTopCategory.toLowerCase());
-                });
-            }
-
-            if (filtered.length == 0) {
-                $scope.filteredTopService = "-";
-                return;
-            }
-
-            filtered.sort(function (a, b) {
-                return b.bookings - a.bookings;
-            });
-
-            $scope.filteredTopService =
-                filtered[0].name || filtered[0].service;
-        };
 
         // ===== PAYMENT PAGE VARIABLES =====
         $scope.bookingSummary = null;
@@ -153,7 +118,7 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.reviewsPerPage = 6;
         $scope.reviewStarFilter = '';
         $scope.reviewSearch = '';
-            
+
         $scope.loadReviews = function () {
             var path = window.location.pathname.toLowerCase();
 
@@ -1874,18 +1839,12 @@ app.controller("DestLoungeSalesandBookingController",
             $http.get('/Admin/GetSalesAnalytics', { params: { range: range } })
                 .then(function (res) {
                     var data = res.data || {};
-
                     $scope.analytics.totalRevenue = data.totalRevenue || 0;
                     $scope.analytics.completedBookings = data.completedBookings || 0;
                     $scope.analytics.topService = data.topService || '—';
-
-                    $scope.servicePerformance = data.servicePerformance || [];
-                    $scope.updateTopService();
-
                     $scope.pendingBookingsCount = $scope.bookings.filter(function (b) {
                         return b.status === 'Pending';
                     }).length;
-
                     $timeout(function () {
                         renderAnalyticsChart(data.points || [], range);
                     }, 100);
@@ -2090,7 +2049,7 @@ app.controller("DestLoungeSalesandBookingController",
 
             if (range !== 'custom') {
                 $scope.loadSales(range);
-                 
+
             }
 
         };
@@ -2197,15 +2156,15 @@ app.controller("DestLoungeSalesandBookingController",
         };
 
         // Initialize sales page data
-        
 
-            
 
-       
-            
-        
 
-     
+
+
+
+
+
+
 
         // ===== CONTACT DATA =====
         $scope.loadContactInfo = function () {
