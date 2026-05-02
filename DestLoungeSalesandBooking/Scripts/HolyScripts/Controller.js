@@ -1,6 +1,7 @@
 ﻿// Controller.js
 var app = angular.module("DestLoungeSalesandBooking", ['ngSanitize']);
 
+console.log("🔥 NEW CONTROLLER LOADED");
 
 app.controller("DestLoungeSalesandBookingController",
     function ($scope, $window, $http, $sce, $httpParamSerializerJQLike, $timeout) {
@@ -8,6 +9,8 @@ app.controller("DestLoungeSalesandBookingController",
 
         console.log("CONTROLLER RUNNING");
 
+
+        $scope.notifications = [];
         $scope.test = "Working";
         $scope.myReviews = [];
 
@@ -2097,7 +2100,11 @@ app.controller("DestLoungeSalesandBookingController",
                 $scope.filteredServicePerformance =
                     angular.copy($scope.servicePerformance);
 
-                renderSalesChart(res.data.points || []);
+                //if (typeof renderSalesChart === "function") {
+                    //renderSalesChart(data);
+                //} else {
+                    //console.warn("renderSalesChart is not defined");
+                //}
 
             }, function (err) {
                 console.log(err);
@@ -2732,13 +2739,52 @@ app.controller("DestLoungeSalesandBookingController",
         $scope.showNotif = false;
 
         $scope.loadNotifications = function () {
-            var userId = window.loggedInUserId;
             if (!window.loggedInUserId) return;
+
             return $http.get("/Booking/GetNotifications?userId=" + window.loggedInUserId)
                 .then(function (res) {
-                    $scope.notifications = res.data || [];
+
+                    console.log("RAW API:", res);
+
+                    let data = res.data;
+
+                    // 🔥 FORCE FIX
+                    if (Array.isArray(data)) {
+                        $scope.notifications = data;
+                    }
+                    else if (data && Array.isArray(data.data)) {
+                        $scope.notifications = data.data;
+                    }
+                    else if (data && Array.isArray(data.notifications)) {
+                        $scope.notifications = data.notifications;
+                    }
+                    else {
+                        console.warn("Notifications is not array, forcing empty");
+                        $scope.notifications = [];
+                    }
+
+                    console.log("FINAL NOTIFICATIONS:", $scope.notifications);
                 });
         };
+
+        $scope.loadNotifications = function () {
+            $http.get('/Reminder/GetAll')
+                .then(function (res) {
+                    console.log("NOTIFICATIONS API:", res.data);
+
+                    if (Array.isArray(res.data)) {
+                        $scope.notifications = res.data;
+                    } else {
+                        $scope.notifications = [];
+                    }
+                })
+                .catch(function (err) {
+                    console.error("Failed to load notifications:", err);
+                    $scope.notifications = [];
+                });
+        };
+
+        $scope.loadNotifications();
 
         $scope.toggleNotif = function ($event) {
             if ($event) $event.stopPropagation();
@@ -2750,9 +2796,13 @@ app.controller("DestLoungeSalesandBookingController",
         };
 
         $scope.checkReviewNotification = function () {
+
+            if (!Array.isArray($scope.notifications)) return;
+
             var reviewNotif = $scope.notifications.find(function (n) {
-                return n.Message.includes("completed");
+                return (n.Message || "").includes("completed");
             });
+
             if (reviewNotif) {
                 setTimeout(function () {
                     if (confirm("Your booking is completed! Write a review?")) {
@@ -2814,8 +2864,17 @@ app.controller("DestLoungeSalesandBookingController",
         };
 
         $scope.getUnreadCount = function () {
+
+            if (!Array.isArray($scope.notifications)) {
+                return 0;
+            }
+
+            console.log("NOTIFICATIONS TYPE:", typeof $scope.notifications);
+            console.log("IS ARRAY:", Array.isArray($scope.notifications));
+            console.log("VALUE:", $scope.notifications);
+
             return $scope.notifications.filter(function (n) {
-                return !(n.IsRead || n.isRead);
+                return !(n.IsRead || n.isRead || n.read);
             }).length;
         };
 

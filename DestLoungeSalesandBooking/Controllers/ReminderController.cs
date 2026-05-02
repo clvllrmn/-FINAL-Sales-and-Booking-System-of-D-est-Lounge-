@@ -158,5 +158,20 @@ namespace DestLoungeSalesandBooking.Controllers
                 }
             }
         }
+
+
+        public JsonResult GetAll()
+        {
+            var notifications = db.tbl_bookings
+                .Where(b => b.Status == "Approved")
+                .Select(b => new
+                {
+                    Message = "You have a booking on " + b.BookingDate,
+                    IsRead = false
+                })
+                .ToList();
+
+            return Json(notifications, JsonRequestBehavior.AllowGet);
+        }
     }
 }

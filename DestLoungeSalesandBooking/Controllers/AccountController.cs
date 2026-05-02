@@ -169,8 +169,7 @@ namespace DestLoungeSalesandBooking.Controllers
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "An error occurred during login. Please try again.";
-                System.Diagnostics.Debug.WriteLine("Login Error: " + ex.ToString());
+                TempData["ErrorMessage"] = ex.ToString();
                 return RedirectToAction("LoginPage", "Main");
             }
         }
