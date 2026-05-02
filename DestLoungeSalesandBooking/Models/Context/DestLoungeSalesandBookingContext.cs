@@ -15,7 +15,7 @@ namespace DestLoungeSalesandBooking.Models.Context
         }
 
         public DestLoungeSalesandBookingContext()
-    : base("Server=127.0.0.1;Port=3306;Database=destlounge_db;Uid=root;Pwd=;")
+    : base("Server=127.0.0.1;Port=3306;Database=destlounge_db;Uid=root;Pwd=dest@pass123;")
         {
         }
 
