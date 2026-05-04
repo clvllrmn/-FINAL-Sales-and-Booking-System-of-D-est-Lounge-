@@ -10,12 +10,12 @@ namespace DestLoungeSalesandBooking.Models.Maps
             ToTable("tbl_bookings");
             HasKey(b => b.BookingId);
             Property(b => b.BookingId)
-                .HasColumnName("BookingID");
+                .HasColumnName("BookingId");
             Property(b => b.CustomerId)
-                .HasColumnName("CustomerID")
+                .HasColumnName("CustomerId")
                 .IsRequired();
             Property(b => b.ServiceId)
-                .HasColumnName("ServiceID")
+                .HasColumnName("ServiceId")
                 .IsRequired();
             Property(b => b.BookingDate)
                 .HasColumnName("BookingDate")
