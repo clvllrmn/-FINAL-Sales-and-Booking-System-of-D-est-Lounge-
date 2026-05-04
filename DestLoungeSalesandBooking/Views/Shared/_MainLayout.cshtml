@@ -774,15 +774,14 @@
 }
 
 /* ── RIGHT GROUP — bell + hamburger, always visible ── */
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;          /* space between login / bell / hamburger */
-    flex-shrink: 0;
-    z-index: 1050;         /* above overlay (900) and nav drawer (1000), but
-                              hamburger itself gets 1100 so it stays tappable
-                              even when the drawer is open */
-}
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem; /* consistent spacing between bell and hamburger */
+        flex-shrink: 0;
+        position: relative; /* ← establishes stacking context */
+        z-index: 1050; /* ← always above drawer (1000) and overlay (900) */
+    }
 
 /* ── Notification wrapper — positions the dropdown ── */
 .notif-wrapper {
@@ -819,19 +818,19 @@
     pointer-events: none;
 }
 
-.notif-dropdown {
-    position: absolute;
-    right: 0;
-    top: calc(100% + 8px);  /* 8px gap below the bell button */
-    width: 280px;
-    max-height: 350px;
-    overflow-y: auto;
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    z-index: 99999;          /* on top of everything */
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
+    .notif-dropdown {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        width: 280px;
+        max-height: 350px;
+        overflow-y: auto;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        z-index: 99999; /* ← keeps dropdown above everything */
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
 
 .notif-header {
     padding: 10px 12px;
