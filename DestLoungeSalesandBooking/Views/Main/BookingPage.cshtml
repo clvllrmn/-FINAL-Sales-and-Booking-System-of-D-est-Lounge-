@@ -8,20 +8,23 @@
         ng-init="loadNotifications()">
 
     <div class="header-container">
+
+        <!-- LOGO -->
         <div class="logo">
             <a href="@Url.Action("Homepage","Main")">
                 <img src="~/Content/Pictures/DestLogo.png" alt="D'est Lounge">
             </a>
         </div>
 
+        <!-- NAV DRAWER (slides — bell is NOT inside here anymore) -->
         <nav class="main-nav" id="mainNav">
-            <a href="@Url.Action("Homepage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "Homepage" ? "nav-active" : "")">HOME</a>
-            <a href="@Url.Action("ServicePage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ServicePage" ? "nav-active" : "")">SERVICES</a>
-            <a href="@Url.Action("GalleryPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "GalleryPage" ? "nav-active" : "")">GALLERY</a>
-            <a href="@Url.Action("ContactPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ContactPage" ? "nav-active" : "")">CONTACT</a>
-            <a href="@Url.Action("FAQsPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "FAQsPage" ? "nav-active" : "")">FAQs</a>
+            <a href="@Url.Action("Homepage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "Homepage"    ? "nav-active" : "")">HOME</a>
+            <a href="@Url.Action("ServicePage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ServicePage"  ? "nav-active" : "")">SERVICES</a>
+            <a href="@Url.Action("GalleryPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "GalleryPage"  ? "nav-active" : "")">GALLERY</a>
+            <a href="@Url.Action("ContactPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "ContactPage"  ? "nav-active" : "")">CONTACT</a>
+            <a href="@Url.Action("FAQsPage","Main")" class="@(ViewContext.RouteData.Values["action"].ToString() == "FAQsPage"     ? "nav-active" : "")">FAQs</a>
 
-            <!-- MOBILE ACTIONS -->
+            <!-- Mobile login link lives in the drawer, that's fine -->
             <div class="mobile-nav-actions">
                 @if (isLoggedIn)
                 {
@@ -35,113 +38,85 @@
                         <i class="fa-regular fa-user"></i> LOGIN
                     </a>
                 }
+            </div>
+        </nav>
 
-                <!-- 🔔 NOTIFICATION (MOBILE) -->
+        <!--
+            ╔══════════════════════════════════════════════════════╗
+            ║  .header-right — ALWAYS visible, never transforms   ║
+            ║  Contains: login (desktop) · bell · hamburger        ║
+            ╚══════════════════════════════════════════════════════╝
+        -->
+        <div class="header-right">
+
+            <!-- Desktop login link -->
+            <div class="desktop-only">
+                @if (isLoggedIn)
+                {
+                    <a href="@Url.Action("ProfilePage","Main")" class="welcome-text">
+                        <i class="fa-solid fa-circle-user"></i> Welcome, @userFirstName!
+                    </a>
+                }
+                else
+                {
+                    <a href="@Url.Action("LoginPage","Main")" class="login-link">
+                        <i class="fa-regular fa-user"></i> LOGIN
+                    </a>
+                }
+            </div>
+
+            <!-- ════ NOTIFICATION BELL (shared, always visible) ════ -->
+            <div class="notif-wrapper">
                 <button type="button"
-                        ng-click="toggleNotif($event)"
-                        style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037;">
+                        class="notif-btn"
+                        ng-click="toggleNotif($event)">
                     <i class="fa-solid fa-bell"></i>
-
-                    <span ng-if="getUnreadCount() > 0"
-                          class="notif-badge">!</span>
+                    <span ng-if="getUnreadCount() > 0" class="notif-badge">!</span>
                 </button>
 
-                <div ng-show="showNotif"
-                     ng-click="$event.stopPropagation()"
-                     style="position:absolute; right:0; top:35px; width:280px; max-height:350px; overflow-y:auto; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999; box-shadow:0 4px 10px rgba(0,0,0,0.2);">
-                    <div style="padding:10px 12px; font-weight:bold; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:#333;">Notifications</span>
+                <div class="notif-dropdown"
+                     ng-show="showNotif"
+                     ng-click="$event.stopPropagation()">
+                    <div class="notif-header">
+                        <span>Notifications</span>
                         <button ng-if="notifications.length > 0"
                                 ng-click="clearAllNotifications($event)"
-                                style="font-size:11px; color:#e74c3c; background:none; border:none; cursor:pointer; padding:0;">
+                                class="notif-clear-btn">
                             Clear all
                         </button>
                     </div>
-                    <div ng-if="!notifications.length" style="padding:12px; color:gray; font-size:13px; text-align:center;">
+
+                    <div ng-if="!notifications.length" class="notif-empty">
                         No notifications yet.
                     </div>
+
                     <div ng-repeat="n in notifications"
                          class="notif-item"
-                         ng-class="(n.IsRead || n.isRead) ? 'read' : 'unread'"
-                         style="padding:10px 12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                         ng-class="(n.IsRead || n.isRead) ? 'read' : 'unread'">
                         <span ng-click="markAsReadAndGo(n, $event)"
-                              style="cursor:pointer; flex:1; line-height:1.4;"
-                              ng-style="(n.IsRead || n.isRead) ? {'font-size':'13px','color':'#999','font-weight':'normal'} : {'font-size':'13px','color':'#333','font-weight':'600'}">
+                              class="notif-message"
+                              ng-class="(n.IsRead || n.isRead) ? 'notif-message--read' : 'notif-message--unread'">
                             <span ng-if="!(n.IsRead || n.isRead)" class="notif-unread-dot"></span>
                             {{n.Message || n.message}}
                         </span>
                         <button ng-click="deleteNotification(n.NotificationId || n.notificationId, $event)"
-                                style="background:none; border:none; cursor:pointer; color:#aaa; font-size:16px; padding:0 0 0 6px; flex-shrink:0; line-height:1;">
+                                class="notif-delete-btn">
                             &times;
                         </button>
                     </div>
                 </div>
             </div>
-        </nav>
-
-        <!-- DESKTOP ACTIONS -->
-        <div class="header-actions desktop-only">
-            @if (isLoggedIn)
-            {
-                <a href="@Url.Action("ProfilePage","Main")" class="welcome-text">
-                    <i class="fa-solid fa-circle-user"></i> Welcome, @userFirstName!
-                </a>
-            }
-            else
-            {
-                <a href="@Url.Action("LoginPage","Main")" class="login-link">
-                    <i class="fa-regular fa-user"></i> LOGIN
-                </a>
-            }
-
-            <!-- 🔔 NOTIFICATION (DESKTOP) -->
-            <button type="button"
-                    ng-click="toggleNotif($event)"
-                    style="background:none; border:none; cursor:pointer; font-size:22px; position:relative; color:#5d4037;">
-                <i class="fa-solid fa-bell"></i>
-
-                <span ng-if="getUnreadCount() > 0"
-                      class="notif-badge">!</span>
+            <!-- ════ END BELL ════ -->
+            <!-- HAMBURGER (mobile/tablet only) -->
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
             </button>
 
-            <div ng-show="showNotif"
-                 ng-click="$event.stopPropagation()"
-                 style="position:absolute; right:0; top:35px; width:280px; max-height:350px; overflow-y:auto; background:white; border:1px solid #ccc; border-radius:10px; z-index:99999; box-shadow:0 4px 10px rgba(0,0,0,0.2);">
-                <div style="padding:10px 12px; font-weight:bold; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
-                    <span style="color:#333;">Notifications</span>
-                    <button ng-if="notifications.length > 0"
-                            ng-click="clearAllNotifications($event)"
-                            style="font-size:11px; color:#e74c3c; background:none; border:none; cursor:pointer; padding:0;">
-                        Clear all
-                    </button>
-                </div>
-                <div ng-if="!notifications.length" style="padding:12px; color:gray; font-size:13px; text-align:center;">
-                    No notifications yet.
-                </div>
-                <div ng-repeat="n in notifications"
-                     class="notif-item"
-                     ng-class="(n.IsRead || n.isRead) ? 'read' : 'unread'"
-                     style="padding:10px 12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
-                    <span ng-click="markAsReadAndGo(n, $event)"
-                          style="cursor:pointer; flex:1; line-height:1.4;"
-                          ng-style="(n.IsRead || n.isRead) ? {'font-size':'13px','color':'#999','font-weight':'normal'} : {'font-size':'13px','color':'#333','font-weight':'600'}">
-                        <span ng-if="!(n.IsRead || n.isRead)" class="notif-unread-dot"></span>
-                        {{n.Message || n.message}}
-                    </span>
-                    <button ng-click="deleteNotification(n.NotificationId || n.notificationId, $event)"
-                            style="background:none; border:none; cursor:pointer; color:#aaa; font-size:16px; padding:0 0 0 6px; flex-shrink:0; line-height:1;">
-                        &times;
-                    </button>
-                </div>
-            </div>
         </div>
+        <!-- end .header-right -->
 
-        <!-- HAMBURGER -->
-        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
     </div>
 
     <div class="nav-overlay" id="navOverlay"></div>
@@ -1169,6 +1144,7 @@
             margin: 0 2rem;
         }
     }
+
     .blocked-service-option {
         opacity: 0.45;
         filter: grayscale(100%);

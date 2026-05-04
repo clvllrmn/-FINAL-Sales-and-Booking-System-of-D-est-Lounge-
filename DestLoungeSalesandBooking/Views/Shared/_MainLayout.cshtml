@@ -112,23 +112,11 @@
         z-index: 1000;
     }
 
-    .header-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
     .logo img {
         height: 5rem;
         width: auto;
     }
 
-    .main-nav {
-        margin-left: 3rem;
-        margin-right: auto;
-        display: flex;
-        gap: 2.5rem;
-    }
 
     .main-nav a {
         color: #5d4037;
@@ -561,13 +549,7 @@
         .welcome-text i {
             font-size: 1.1rem;
         }
-    /* ── Notification Wrapper ── */
-    .notif-wrapper {
-        position: relative;
-        margin-left: 15px;
-        display: flex;
-        align-items: center;
-    }
+
 
     /* ── Bell Button ── */
     .notif-bell-btn {
@@ -590,24 +572,7 @@
         }
 
     /* ── Badge ── */
-    .notif-badge {
-        position: absolute;
-        top: -4px;
-        right: -4px;
-        background: #e74c3c;
-        color: white;
-        border-radius: 50%;
-        width: 18px;
-        height: 18px;
-        font-size: 12px;
-        font-weight: 900;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 2px solid #e7dfd6;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-        line-height: 1;
-    }
+
 
     /* Unread notification item */
     .notif-item.unread {
@@ -637,22 +602,7 @@
         flex-shrink: 0;
     }
     /* ── Dropdown ── */
-    .notif-dropdown {
-        position: absolute;
-        right: 0;
-        top: calc(100% + 12px);
-        width: 290px;
-        background: #fff8f3;
-        border: 1px solid #d4c4b0;
-        border-radius: 16px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-        z-index: 99999;
-        overflow: hidden;
-        animation: fadeIn 0.25s ease;
-        /* ❌ DELETE THESE TWO: */
-        max-height: 400px;
-        overflow-y: auto;
-    }
+
     .notif-items-scroll {
         overflow-y: auto;
         flex: 1;
@@ -671,30 +621,6 @@
             background: #c4a882;
             border-radius: 10px;
         }
-    /* ── Dropdown Header ── */
-    .notif-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 14px 18px;
-        font-weight: 700;
-        font-size: 1rem;
-        color: #fff8f3;
-        background-color: #6b4423;
-        letter-spacing: 0.04em;
-    }
-
-    /* ── Empty State ── */
-    .notif-empty {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-        padding: 28px 16px;
-        color: #9e8c7e;
-        font-size: 0.9rem;
-        font-style: italic;
-    }
 
         .notif-empty i {
             font-size: 2rem;
@@ -705,19 +631,6 @@
             margin: 0;
         }
 
-    /* ── Notification Items ── */
-    .notif-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        padding: 13px 18px;
-        border-bottom: 1px solid #ede3d9;
-        cursor: pointer;
-        font-size: 0.88rem;
-        color: #4a3728;
-        line-height: 1.5;
-        transition: background 0.15s ease;
-    }
 
         .notif-item:last-child {
             border-bottom: none;
@@ -835,6 +748,299 @@
 @@media (min-width: 1025px) {
     .header-bell-fixed {
         display: none !important;
+    }
+}
+/* ── Header container ── */
+.header-container {
+    display: flex;
+    align-items: center;
+    /* logo on left, nav in middle, header-right on right */
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    height: 64px;          /* give it a fixed height so nothing jumps */
+    position: relative;    /* anchor for any absolutely-positioned children */
+}
+
+/* ── Logo ── */
+.logo {
+    flex-shrink: 0;
+}
+
+/* ── Main nav ── */
+/* Desktop: sits between logo and header-right */
+.main-nav {
+    flex: 1;
+    /* desktop styles applied via @@media below */
+}
+
+/* ── RIGHT GROUP — bell + hamburger, always visible ── */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;          /* space between login / bell / hamburger */
+    flex-shrink: 0;
+    z-index: 1050;         /* above overlay (900) and nav drawer (1000), but
+                              hamburger itself gets 1100 so it stays tappable
+                              even when the drawer is open */
+}
+
+/* ── Notification wrapper — positions the dropdown ── */
+.notif-wrapper {
+    position: relative;    /* dropdown anchors to THIS, not the header */
+}
+
+.notif-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 22px;
+    color: #5d4037;
+    position: relative;    /* for the badge */
+    display: flex;
+    align-items: center;
+    padding: 0.25rem;
+    line-height: 1;
+}
+
+.notif-badge {
+    position: absolute;
+    top: -2px;
+    right: -4px;
+    background: #e74c3c;
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.notif-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);  /* 8px gap below the bell button */
+    width: 280px;
+    max-height: 350px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    z-index: 99999;          /* on top of everything */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.notif-header {
+    padding: 10px 12px;
+    font-weight: bold;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #333;
+}
+
+.notif-clear-btn {
+    font-size: 11px;
+    color: #e74c3c;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.notif-empty {
+    padding: 12px;
+    color: gray;
+    font-size: 13px;
+    text-align: center;
+}
+
+.notif-item {
+    padding: 10px 12px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.notif-message {
+    cursor: pointer;
+    flex: 1;
+    line-height: 1.4;
+    font-size: 13px;
+}
+.notif-message--read   { color: #999; font-weight: normal; }
+.notif-message--unread { color: #333; font-weight: 600; }
+
+.notif-delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #aaa;
+    font-size: 16px;
+    padding: 0 0 0 6px;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+/* ── Hamburger ── */
+.hamburger-btn {
+    display: none;          /* hidden on desktop, shown on tablet/mobile */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    z-index: 1100;          /* above bell dropdown so it's always tappable */
+    flex-shrink: 0;
+}
+.hamburger-btn span {
+    display: block;
+    width: 26px;
+    height: 3px;
+    background-color: #5d4037;
+    border-radius: 3px;
+    transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease;
+    transform-origin: center;
+}
+.hamburger-btn.open span:nth-child(1) { transform: translateY(8px)  rotate(45deg); }
+.hamburger-btn.open span:nth-child(2) { opacity: 0; width: 0; }
+.hamburger-btn.open span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+/* ── Nav overlay ── */
+.nav-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0,0,0,0.4);
+    z-index: 900;           /* below nav (1000) and bell (1050) */
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+.nav-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.mobile-nav-actions { display: none; }
+
+/* ═══════════════════════════════════════════
+   DESKTOP (≥ 1025px)
+═══════════════════════════════════════════ */
+@@media (min-width: 1025px) {
+    .hamburger-btn        { display: none !important; }
+    .mobile-nav-actions   { display: none !important; }
+    .nav-overlay          { display: none !important; }
+
+    .main-nav {
+        position: static !important;
+        transform: none !important;
+        width: auto !important;
+        height: auto !important;
+        background: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin-left: 3rem !important;
+        margin-right: auto !important;   /* pushes .header-right to far right */
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 2.5rem !important;
+        overflow: visible !important;
+        transition: none !important;
+    }
+    .main-nav a {
+        width: auto !important;
+        padding: 0 !important;
+        border-bottom: none !important;
+        font-size: 1.3rem !important;
+        font-weight: 600 !important;
+        color: #5d4037 !important;
+        letter-spacing: 0.5px !important;
+        display: inline !important;
+    }
+    .main-nav a.nav-active {
+        color: #6b4423 !important;
+        border-bottom: 2.5px solid #6b4423 !important;
+        padding-bottom: 2px !important;
+    }
+
+    .desktop-only { display: flex !important; }
+}
+
+/* ═══════════════════════════════════════════
+   TABLET + MOBILE (≤ 1024px)
+═══════════════════════════════════════════ */
+@@media (max-width: 1024px) {
+    .hamburger-btn  { display: flex; }
+    .desktop-only   { display: none !important; }
+    .nav-overlay    { display: block; }
+
+    .main-nav {
+        position: fixed !important;
+        top: 0 !important;
+        right: 0 !important;
+        left: auto !important;
+        width: 280px !important;
+        height: 100vh !important;
+        background-color: #f5f0eb !important;
+        z-index: 1000 !important;          /* above overlay, below bell+hamburger */
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        padding: 5rem 2rem 2rem !important;
+        gap: 0 !important;
+        box-shadow: -4px 0 20px rgba(0,0,0,0.15) !important;
+        transform: translateX(100%) !important;
+        transition: transform 0.35s cubic-bezier(0.4,0,0.2,1) !important;
+        overflow-y: auto !important;
+        margin: 0 !important;
+    }
+    .main-nav.open { transform: translateX(0) !important; }
+
+    .main-nav a {
+        width: 100% !important;
+        padding: 0.9rem 0 !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        color: #5d4037 !important;
+        border-bottom: 1px solid #e0d5c8 !important;
+        display: block !important;
+        text-decoration: none !important;
+        background: none !important;
+    }
+    .main-nav a.nav-active { color: #6b4423 !important; }
+
+    .mobile-nav-actions {
+        display: flex !important;
+        flex-direction: column;
+        width: 100%;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 2px solid #d4c4b0;
+        gap: 0;
+    }
+    .mobile-nav-actions a {
+        display: flex !important;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.75rem 0 !important;
+        font-size: 0.97rem !important;
+        color: #5d4037 !important;
+        border-bottom: 1px solid #e0d5c8 !important;
+        width: 100% !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        background: none !important;
     }
 }
 </style>
