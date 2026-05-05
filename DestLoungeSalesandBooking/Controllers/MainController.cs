@@ -1165,6 +1165,31 @@ namespace DestLoungeSalesandBooking.Controllers
 
         }
 
-    }
+
+        [HttpGet]
+        public JsonResult GetBookings()
+        {
+            try
+            {
+                var test = db.tbl_bookings.ToList();
+
+                return Json(new
+                {
+                    success = true,
+                    data = test
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = ex.ToString()
+                }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
 
     }
+
+}
